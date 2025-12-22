@@ -344,31 +344,31 @@ INSERT INTO `menus` (`id`, `name`, `title`, `menu_type`, `path`, `component`, `i
 
 -- 插入系统管理子菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(5, 'UserManage', '用户管理', 'system:user:list', 'C', 'user', 'system/user/index', 'user', 1, 1, 1, 1),
-(6, 'RoleManage', '角色管理', 'system:role:list', 'C', 'role', 'system/role/index', 'peoples', 1, 2, 1, 1),
-(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', 'menu', 'system/menu/index', 'tree-table', 1, 3, 1, 1),
-(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', 'dept', 'system/dept/index', 'tree', 1, 4, 1, 1),
-(9, 'PostManage', '岗位管理', 'system:post:list', 'C', 'post', 'system/post/index', 'post', 1, 5, 1, 1),
-(10, 'DictManage', '字典管理', 'system:dict:list', 'C', 'dict', 'system/dict/index', 'dict', 1, 6, 1, 1),
-(11, 'ConfigManage', '参数设置', 'system:config:list', 'C', 'config', 'system/config/index', 'edit', 1, 7, 1, 1);
+(5, 'UserManage', '用户管理', 'system:user:list', 'C', '/system/user', 'system/user/index', 'user', 1, 1, 1, 1),
+(6, 'RoleManage', '角色管理', 'system:role:list', 'C', '/system/role', 'system/role/index', 'peoples', 1, 2, 1, 1),
+(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', '/system/menu', 'system/menu/index', 'tree-table', 1, 3, 1, 1),
+(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept', 'system/dept/index', 'tree', 1, 4, 1, 1),
+(9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post', 'system/post/index', 'post', 1, 5, 1, 1),
+(10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict', 'system/dict/index', 'dict', 1, 6, 1, 1),
+(11, 'ConfigManage', '参数设置', 'system:config:list', 'C', '/system/config', 'system/config/index', 'edit', 1, 7, 1, 1);
 
 -- 插入系统监控子菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(12, 'OnlineUser', '在线用户', 'monitor:online:list', 'C', 'online', 'monitor/online/index', 'online', 2, 1, 1, 1),
-(13, 'OperLog', '操作日志', 'monitor:operlog:list', 'C', 'operlog', 'monitor/operlog/index', 'form', 2, 2, 1, 1),
-(14, 'LoginLog', '登录日志', 'monitor:logininfor:list', 'C', 'logininfor', 'monitor/logininfor/index', 'logininfor', 2, 3, 1, 1),
-(15, 'Server', '服务监控', 'monitor:server:list', 'C', 'server', 'monitor/server/index', 'server', 2, 4, 1, 1),
-(16, 'Cache', '缓存监控', 'monitor:cache:list', 'C', 'cache', 'monitor/cache/index', 'redis', 2, 5, 1, 1);
+(12, 'OnlineUser', '在线用户', 'monitor:online:list', 'C', '/monitor/online', 'monitor/online/index', 'online', 2, 1, 1, 1),
+(13, 'OperLog', '操作日志', 'monitor:operlog:list', 'C', '/monitor/operlog', 'monitor/operlog/index', 'form', 2, 2, 1, 1),
+(14, 'LoginLog', '登录日志', 'monitor:logininfor:list', 'C', '/monitor/logininfor', 'monitor/logininfor/index', 'logininfor', 2, 3, 1, 1),
+(15, 'Server', '服务监控', 'monitor:server:list', 'C', '/monitor/server', 'monitor/server/index', 'server', 2, 4, 1, 1),
+(16, 'Cache', '缓存监控', 'monitor:cache:list', 'C', '/monitor/cache', 'monitor/cache/index', 'redis', 2, 5, 1, 1);
 
 -- 插入系统工具子菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(17, 'Build', '表单构建', 'tool:build:list', 'C', 'build', 'tool/build/index', 'build', 3, 1, 1, 1),
-(18, 'Swagger', '系统接口', 'tool:swagger:list', 'C', 'swagger', 'tool/swagger/index', 'swagger', 3, 2, 1, 1);
+(17, 'Build', '表单构建', 'tool:build:list', 'C', '/tool/build', 'tool/build/index', 'build', 3, 1, 1, 1),
+(18, 'Swagger', '系统接口', 'tool:swagger:list', 'C', '/tool/swagger', 'tool/swagger/index', 'swagger', 3, 2, 1, 1);
 
 -- 插入个人中心子菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(19, 'Profile', '个人中心', '', 'C', 'profile', 'user/profile/index', 'user', 4, 1, 1, 1),
-(20, 'UserInfo', '用户信息', 'user:info:list', 'C', 'info', 'user/info/index', 'user', 4, 2, 1, 1);
+(19, 'Profile', '个人中心', '', 'C', '/user/profile', 'user/profile/index', 'user', 4, 1, 1, 1),
+(20, 'UserInfo', '用户信息', 'user:info:list', 'C', '/user/info', 'user/info/index', 'user', 4, 2, 1, 1);
 
 -- 插入按钮权限（用户管理按钮）
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `parent_id`, `order_num`, `visible`, `status`) VALUES
