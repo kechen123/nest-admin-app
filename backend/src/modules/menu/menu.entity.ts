@@ -20,7 +20,7 @@ export class Menu extends BaseEntity {
   @Column({ name: "parent_id", nullable: true })
   parentId?: number;
 
-  @ManyToOne(() => Menu, (menu) => menu.children, { nullable: true, onDelete: "CASCADE" })
+  @ManyToOne(() => Menu, (menu) => menu.children, { nullable: true, onDelete: "CASCADE", createForeignKeyConstraints: false })
   @JoinColumn({ name: "parent_id" })
   parent?: Menu;
 

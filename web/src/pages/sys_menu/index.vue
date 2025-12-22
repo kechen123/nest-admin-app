@@ -1,30 +1,28 @@
 <template>
   <TableWithSlidePanel :config="kcConfig" :column-display-config="columnDisplayConfig" ref="tableRef">
-    <template #avatar_url="{ row }">
-      <el-avatar :size="50" shape="square" :src="row.avatar_url" />
-    </template>
     <template #actions="{ row }">
-      <el-button type="primary" plain size="small" @click="openUserDetail(row.id, 'edit')">编辑</el-button>
-      <el-button type="success" plain size="small" @click="openUserDetail(row.id, 'view')">查看详情</el-button>
-      <el-button type="danger" plain size="small" @click="handleClick">删除</el-button>
+      <el-button type="primary" plain size="small" @click="openMenuDetail(row.id, 'edit')">编辑</el-button>
+      <el-button type="success" plain size="small" @click="openMenuDetail(row.id, 'view')">查看详情</el-button>
+      <el-button type="danger" plain size="small" @click="handleDelete(row.id)">删除</el-button>
     </template>
   </TableWithSlidePanel>
 </template>
 
 <script setup lang="ts">
-import { getMenuLis, getMenuTree } from '@/api/sys_menu'
+import { getMenuTree, deleteMenu, type BackendMenu } from '@/api/sys_menu'
 import Detail from './_detail.vue'
 import TableWithSlidePanel from '@/components/Kc/TableWithSlidePanel.vue'
 import { useRouterStore } from '@/stores/router'
-import type { KcConfig, TableConfig, ColumnProps, ButtonConfig } from '@/components/Kc/types'
+import type { KcConfig, TableConfig, ColumnProps } from '@/components/Kc/types'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const routerStore = useRouterStore()
 
 // 选中的行数据
-const selectedRows = ref<any[]>([])
+const selectedRows = ref<BackendMenu[]>([])
 
-const departmentList = ref<any[]>([])
-const positionList = ref<any[]>([])
+// 菜单树数据（用于父级菜单选择）
+const menuTree = ref<BackendMenu[]>([])
 
 // 列显示配置
 const columnDisplayConfig = {
@@ -44,16 +42,6 @@ const columnDisplayConfig = {
 
 // 基础列配置
 const baseColumns: ColumnProps[] = [
-
-  // {
-  //   type: 'index',
-  //   label: '序号',
-  //   prop: 'index',
-  //   show: true,
-  //   treeNodeColumn: true,
-  //   width: 80,
-  //   align: 'center',
-  // },
   {
     type: 'text',
     label: 'ID',
@@ -64,23 +52,12 @@ const baseColumns: ColumnProps[] = [
     align: 'center',
   },
   {
-    type: 'tag',
-    prop: 'menu_type',
-    align: 'center',
-    label: '菜单类型',
-    width: 160,
-    show: true,
-    options: [
-      { value: 'M', label: '目录', tagType: 'primary' },
-      { value: 'C', label: '菜单', tagType: 'success' },
-    ]
-  },
-  {
     type: 'text',
-    prop: 'menu_name',
-    align: 'center',
+    prop: 'name',
+    align: 'left',
     show: true,
     label: '菜单名称',
+    width: 150,
   },
   {
     prop: 'icon',
@@ -88,22 +65,34 @@ const baseColumns: ColumnProps[] = [
     type: 'text',
     show: true,
     align: 'center',
-  },
-  {
-    label: '路由名称',
-    prop: 'route_name',
-    type: 'text',
-    align: 'center',
-    show: true,
-    width: 150
+    width: 100,
+    formatter: (row: any) => {
+      return row.icon || '-'
+    }
   },
   {
     label: '路由路径',
     prop: 'path',
     type: 'text',
-    align: 'center',
+    align: 'left',
     show: true,
-    width: 150
+    width: 200,
+    showOverflowTooltip: true,
+    formatter: (row: any) => {
+      return row.path || '-'
+    }
+  },
+  {
+    label: '组件路径',
+    prop: 'component',
+    type: 'text',
+    align: 'left',
+    show: true,
+    width: 200,
+    showOverflowTooltip: true,
+    formatter: (row: any) => {
+      return row.component || '-'
+    }
   },
   {
     prop: 'status',
@@ -111,36 +100,54 @@ const baseColumns: ColumnProps[] = [
     type: 'tag',
     show: true,
     align: 'center',
+    width: 100,
     options: [
-      { value: '0', label: '禁用', tagType: 'danger' },
-      { value: '1', label: '启用', tagType: 'success' },
+      { value: 0, label: '禁用', tagType: 'danger' },
+      { value: 1, label: '启用', tagType: 'success' },
     ]
   },
   {
-    prop: 'visible',
-    label: '是否隐藏',
+    prop: 'isExternal',
+    label: '外部链接',
     type: 'tag',
     show: true,
     align: 'center',
     width: 100,
     options: [
-      { value: '0', label: '显示', tagType: 'success' },
-      { value: '1', label: '隐藏', tagType: 'danger' },
+      { value: 0, label: '否', tagType: 'success' },
+      { value: 1, label: '是', tagType: 'warning' },
     ]
   },
   {
+    label: '权限代码',
+    prop: 'permissionCode',
+    type: 'text',
+    align: 'left',
+    show: true,
+    width: 150,
+    showOverflowTooltip: true,
+    formatter: (row: any) => {
+      return row.permissionCode || '-'
+    }
+  },
+  {
     label: '父级菜单ID',
-    prop: 'parent_id',
+    prop: 'parentId',
     type: 'text',
     show: true,
     align: 'center',
+    width: 120,
+    formatter: (row: any) => {
+      return row.parentId || '-'
+    }
   },
   {
     label: '排序',
-    prop: 'order_num',
+    prop: 'sort',
     type: 'text',
     show: true,
     align: 'center',
+    width: 80,
   },
   {
     label: '操作',
@@ -153,21 +160,19 @@ const baseColumns: ColumnProps[] = [
   }
 ]
 
+// 请求函数：获取菜单树
+const requestMenuTree = async (params: any) => {
+  const res = await getMenuTree()
+  // 返回树形结构数据
+  return {
+    list: res.data || [],
+    total: res.data?.length || 0,
+  }
+}
+
 const tableConfig: TableConfig = {
   columns: baseColumns,
-
-  request: getMenuTree,
-  // defaultPagination: { page: 1, size: 10 },
-  beforeRequest: (params: any) => {
-    console.log('beforeRequest', params)
-    //判断是否搜索 params参数除了page和size之外的参数是否为空
-    const searchParams = Object.keys(params).filter(key => key !== 'page' && key !== 'size')
-    if (searchParams.length > 0) {
-      params.search = true
-    }
-
-    return params
-  },
+  request: requestMenuTree,
   showPagination: false,
   showLoading: true,
   options: {
@@ -179,12 +184,8 @@ const tableConfig: TableConfig = {
     },
     events: {
       onSelectionChange: (selection: any[]) => {
-        console.log('onSelectionChange', selection)
         selectedRows.value = selection
       },
-      onRowClick: (row: any, column: any, event: any) => {
-        console.log('onRowClick', row, column, event)
-      }
     }
   }
 }
@@ -194,43 +195,62 @@ const toolbarConfig = computed(() => ({
   leftButtons: [
     {
       key: 'add',
-      label: '新增',
+      label: '新增菜单',
       type: 'primary' as const,
-      onClick: (btn: ButtonConfig) => {
-        console.log('新增按钮被点击', btn)
-        // 这里可以添加新增用户的逻辑
-        openUserDetail()
+      onClick: () => {
+        openMenuDetail()
       }
     },
     {
       key: 'batchDelete',
       label: `批量删除${selectedRows.value.length > 0 ? `(${selectedRows.value.length})` : ''}`,
       type: 'danger' as const,
-      disabled: selectedRows.value.length === 0, // 根据选中状态动态设置
-      onClick: (btn: ButtonConfig) => {
-        console.log('批量删除按钮被点击', btn)
-        if (confirm(`确定要删除选中的 ${selectedRows.value.length} 个用户吗？`)) {
-          // 执行批量删除逻辑
-          console.log('执行批量删除', selectedRows.value)
-          // 这里可以调用API删除选中的用户
-          selectedRows.value = [] // 清空选中状态
+      disabled: selectedRows.value.length === 0,
+      onClick: async () => {
+        try {
+          await ElMessageBox.confirm(
+            `确定要删除选中的 ${selectedRows.value.length} 个菜单吗？`,
+            '提示',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning',
+            }
+          )
+
+          // 执行批量删除
+          const deletePromises = selectedRows.value.map(menu => deleteMenu(menu.id))
+          await Promise.all(deletePromises)
+
+          ElMessage.success('批量删除成功')
+          selectedRows.value = []
+          await tableRef.value?.refresh()
+          // 刷新菜单树
+          await loadMenuTree()
+        } catch (error) {
+          if (error !== 'cancel') {
+            ElMessage.error('批量删除失败')
+          }
         }
       }
     }
   ],
   rightButtons: [
     {
-      key: 'export',
+      key: 'updateMenu',
       label: '更新菜单',
       type: 'success' as const,
       icon: 'Refresh',
-      onClick: async (btn: ButtonConfig) => {
-        console.log('导出按钮被点击', btn)
-        const res = await routerStore.initMenu()
-        if (res.status != 200) {
+      onClick: async () => {
+        try {
+          const res = await routerStore.initMenu()
+          if (res.status != 200) {
+            ElMessage.error('更新菜单失败')
+          } else {
+            ElMessage.success('更新菜单成功')
+          }
+        } catch (error) {
           ElMessage.error('更新菜单失败')
-        } else {
-          ElMessage.success('更新菜单成功')
         }
       }
     },
@@ -239,10 +259,10 @@ const toolbarConfig = computed(() => ({
       label: '刷新',
       type: 'info' as const,
       icon: 'Refresh',
-      onClick: (btn: ButtonConfig) => {
-        console.log('刷新按钮被点击', btn)
-        // 刷新表格数据
-        // 这里可以通过 ref 调用表格的刷新方法
+      onClick: async () => {
+        await tableRef.value?.refresh()
+        await loadMenuTree()
+        ElMessage.success('刷新成功')
       }
     }
   ]
@@ -253,26 +273,10 @@ const kcConfig = computed<KcConfig>(() => ({
   search: {
     fields: [
       {
-        key: 'menu_type',
-        label: '菜单类型',
-        type: 'select' as const,
-        placeholder: '请选择菜单类型',
-        options: [
-          { label: '目录', value: 'M' },
-          { label: '菜单', value: 'C' }
-        ]
-      },
-      {
-        key: 'menu_name',
+        key: 'name',
         label: '菜单名称',
         type: 'input' as const,
         placeholder: '请输入菜单名称',
-      },
-      {
-        key: 'route_name',
-        label: '路由名称',
-        type: 'input' as const,
-        placeholder: '请输入路由名称',
       },
       {
         key: 'path',
@@ -286,20 +290,10 @@ const kcConfig = computed<KcConfig>(() => ({
         type: 'select' as const,
         placeholder: '请选择状态',
         options: [
-          { label: '启用', value: '1' },
-          { label: '禁用', value: '0' }
+          { label: '启用', value: 1 },
+          { label: '禁用', value: 0 }
         ]
       },
-      // {
-      //   key: 'visible',
-      //   label: '是否隐藏',
-      //   type: 'select' as const,
-      //   placeholder: '请选择',
-      //   options: [
-      //     { label: '显示', value: '0' },
-      //     { label: '隐藏', value: '1' }
-      //   ]
-      // }
     ],
     defaultCount: 2,
     fieldWidth: '250px',
@@ -311,28 +305,71 @@ const kcConfig = computed<KcConfig>(() => ({
 
 const tableRef = ref()
 
-const openUserDetail = (rowId?: any, type?: string) => {
-  tableRef.value.openPanel({
+// 加载菜单树（用于父级菜单选择）
+const loadMenuTree = async () => {
+  try {
+    const res = await getMenuTree()
+    menuTree.value = res.data || []
+  } catch (error) {
+    console.error('加载菜单树失败', error)
+  }
+}
+
+onMounted(() => {
+  loadMenuTree()
+})
+
+const openMenuDetail = (rowId?: number, type?: string) => {
+  // 确定标题：优先使用 type 参数，如果没有则根据 rowId 判断
+  let title = '新增菜单'
+  if (type === 'view') {
+    title = '查看菜单'
+  } else if (type === 'edit' || (rowId && !type)) {
+    title = '编辑菜单'
+  } else if (!rowId) {
+    title = '新增菜单'
+  }
+  
+  // 确定传递给组件的 type：如果没有指定，则根据 rowId 判断
+  const finalType = type || (rowId ? 'edit' : 'create')
+
+  tableRef.value?.openPanel({
     component: Detail,
     data: {
       rowId,
-      type,
-      departmentList: departmentList.value,
-      positionList: positionList.value
+      type: finalType,
+      menuTree: menuTree.value,
     },
     width: 600,
-    title: '用户详情',
+    title,
     onClose: async (refresh: boolean) => {
-      console.log('关闭用户详情')
       if (refresh) {
-        await tableRef.value.refresh()
+        await tableRef.value?.refresh()
+        // 刷新菜单树
+        await loadMenuTree()
       }
     }
   })
 }
 
-const handleClick = () => {
-  console.log('click')
+const handleDelete = async (id: number) => {
+  try {
+    await ElMessageBox.confirm('确定要删除该菜单吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
+    await deleteMenu(id)
+    ElMessage.success('删除成功')
+    await tableRef.value?.refresh()
+    // 刷新菜单树
+    await loadMenuTree()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
 }
 
 </script>

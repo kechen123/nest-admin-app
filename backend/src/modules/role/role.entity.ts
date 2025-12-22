@@ -13,9 +13,9 @@ export class Role extends BaseEntity {
   @Column({ unique: true, length: 50 })
   code: string;
 
-  @ApiProperty({ description: "描述", example: "拥有所有权限", required: false })
-  @Column({ length: 200, nullable: true })
-  description?: string;
+  @ApiProperty({ description: "备注", example: "拥有所有权限", required: false })
+  @Column({ name: "remark", length: 500, nullable: true })
+  remark?: string;
 
   @ManyToMany(() => Permission)
   @JoinTable({

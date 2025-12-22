@@ -7,6 +7,13 @@
         </el-icon>
       </el-avatar>
     </template>
+    <template #roles="{ row }">
+      <el-tag v-for="role in row.roles || []" :key="role.id" size="small" type="primary"
+        style="margin-right: 4px; margin-bottom: 4px;">
+        {{ role.name }}
+      </el-tag>
+      <span v-if="!row.roles || row.roles.length === 0" style="color: #999;">-</span>
+    </template>
     <template #actions="{ row }">
       <el-button type="primary" plain size="small" @click="openUserDetail(row.id, 'edit')">编辑</el-button>
       <el-button type="success" plain size="small" @click="openUserDetail(row.id, 'view')">查看详情</el-button>
@@ -23,9 +30,80 @@ import TableWithSlidePanel from '@/components/Kc/TableWithSlidePanel.vue'
 import type { KcConfig, TableConfig, ColumnProps } from '@/components/Kc/types'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPreviewUrl } from '@/utils/common'
+import { getDictOptions } from '@/utils/dict'
+import type { DictOption } from '@/api/dict'
+import axios from '@/utils/http/axios'
 
 // 选中的行数据
 const selectedRows = ref<UserType[]>([])
+
+// 字典选项
+const genderOptions = ref<DictOption[]>([])
+const statusOptions = ref<DictOption[]>([])
+const isAdminOptions = ref<DictOption[]>([])
+
+// 部门和岗位映射
+const deptMap = ref<Record<number, string>>({})
+const postMap = ref<Record<number, string>>({})
+
+// 加载字典数据
+const loadDicts = async () => {
+  try {
+    genderOptions.value = await getDictOptions('sys_user_sex')
+    statusOptions.value = await getDictOptions('sys_normal_disable')
+    isAdminOptions.value = await getDictOptions('sys_yes_no')
+
+  } catch (error) {
+    console.error('加载字典数据失败:', error)
+  }
+}
+
+// 加载部门和岗位数据
+const loadDeptAndPost = async () => {
+  try {
+    // 获取部门列表
+    // axios拦截器已经返回了res.data，所以这里直接使用返回的数组
+    try {
+      const deptList = await axios.get('/department')
+      if (Array.isArray(deptList)) {
+        const map: Record<number, string> = {}
+        deptList.forEach((item: any) => {
+          if (item.id && item.name) {
+            map[item.id] = item.name
+          }
+        })
+        deptMap.value = map
+      }
+    } catch (error) {
+      console.warn('获取部门列表失败:', error)
+    }
+
+    // 获取岗位列表
+    // axios拦截器已经返回了res.data，所以这里直接使用返回的数组
+    try {
+      const postList = await axios.get('/position')
+      if (Array.isArray(postList)) {
+        const map: Record<number, string> = {}
+        postList.forEach((item: any) => {
+          if (item.id && item.name) {
+            map[item.id] = item.name
+          }
+        })
+        postMap.value = map
+      }
+    } catch (error) {
+      console.warn('获取岗位列表失败:', error)
+    }
+  } catch (error) {
+    console.error('加载部门和岗位数据失败:', error)
+  }
+}
+
+// 组件挂载时加载字典和部门岗位数据
+onMounted(() => {
+  loadDicts()
+  loadDeptAndPost()
+})
 
 // 列显示配置
 const columnDisplayConfig = {
@@ -34,14 +112,19 @@ const columnDisplayConfig = {
     'selection',
     'avatar',
     'status',
+    'isAdmin',
+    'loginIp',
+    'loginDate',
+    'deptId',
+    'postId',
     'actions',
   ],
   // 当右侧栏目打开时始终显示的列（优先级高于隐藏列表）
   alwaysShow: []
 }
 
-// 基础列配置
-const baseColumns: ColumnProps[] = [
+// 基础列配置（使用计算属性，以便响应字典数据变化）
+const baseColumns = computed<ColumnProps[]>(() => [
   {
     type: 'text',
     label: 'ID',
@@ -72,7 +155,7 @@ const baseColumns: ColumnProps[] = [
     align: 'left',
     show: true,
     label: '昵称',
-    width: 150,
+    width: 100,
   },
   {
     type: 'text',
@@ -81,18 +164,80 @@ const baseColumns: ColumnProps[] = [
     show: true,
     label: '邮箱',
     showOverflowTooltip: true,
+    width: 150,
+  },
+  {
+    type: 'slot',
+    prop: 'roles',
+    align: 'left',
+    label: '角色',
+    width: 200,
+    show: true,
+  },
+  {
+    type: 'text',
+    prop: 'phone',
+    align: 'left',
+    show: true,
+    label: '手机号',
+    width: 120,
   },
   {
     type: 'tag',
-    prop: 'role',
+    prop: 'gender',
     align: 'center',
-    label: '角色',
+    label: '性别',
+    width: 100,
+    show: true,
+    options: genderOptions.value.map(opt => ({
+      value: Number(opt.value),
+      label: opt.label,
+      tagType: opt.tagType || 'info'
+    }))
+  },
+  {
+    type: 'text',
+    prop: 'deptId',
+    align: 'left',
+    label: '部门',
     width: 120,
     show: true,
-    options: [
-      { value: 'admin', label: '管理员', tagType: 'danger' },
-      { value: 'user', label: '用户', tagType: 'primary' },
-    ]
+    formatter: (row: any) => {
+      if (!row.deptId) return '-'
+      return deptMap.value[row.deptId] || `部门ID: ${row.deptId}`
+    }
+  },
+  {
+    type: 'text',
+    prop: 'postId',
+    align: 'left',
+    label: '岗位',
+    width: 140,
+    show: true,
+    formatter: (row: any) => {
+      if (!row.postId) return '-'
+      return postMap.value[row.postId] || `岗位ID: ${row.postId}`
+    }
+  },
+  {
+    type: 'text',
+    prop: 'loginIp',
+    align: 'left',
+    label: '登录IP',
+    width: 130,
+    show: true,
+    formatter: (row: any) => row.loginIp || '-'
+  },
+  {
+    type: 'text',
+    prop: 'loginDate',
+    align: 'center',
+    label: '登录时间',
+    width: 180,
+    show: true,
+    formatter: (row: any) => {
+      return row.loginDate ? new Date(row.loginDate).toLocaleString('zh-CN') : '-'
+    }
   },
   {
     prop: 'status',
@@ -101,10 +246,33 @@ const baseColumns: ColumnProps[] = [
     show: true,
     align: 'center',
     width: 100,
-    options: [
-      { value: false, label: '禁用', tagType: 'danger' },
-      { value: true, label: '启用', tagType: 'success' },
-    ]
+    options: statusOptions.value.map((opt: DictOption) => ({
+      value: Number(opt.value),
+      label: opt.label,
+      tagType: opt.tagType || (opt.value === '1' ? 'success' : 'danger')
+    }))
+  },
+  {
+    type: 'tag',
+    prop: 'isAdmin',
+    align: 'center',
+    label: '是否管理员',
+    width: 120,
+    show: true,
+    options: computed(() => isAdminOptions.value.map((opt: DictOption) => ({
+      value: Number(opt.value),
+      label: opt.label,
+      tagType: opt.tagType || (opt.value === '1' ? 'success' : 'info')
+    })))
+  },
+  {
+    type: 'text',
+    prop: 'remark',
+    align: 'center',
+    show: true,
+    label: '备注',
+    showOverflowTooltip: true,
+    width: 200,
   },
   {
     type: 'text',
@@ -112,6 +280,7 @@ const baseColumns: ColumnProps[] = [
     align: 'center',
     show: true,
     label: '创建时间',
+    width: 180,
     formatter: (row: any) => {
       return row.createdAt ? new Date(row.createdAt).toLocaleString('zh-CN') : '-'
     }
@@ -122,6 +291,7 @@ const baseColumns: ColumnProps[] = [
     align: 'center',
     show: true,
     label: '更新时间',
+    width: 180,
     formatter: (row: any) => {
       return row.updatedAt ? new Date(row.updatedAt).toLocaleString('zh-CN') : '-'
     }
@@ -135,7 +305,7 @@ const baseColumns: ColumnProps[] = [
     fixed: 'right',
     width: 240
   }
-]
+])
 
 // 请求函数：适配后端数据格式
 const requestUserList = async (params: any) => {

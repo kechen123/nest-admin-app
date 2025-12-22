@@ -96,7 +96,7 @@ export interface TableEvents {
 
 // 表格配置类型
 export interface TableConfig {
-  columns: ColumnProps[]
+  columns: ColumnProps[] | ComputedRef<ColumnProps[]>
 
   // 数据源配置 - 二选一
   data?: any[]

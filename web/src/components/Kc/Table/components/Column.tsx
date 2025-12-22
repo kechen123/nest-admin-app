@@ -2,7 +2,7 @@ import { ElTableColumn, ElTag, ElSwitch } from 'element-plus'
 import 'element-plus/es/components/table-column/style/css'
 import 'element-plus/es/components/tag/style/css'
 import 'element-plus/es/components/switch/style/css'
-import { getCurrentInstance } from 'vue'
+import { getCurrentInstance, isRef, unref } from 'vue'
 
 export default defineComponent({
   props: {
@@ -29,13 +29,25 @@ export default defineComponent({
         let optionsArr = []
         if (Array.isArray(item.options)) {
           optionsArr = item.options
+        } else if (isRef(item.options)) {
+          optionsArr = unref(item.options)
         } else if (item.options && typeof item.options === 'object' && 'value' in item.options) {
           optionsArr = item.options.value
         }
-        const option = optionsArr.find((opt: any) => opt.value === value)
+        // 使用宽松匹配，支持数字和字符串的比较
+        const option = optionsArr.find((opt: any) => {
+          const optValue = opt.value
+          const cellValue = value
+          // 严格相等匹配
+          if (optValue === cellValue) return true
+          // 类型转换后匹配（处理数字和字符串的情况）
+          if (String(optValue) === String(cellValue)) return true
+          if (Number(optValue) === Number(cellValue) && !isNaN(Number(optValue)) && !isNaN(Number(cellValue))) return true
+          return false
+        })
         return (
           <ElTag type={option?.tagType || item.tagType || 'primary'}>
-            {option?.label ?? value}
+            {option?.label ?? (value !== undefined && value !== null ? String(value) : '-')}
           </ElTag>
         )
       }

@@ -9,10 +9,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue'
+import { ref, computed, watchEffect, type ComputedRef } from 'vue'
 import SlideContainer from '@/modules/slide-panel/SlideContainer.vue'
 import Kc from './index.vue'
-import type { KcConfig } from './types'
+import type { KcConfig, ColumnProps } from './types'
 
 interface Props {
   config: KcConfig
@@ -37,7 +37,11 @@ const panelState = ref(false)
 
 // 动态计算列配置
 const dynamicColumns = computed(() => {
-  const originalColumns = props.config.table?.columns || []
+  const rawColumns = props.config.table?.columns
+  // 处理 computed ref：如果是 computed ref，需要访问 .value
+  const originalColumns = (rawColumns && typeof rawColumns === 'object' && 'value' in rawColumns)
+    ? (rawColumns as ComputedRef<ColumnProps[]>).value
+    : (rawColumns as ColumnProps[] | undefined) || []
 
   return originalColumns.map(column => {
     // 如果右侧栏目打开，检查是否需要隐藏该列

@@ -1,5 +1,5 @@
 import axios from '@/utils/http/axios'
-import { Permission } from './permission'
+import type { Permission } from './permission'
 
 export interface Role {
   id: number
@@ -40,6 +40,11 @@ export interface PaginationResponse<T> {
 
 // 角色 API
 export const roleApi = {
+  // 获取所有角色列表（不分页）
+  getAllRoles() {
+    return axios.get<Role[]>('/roles/all')
+  },
+
   // 获取角色列表
   getRoleList(params?: QueryRoleParams) {
     return axios.get<PaginationResponse<Role>>('/roles', { params })
@@ -70,4 +75,3 @@ export const roleApi = {
     return axios.post(`/roles/${roleId}/permissions`, { permissionIds })
   },
 }
-

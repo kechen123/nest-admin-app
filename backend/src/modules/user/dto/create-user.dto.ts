@@ -5,6 +5,8 @@ import {
   IsOptional,
   MinLength,
   MaxLength,
+  IsInt,
+  IsIn,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -29,6 +31,52 @@ export class CreateUserDto {
   @IsString()
   @MaxLength(50)
   nickname?: string;
+
+  @ApiProperty({ description: '头像URL', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  avatar?: string;
+
+  @ApiProperty({ description: '手机号', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  phone?: string;
+
+  @ApiProperty({ description: '性别: 0-未知, 1-男, 2-女', example: 0, required: false })
+  @IsOptional()
+  @IsInt()
+  @IsIn([0, 1, 2])
+  gender?: number;
+
+  @ApiProperty({ description: '部门ID', required: false })
+  @IsOptional()
+  @IsInt()
+  deptId?: number;
+
+  @ApiProperty({ description: '岗位ID', required: false })
+  @IsOptional()
+  @IsInt()
+  postId?: number;
+
+  @ApiProperty({ description: '备注', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  remark?: string;
+
+  @ApiProperty({ description: '状态: 0-禁用, 1-正常', example: 1, required: false })
+  @IsOptional()
+  @IsInt()
+  @IsIn([0, 1])
+  status?: number;
+
+  @ApiProperty({ description: '是否管理员: 0-否, 1-是', example: 0, required: false })
+  @IsOptional()
+  @IsInt()
+  @IsIn([0, 1])
+  isAdmin?: number;
 
   @ApiProperty({ description: '角色', example: 'user', required: false })
   @IsOptional()

@@ -8,6 +8,9 @@ import { PermissionModule } from "./modules/permission/permission.module";
 import { RoleModule } from "./modules/role/role.module";
 import { MenuModule } from "./modules/menu/menu.module";
 import { UploadModule } from "./modules/upload/upload.module";
+import { DictModule } from "./modules/dict/dict.module";
+import { DepartmentModule } from "./modules/department/department.module";
+import { PostModule } from "./modules/post/post.module";
 
 @Module({
   imports: [
@@ -24,7 +27,9 @@ import { UploadModule } from "./modules/upload/upload.module";
         fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "app.module.ts:20", message: "TypeORM配置开始", data: { synchronize: configService.get<string>("NODE_ENV") !== "production", database: configService.get<string>("DB_DATABASE", "myapp_db") }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "A" }) }).catch(() => {});
         // #endregion
 
-        const synchronize = configService.get<string>("NODE_ENV") !== "production";
+        // 禁用 synchronize，使用 SQL 初始化脚本管理数据库结构
+        // synchronize 会在启动时自动修改表结构，可能导致数据丢失
+        const synchronize = false;
 
         // #region agent log
         fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "app.module.ts:35", message: "TypeORM配置完成", data: { synchronize }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "A" }) }).catch(() => {});
@@ -52,6 +57,9 @@ import { UploadModule } from "./modules/upload/upload.module";
     RoleModule,
     MenuModule,
     UploadModule,
+    DictModule,
+    DepartmentModule,
+    PostModule,
   ],
 })
 export class AppModule {}

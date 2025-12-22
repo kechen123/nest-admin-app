@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEmail, IsOptional, MaxLength, MinLength, ValidateIf } from 'class-validator';
+import { IsString, IsEmail, IsOptional, MaxLength, MinLength, ValidateIf, IsInt, IsIn } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateUserDto {
@@ -34,14 +34,51 @@ export class UpdateUserDto {
   @ApiProperty({ description: '头像URL', required: false })
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   avatar?: string;
+
+  @ApiProperty({ description: '手机号', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  phone?: string;
+
+  @ApiProperty({ description: '性别: 0-未知, 1-男, 2-女', required: false })
+  @IsOptional()
+  @IsInt()
+  @IsIn([0, 1, 2])
+  gender?: number;
+
+  @ApiProperty({ description: '部门ID', required: false })
+  @IsOptional()
+  @IsInt()
+  deptId?: number;
+
+  @ApiProperty({ description: '岗位ID', required: false })
+  @IsOptional()
+  @IsInt()
+  postId?: number;
+
+  @ApiProperty({ description: '备注', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  remark?: string;
+
+  @ApiProperty({ description: '状态: 0-禁用, 1-正常', required: false })
+  @IsOptional()
+  @IsInt()
+  @IsIn([0, 1])
+  status?: number;
+
+  @ApiProperty({ description: '是否管理员: 0-否, 1-是', required: false })
+  @IsOptional()
+  @IsInt()
+  @IsIn([0, 1])
+  isAdmin?: number;
 
   @ApiProperty({ description: '角色', required: false })
   @IsOptional()
   @IsString()
   role?: string;
-
-  @ApiProperty({ description: '状态', required: false })
-  @IsOptional()
-  status?: boolean;
 }

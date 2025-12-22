@@ -24,7 +24,7 @@ export class RoleService {
     const role = this.roleRepository.create({
       name: createRoleDto.name,
       code: createRoleDto.code,
-      description: createRoleDto.description,
+      remark: createRoleDto.remark,
     });
 
     // 如果提供了权限ID，则关联权限
@@ -72,6 +72,17 @@ export class RoleService {
   }
 
   /**
+   * 获取所有角色列表（不分页）
+   */
+  async findAllWithoutPagination(): Promise<Role[]> {
+    return await this.roleRepository.find({
+      order: {
+        createdAt: "DESC",
+      },
+    });
+  }
+
+  /**
    * 根据ID查询角色
    */
   async findOne(id: number): Promise<Role> {
@@ -94,7 +105,7 @@ export class RoleService {
     // 更新基本信息
     if (updateRoleDto.name) role.name = updateRoleDto.name;
     if (updateRoleDto.code) role.code = updateRoleDto.code;
-    if (updateRoleDto.description !== undefined) role.description = updateRoleDto.description;
+    if (updateRoleDto.remark !== undefined) role.remark = updateRoleDto.remark;
 
     // 如果提供了权限ID，则更新权限关联
     if (updateRoleDto.permissions !== undefined) {

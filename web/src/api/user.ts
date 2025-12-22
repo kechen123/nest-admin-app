@@ -1,15 +1,38 @@
 import axios from '@/utils/http/axios'
 
+export interface Role {
+  id: number
+  name: string
+  code: string
+  remark?: string
+  createdAt?: string
+  updatedAt?: string
+  deletedAt?: string | null
+}
+
 export interface User {
   id: number
   username: string
   email: string
   nickname?: string
   avatar?: string
-  role: string
-  status: boolean
+  phone?: string
+  gender?: number
+  deptId?: number
+  postId?: number
+  loginIp?: string
+  loginDate?: string
+  remark?: string
+  status: number
+  isAdmin?: number
+  delFlag?: number
+  createdBy?: number
+  updatedBy?: number
+  role?: string
+  roles?: Role[]
   createdAt: string
   updatedAt: string
+  deletedAt?: string | null
 }
 
 export interface CreateUserDto {
@@ -17,6 +40,14 @@ export interface CreateUserDto {
   email: string
   password: string
   nickname?: string
+  avatar?: string
+  phone?: string
+  gender?: number
+  deptId?: number
+  postId?: number
+  remark?: string
+  status?: number
+  isAdmin?: number
   role?: string
 }
 
@@ -25,8 +56,14 @@ export interface UpdateUserDto {
   password?: string
   nickname?: string
   avatar?: string
+  phone?: string
+  gender?: number
+  deptId?: number
+  postId?: number
+  remark?: string
+  status?: number
+  isAdmin?: number
   role?: string
-  status?: boolean
 }
 
 export interface QueryUserParams {

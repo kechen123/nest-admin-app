@@ -9,9 +9,9 @@ export const getList = (params: any) => {
 }
 
 export const getDepartment = (params?: any) => {
-  return axios.get('/rs/department', { params })
+  return axios.get('/department', { params })
 }
 
 export const getPosition = (params?: any) => {
-  return axios.get('/rs/position', { params })
+  return axios.get('/position', { params })
 }

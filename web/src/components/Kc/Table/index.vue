@@ -27,8 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import type { TableConfig, PaginationResponse } from '../types'
+import { ref, computed, watch, type ComputedRef } from 'vue'
+import type { TableConfig, PaginationResponse, ColumnProps } from '../types'
 import RenderColumn from './components/Column'
 import { useTable } from '@/hooks/useTable'
 import { useTableEvents } from './composables/useTableEvents'
@@ -50,8 +50,14 @@ const {
   options = {},
 } = props.config
 
-// 使columns响应式
-const columns = computed(() => props.config.columns)
+// 使columns响应式，处理 computed ref 或普通数组
+const columns = computed(() => {
+  const cols = props.config.columns
+  // 如果是 computed ref，访问 .value；否则直接使用
+  return cols && typeof cols === 'object' && 'value' in cols
+    ? (cols as ComputedRef<ColumnProps[]>).value
+    : (cols as ColumnProps[])
+})
 
 // 表格事件
 const { tableEvents } = useTableEvents(options.events)

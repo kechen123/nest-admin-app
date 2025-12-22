@@ -16,11 +16,11 @@ export class UpdateRoleDto {
   @MaxLength(50)
   code?: string;
 
-  @ApiProperty({ description: "描述", required: false })
+  @ApiProperty({ description: "备注", required: false })
   @IsOptional()
   @IsString()
-  @MaxLength(200)
-  description?: string;
+  @MaxLength(500)
+  remark?: string;
 
   @ApiProperty({ description: "权限ID数组", required: false, type: [Number] })
   @IsOptional()

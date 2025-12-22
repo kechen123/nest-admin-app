@@ -6,15 +6,9 @@
       :model="formData" />
 
     <!-- Input 类型 -->
-    <el-input
-      v-else-if="field.type === 'input'"
-      v-model="formData[field.key]"
-      :type="field.inputType || 'text'"
-      :placeholder="getPlaceholder(field)"
-      :clearable="field.clearable !== false"
-      :disabled="getDisabled(field)"
-      @change="handleFieldChange(field.key, formData[field.key])"
-    />
+    <el-input v-else-if="field.type === 'input' || field.type === 'textarea'" v-model="formData[field.key]"
+      :type="field.inputType || 'text'" :placeholder="getPlaceholder(field)" :clearable="field.clearable !== false"
+      :disabled="getDisabled(field)" @change="handleFieldChange(field.key, formData[field.key])" />
 
     <!-- Select 类型 -->
     <el-select v-else-if="field.type === 'select'" v-model="formData[field.key]" :placeholder="field.placeholder"
@@ -23,6 +17,7 @@
       <el-option v-for="option in getOptions(field.options)" :key="option.value" :label="option.label"
         :value="option.value" />
     </el-select>
+
   </el-form-item>
 </template>
 

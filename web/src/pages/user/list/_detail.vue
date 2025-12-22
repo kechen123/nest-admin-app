@@ -23,8 +23,13 @@
 
 <script setup lang="ts">
 import { userApi, type User, type CreateUserDto, type UpdateUserDto } from '@/api/user'
+import { departmentApi, type Department } from '@/api/department'
+import { postApi, type Post } from '@/api/post'
+import { roleApi, type Role } from '@/api/role'
 import { ElMessage } from 'element-plus'
 import ImageUpload from '@/components/ImageUpload/index.vue'
+import { getDictOptions } from '@/utils/dict'
+import type { DictOption } from '@/api/dict'
 
 // 防止 props 暴露到 DOM 元素上
 defineOptions({
@@ -33,21 +38,86 @@ defineOptions({
 
 const close = inject<(val?: any) => void>('slideClose')
 
-const formData = ref<Partial<User & CreateUserDto>>({
+const formData = ref<Partial<User & CreateUserDto & { loginDate?: string; isAdminText?: string }>>({
   username: '',
   email: '',
   password: '',
   nickname: '',
   avatar: '',
+  phone: '',
+  gender: 0,
+  deptId: undefined,
+  postId: undefined,
+  remark: '',
   role: 'user',
-  status: true,
+  status: 1,
 })
 
 const type = ref<'edit' | 'view' | 'create'>('edit')
 const formRef = ref()
 
-const formConfig = reactive({
-  fields: [
+// 字典选项
+const genderOptions = ref<DictOption[]>([])
+const statusOptions = ref<DictOption[]>([])
+
+// 部门、岗位和角色选项
+const deptOptions = ref<Array<{ label: string; value: number }>>([])
+const postOptions = ref<Array<{ label: string; value: number }>>([])
+const roleOptions = ref<Array<{ label: string; value: string }>>([])
+
+// 加载字典数据
+const loadDicts = async () => {
+  try {
+    genderOptions.value = await getDictOptions('sys_user_sex')
+    statusOptions.value = await getDictOptions('sys_normal_disable')
+  } catch (error) {
+    console.error('加载字典数据失败:', error)
+  }
+}
+
+// 加载部门、岗位和角色数据
+const loadDeptAndPost = async () => {
+  try {
+    // 加载部门列表
+    const deptRes = await departmentApi.getAllDepartments()
+    console.log('deptRes', deptRes)
+    if (deptRes && Array.isArray(deptRes)) {
+      deptOptions.value = deptRes.map((item: Department) => ({
+        label: item.name,
+        value: item.id,
+      }))
+    }
+
+    // 加载岗位列表
+    const postRes = await postApi.getAllPosts()
+    if (postRes && Array.isArray(postRes)) {
+      postOptions.value = postRes.map((item: Post) => ({
+        label: item.name,
+        value: item.id,
+      }))
+    }
+
+    // 加载角色列表
+    const roleRes = await roleApi.getAllRoles()
+    if (roleRes && Array.isArray(roleRes)) {
+      roleOptions.value = roleRes.map((item: Role) => ({
+        label: item.name,
+        value: item.code,
+      }))
+    }
+  } catch (error) {
+    console.error('加载部门、岗位和角色数据失败:', error)
+  }
+}
+
+// 组件挂载时加载字典和部门岗位数据
+onMounted(() => {
+  loadDicts()
+  loadDeptAndPost()
+})
+
+const formConfig = computed(() => ({
+  fields: ([
     {
       key: 'username',
       label: '用户名',
@@ -96,31 +166,111 @@ const formConfig = reactive({
       disabled: computed(() => type.value === 'view'),
     },
     {
-      key: 'role',
+      key: 'roles',
       label: '角色',
       type: 'select' as const,
-      options: [
-        { label: '管理员', value: 'admin' },
-        { label: '用户', value: 'user' }
-      ],
+      options: computed(() => roleOptions.value),
       placeholder: '请选择角色',
+      multiple: true,
       width: 240,
       rules: [{ required: true, message: '请选择角色', trigger: 'change' }],
       disabled: computed(() => type.value === 'view'),
     },
     {
+      key: 'phone',
+      label: '手机号',
+      type: 'input' as const,
+      placeholder: '请输入手机号',
+      width: 240,
+      disabled: computed(() => type.value === 'view'),
+    },
+    {
+      key: 'gender',
+      label: '性别',
+      type: 'select' as const,
+      options: genderOptions.value.map((opt: DictOption) => ({
+        label: opt.label,
+        value: Number(opt.value)
+      })),
+      placeholder: '请选择性别',
+      width: 240,
+      disabled: computed(() => type.value === 'view'),
+    },
+    {
+      key: 'deptId',
+      label: '部门',
+      type: 'select' as const,
+      options: computed(() => deptOptions.value),
+      placeholder: '请选择部门',
+      width: 240,
+      disabled: computed(() => type.value === 'view'),
+    },
+    {
+      key: 'postId',
+      label: '岗位',
+      type: 'select' as const,
+      options: computed(() => postOptions.value),
+      placeholder: '请选择岗位',
+      width: 240,
+      disabled: computed(() => type.value === 'view'),
+    },
+    {
+      key: 'remark',
+      label: '备注',
+      type: 'textarea' as const,
+      placeholder: '请输入备注',
+      width: '100%',
+      disabled: computed(() => type.value === 'view'),
+      
+    },
+    {
       key: 'status',
       label: '状态',
       type: 'select' as const,
-      options: [
-        { label: '启用', value: true },
-        { label: '禁用', value: false }
-      ],
+      options: statusOptions.value.map((opt: DictOption) => ({
+        label: opt.label,
+        value: Number(opt.value)
+      })),
       placeholder: '请选择状态',
       width: 240,
       disabled: computed(() => type.value === 'view'),
     },
-  ],
+    // 只读字段（仅在查看模式下显示）
+    {
+      key: 'loginIp',
+      label: '登录IP',
+      type: 'input' as const,
+      placeholder: '-',
+      width: 240,
+      disabled: true,
+      show: computed(() => type.value === 'view' && !!formData.value.loginIp),
+    },
+    {
+      key: 'loginDate',
+      label: '登录时间',
+      type: 'input' as const,
+      placeholder: '-',
+      width: 240,
+      disabled: true,
+      show: computed(() => type.value === 'view' && !!formData.value.loginDate),
+    },
+    {
+      key: 'isAdminText',
+      label: '是否管理员',
+      type: 'input' as const,
+      placeholder: '-',
+      width: 240,
+      disabled: true,
+      show: computed(() => type.value === 'view' && formData.value.isAdmin !== undefined),
+    },
+  ] as any[]).filter((field: any) => {
+    // 过滤掉不显示的字段
+    if (field.show !== undefined) {
+      const showValue = typeof field.show === 'function' ? field.show() : (field.show?.value ?? field.show)
+      return showValue
+    }
+    return true
+  }),
   rules: {
     username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
     email: [
@@ -134,7 +284,7 @@ const formConfig = reactive({
   },
   labelWidth: '100px',
   fieldWidth: 250,
-})
+}))
 
 
 const onSubmit = async (data: any) => {
@@ -150,6 +300,11 @@ const onSubmit = async (data: any) => {
         email: data.email,
         nickname: data.nickname,
         avatar: data.avatar,
+        phone: data.phone,
+        gender: data.gender,
+        deptId: data.deptId,
+        postId: data.postId,
+        remark: data.remark,
         role: data.role,
         status: data.status,
       }
@@ -166,7 +321,14 @@ const onSubmit = async (data: any) => {
         email: data.email,
         password: data.password,
         nickname: data.nickname,
+        avatar: data.avatar,
+        phone: data.phone,
+        gender: data.gender,
+        deptId: data.deptId,
+        postId: data.postId,
+        remark: data.remark,
         role: data.role,
+        status: data.status,
       }
       await userApi.createUser(createData)
       ElMessage.success('创建成功')
@@ -185,8 +347,13 @@ const onReset = () => {
     password: '',
     nickname: '',
     avatar: '',
+    phone: '',
+    gender: 0,
+    deptId: undefined,
+    postId: undefined,
+    remark: '',
     role: 'user',
-    status: true,
+    status: 1,
   }
 }
 
@@ -200,6 +367,10 @@ const init = async (data: any) => {
     formData.value = {
       ...user,
       password: '', // 不显示密码
+      roles: user.roles?.map((item: any) => item.code),
+      // 格式化只读字段
+      loginDate: user.loginDate ? new Date(user.loginDate).toLocaleString('zh-CN') : '-',
+      isAdminText: user.isAdmin === 1 ? '是' : user.isAdmin === 0 ? '否' : '-',
     }
 
   } else {
@@ -211,8 +382,13 @@ const init = async (data: any) => {
       password: '',
       nickname: '',
       avatar: '',
+      phone: '',
+      gender: 0,
+      deptId: undefined,
+      postId: undefined,
+      remark: '',
       role: 'user',
-      status: true,
+      status: 1,
     }
   }
 }

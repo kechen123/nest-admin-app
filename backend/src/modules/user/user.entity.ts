@@ -21,16 +21,61 @@ export class User extends BaseEntity {
   nickname?: string;
 
   @ApiProperty({ description: "头像URL", required: false })
-  @Column({ length: 255, nullable: true })
+  @Column({ length: 500, nullable: true, default: '/avatar/default.jpg' })
   avatar?: string;
 
-  @ApiProperty({ description: "角色", example: "admin", default: "user" })
-  @Column({ length: 20, default: "user" })
-  role: string;
+  @ApiProperty({ description: "手机号", required: false })
+  @Column({ length: 20, nullable: true })
+  phone?: string;
 
-  @ApiProperty({ description: "状态", example: true, default: true })
-  @Column({ default: true })
-  status: boolean;
+  @ApiProperty({ description: "性别: 0-未知, 1-男, 2-女", example: 0, default: 0 })
+  @Column({ type: "tinyint", default: 0 })
+  gender: number;
+
+  @ApiProperty({ description: "部门ID", required: false })
+  @Column({ name: "dept_id", nullable: true })
+  deptId?: number;
+
+  @ApiProperty({ description: "岗位ID", required: false })
+  @Column({ name: "post_id", nullable: true })
+  postId?: number;
+
+  @ApiProperty({ description: "最后登录IP", required: false })
+  @Column({ name: "login_ip", length: 50, nullable: true })
+  loginIp?: string;
+
+  @ApiProperty({ description: "最后登录时间", required: false })
+  @Column({ name: "login_date", type: "datetime", nullable: true })
+  loginDate?: Date;
+
+  @ApiProperty({ description: "备注", required: false })
+  @Column({ length: 500, nullable: true })
+  remark?: string;
+
+  @ApiProperty({ description: "状态: 0-禁用, 1-正常", example: 1, default: 1 })
+  @Column({ type: "tinyint", default: 1 })
+  status: number;
+
+  @ApiProperty({ description: "是否管理员: 0-否, 1-是", example: 0, default: 0 })
+  @Column({ name: "is_admin", type: "tinyint", default: 0 })
+  isAdmin: number;
+
+  @ApiProperty({ description: "删除标志: 0-正常, 1-删除", example: 0, default: 0 })
+  @Column({ name: "del_flag", type: "tinyint", default: 0 })
+  delFlag: number;
+
+  @ApiProperty({ description: "创建人", required: false })
+  @Column({ name: "created_by", nullable: true })
+  createdBy?: number;
+
+  @ApiProperty({ description: "更新人", required: false })
+  @Column({ name: "updated_by", nullable: true })
+  updatedBy?: number;
+
+  @ApiProperty({ description: "角色", example: "admin", default: "user" })
+  // 注意：role 字段不在数据库表中，而是通过 roles 关联获取
+  // 如果需要使用，请通过 roles 关联查询
+  role?: string;
 
   @ManyToMany(() => Role)
   @JoinTable({

@@ -23,6 +23,13 @@ export class RoleController {
     return this.roleService.create(createRoleDto);
   }
 
+  @Get("all")
+  @ApiOperation({ summary: "获取所有角色列表（不分页）" })
+  @ApiResponse({ status: 200, type: [Role] })
+  findAllWithoutPagination() {
+    return this.roleService.findAllWithoutPagination();
+  }
+
   @Get()
   @ApiOperation({ summary: "分页查询角色列表" })
   @ApiResponse({ status: 200, type: PaginationResponseDto })
