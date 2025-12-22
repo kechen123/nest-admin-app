@@ -1,0 +1,31 @@
+:root,
+.dark {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    fill 0.3s ease,
+    stroke 0.3s ease;
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 20px;
+  color: var(--text-color);
+}
+
+::-webkit-scrollbar {
+  width: 4px; /* 垂直滚动条宽度 */
+  height: 4px; /* 水平滚动条高度 */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--el-text-color-secondary); /* 滑块颜色 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent; /* 轨道颜色 */
+}

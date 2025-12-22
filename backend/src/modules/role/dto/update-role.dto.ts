@@ -1,0 +1,30 @@
+import { ApiProperty } from "@nestjs/swagger";
+import { IsString, IsOptional, IsArray, IsInt, MinLength, MaxLength } from "class-validator";
+
+export class UpdateRoleDto {
+  @ApiProperty({ description: "角色名称", required: false })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(50)
+  name?: string;
+
+  @ApiProperty({ description: "角色代码", required: false })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(50)
+  code?: string;
+
+  @ApiProperty({ description: "描述", required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  description?: string;
+
+  @ApiProperty({ description: "权限ID数组", required: false, type: [Number] })
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  permissions?: number[];
+}

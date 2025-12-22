@@ -1,0 +1,74 @@
+import axios from '@/utils/http/axios'
+
+export interface User {
+  id: number
+  username: string
+  email: string
+  nickname?: string
+  avatar?: string
+  role: string
+  status: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateUserDto {
+  username: string
+  email: string
+  password: string
+  nickname?: string
+  role?: string
+}
+
+export interface UpdateUserDto {
+  email?: string
+  password?: string
+  nickname?: string
+  avatar?: string
+  role?: string
+  status?: boolean
+}
+
+export interface QueryUserParams {
+  page?: number
+  pageSize?: number
+  username?: string
+  email?: string
+  role?: string
+}
+
+export interface PaginationResponse<T> {
+  list: T[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+// 用户 API
+export const userApi = {
+  // 获取用户列表
+  getUserList(params?: QueryUserParams) {
+    return axios.get<PaginationResponse<User>>('/users', { params })
+  },
+
+  // 获取用户详情
+  getUserById(id: number) {
+    return axios.get<User>(`/users/${id}`)
+  },
+
+  // 创建用户
+  createUser(data: CreateUserDto) {
+    return axios.post<User>('/users', data)
+  },
+
+  // 更新用户
+  updateUser(id: number, data: UpdateUserDto) {
+    return axios.patch<User>(`/users/${id}`, data)
+  },
+
+  // 删除用户
+  deleteUser(id: number) {
+    return axios.delete(`/users/${id}`)
+  },
+}
+

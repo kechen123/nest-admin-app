@@ -1,0 +1,25 @@
+{
+  "name": "uniapp-mobile",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev:h5": "uni",
+    "dev:mp-weixin": "uni -p mp-weixin",
+    "dev:app": "uni -p app",
+    "build:h5": "uni build",
+    "build:mp-weixin": "uni build -p mp-weixin",
+    "build:app": "uni build -p app"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "pinia": "^2.1.7",
+    "@dcloudio/uni-app": "^3.0.0",
+    "@dcloudio/uni-components": "^3.0.0"
+  },
+  "devDependencies": {
+    "@dcloudio/vite-plugin-uni": "^3.0.0",
+    "@dcloudio/types": "^3.3.2",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8"
+  }
+}

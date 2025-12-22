@@ -1,0 +1,9 @@
+{"location":"check-password.js:env-check","message":"环境变量 DB_PASSWORD 检查","data":{"DB_PASSWORD":"kechen0487561","hasEnvFile":true,"hasEnvVar":true,"actualPassword":"使用环境变量值"},"hypothesisId":"A","runId":"run1","timestamp":1766367582277,"sessionId":"debug-session"}
+{"location":"app.module.ts:20","message":"TypeORM配置开始","data":{"synchronize":true,"database":"kechen-admin"},"timestamp":1766368683385,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"app.module.ts:35","message":"TypeORM配置完成","data":{"synchronize":true},"timestamp":1766368683410,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"app.module.ts:20","message":"TypeORM配置开始","data":{"synchronize":true,"database":"kechen-admin"},"timestamp":1766371312792,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"app.module.ts:35","message":"TypeORM配置完成","data":{"synchronize":true},"timestamp":1766371312856,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"app.module.ts:20","message":"TypeORM配置开始","data":{"synchronize":true,"database":"kechen-admin"},"timestamp":1766372232238,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"app.module.ts:35","message":"TypeORM配置完成","data":{"synchronize":true},"timestamp":1766372232265,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"app.module.ts:20","message":"TypeORM配置开始","data":{"synchronize":true,"database":"kechen-admin"},"timestamp":1766374060391,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
+{"location":"app.module.ts:35","message":"TypeORM配置完成","data":{"synchronize":true},"timestamp":1766374060423,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}
