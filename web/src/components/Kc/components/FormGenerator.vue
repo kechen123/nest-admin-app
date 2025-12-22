@@ -5,18 +5,15 @@
     <slot v-if="field.slot" :name="typeof field.slot === 'string' ? field.slot : field.key" :field="field"
       :model="formData" />
 
-    <!-- Input 类型 -->
-    <el-input v-else-if="field.type === 'input' || field.type === 'textarea'" v-model="formData[field.key]"
-      :type="field.inputType || 'text'" :placeholder="getPlaceholder(field)" :clearable="field.clearable !== false"
-      :disabled="getDisabled(field)" @change="handleFieldChange(field.key, formData[field.key])" />
-
-    <!-- Select 类型 -->
-    <el-select v-else-if="field.type === 'select'" v-model="formData[field.key]" :placeholder="field.placeholder"
-      :clearable="field.clearable !== false" :disabled="field.disabled" :multiple="field.multiple"
-      @change="handleFieldChange(field.key, formData[field.key])">
-      <el-option v-for="option in getOptions(field.options)" :key="option.value" :label="option.label"
-        :value="option.value" />
-    </el-select>
+    <!-- 动态组件渲染 -->
+    <component v-else-if="getComponent(field)" :is="getComponent(field)" v-model="formData[field.key]"
+      v-bind="getComponentAttrs(field)" @change="handleFieldChange(field.key, formData[field.key])">
+      <!-- Select/Option 等需要子组件的类型 -->
+      <template v-if="getComponentConfig(field)?.hasOptions">
+        <el-option v-for="option in getOptions(field.options)" :key="option.value" :label="option.label"
+          :value="option.value" />
+      </template>
+    </component>
 
   </el-form-item>
 </template>
@@ -25,6 +22,7 @@
 import { computed, isRef } from 'vue'
 import { ElFormItem, ElInput, ElSelect, ElOption } from 'element-plus'
 import type { FormField } from '../types'
+import { FIELD_TYPE_CONFIGS, getComponentAttrs as getAttrsFromConfig, type FieldTypeConfig } from './fieldConfig'
 
 interface Props {
   fields: FormField[]
@@ -76,18 +74,43 @@ function getOptions(options: any): { label: string; value: any }[] {
   return []
 }
 
-// 获取 placeholder（支持 computed）
-function getPlaceholder(field: FormField): string {
-  if (!field.placeholder) return ''
-  if (isRef(field.placeholder)) return field.placeholder.value
-  return field.placeholder
+/**
+ * 获取组件配置
+ */
+function getComponentConfig(field: FormField): FieldTypeConfig | undefined {
+  return FIELD_TYPE_CONFIGS[field.type]
 }
 
-// 获取 disabled（支持 computed）
-function getDisabled(field: FormField): boolean {
-  if (field.disabled === undefined) return false
-  if (isRef(field.disabled)) return field.disabled.value
-  return field.disabled
+/**
+ * 获取组件属性（通用方法）
+ */
+function getComponentAttrs(field: FormField): Record<string, any> {
+  const config = getComponentConfig(field)
+  if (!config) {
+    console.warn(`Unknown field type: ${field.type}`)
+    return {}
+  }
+  return getAttrsFromConfig(field, config)
+}
+
+/**
+ * 获取组件实例（用于动态组件）
+ */
+function getComponent(field: FormField) {
+  const config = getComponentConfig(field)
+  if (!config) return null
+
+  // 根据组件名称返回对应的组件实例
+  const componentMap: Record<string, any> = {
+    ElInput,
+    ElSelect,
+    // 未来可以在这里添加更多组件
+    // ElDatePicker,
+    // ElSwitch,
+    // ElRadioGroup,
+  }
+
+  return componentMap[config.component] || null
 }
 
 const handleFieldChange = (key: string, value: any) => {

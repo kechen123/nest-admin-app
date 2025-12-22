@@ -220,8 +220,9 @@ const formConfig = computed(() => ({
       type: 'textarea' as const,
       placeholder: '请输入备注',
       width: '100%',
+      rows: 4,
       disabled: computed(() => type.value === 'view'),
-      
+
     },
     {
       key: 'status',

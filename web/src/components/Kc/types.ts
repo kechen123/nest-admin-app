@@ -23,17 +23,20 @@ export interface ToolbarConfig {
 export interface FormField {
   key: string
   label: string
-  type: 'input' | 'select' | 'custom'
-  placeholder?: string
+  type: 'input' | 'select' | 'textarea' | 'custom' | string // string 类型支持未来扩展的组件类型
+  placeholder?: string | Ref<string> | ComputedRef<string>
   clearable?: boolean
-  disabled?: boolean
+  disabled?: boolean | Ref<boolean> | ComputedRef<boolean>
   multiple?: boolean
   width?: string | number // 单个字段宽度，优先级最高
+  labelWidth?: string | number // 单个字段标签宽度
+  inputType?: string // input 的 type 属性（如 'text', 'password', 'textarea' 等）
+  slot?: string | boolean // 自定义插槽
   options?:
     | { label: string; value: any }[]
     | Ref<{ label: string; value: any }[]>
     | ComputedRef<{ label: string; value: any }[]>
-  [key: string]: any
+  [key: string]: any // 支持所有 Element Plus 组件的原生属性
 }
 
 // 搜索配置类型
