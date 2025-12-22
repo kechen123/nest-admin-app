@@ -64,7 +64,6 @@ export const router = createRouter({
   routes: setupLayouts(routes),
 })
 
-// console.log('router', router.getRoutes())
 // 在路由跳转前，检查用户是否有权限访问该路由
 router.beforeEach(async (to, from) => {
   let b: boolean | Object = false

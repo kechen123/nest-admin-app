@@ -8,6 +8,10 @@ export class Menu extends BaseEntity {
   @Column({ length: 50 })
   name: string;
 
+  @ApiProperty({ description: "菜单标题", example: "用户管理" })
+  @Column({ length: 50 })
+  title: string;
+
   @ApiProperty({ description: "路由路径", example: "/user", required: false })
   @Column({ length: 200, nullable: true })
   path?: string;
@@ -32,7 +36,10 @@ export class Menu extends BaseEntity {
   component?: string;
 
   @ApiProperty({ description: "排序", example: 0, default: 0 })
-  @Column({ default: 0 })
+  // #region agent log
+  // Log: sort field definition - checking if column name mapping exists
+  // #endregion
+  @Column({ name: "order_num", default: 0 })
   sort: number;
 
   @ApiProperty({ description: "状态: 0-禁用, 1-启用", example: 1, default: 1 })
@@ -44,7 +51,7 @@ export class Menu extends BaseEntity {
   permissionCode?: string;
 
   @ApiProperty({ description: "是否外部链接: 0-否, 1-是", example: 0, default: 0 })
-  @Column({ name: "is_external", type: "tinyint", default: 0 })
+  @Column({ name: "is_frame", type: "tinyint", default: 0 })
   isExternal: number;
 }
 

@@ -67,8 +67,8 @@ const isRequestMode = computed(() => !!request)
 
 // 默认响应适配器
 const defaultAdapter = (raw: any, params: any): PaginationResponse => ({
-  list: raw.data,
-  total: Number(raw.records),
+  list: raw.list,
+  total: Number(raw.total),
   page: params.page,
   size: params.size,
 })
@@ -78,6 +78,7 @@ const requestTable = useTable({
   request: async (params) => {
     if (!request) return { list: [], total: 0, page: 1, size: 10 }
     const raw = await request(params)
+    console.log('raw', raw)
     return (responseAdapter || defaultAdapter)(raw, params)
   },
   defaultParams: props.config.defaultParams || {},

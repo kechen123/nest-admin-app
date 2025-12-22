@@ -8,6 +8,12 @@ export class UpdateMenuDto {
   @MaxLength(50)
   name?: string;
 
+  @ApiProperty({ description: '菜单标题', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  title?: string;
+
   @ApiProperty({ description: '路由路径', required: false })
   @IsOptional()
   @IsString()

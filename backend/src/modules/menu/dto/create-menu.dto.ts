@@ -14,6 +14,11 @@ export class CreateMenuDto {
   @MaxLength(50)
   name: string;
 
+  @ApiProperty({ description: '菜单标题', example: '用户管理' })
+  @IsString()
+  @MaxLength(50)
+  title: string;
+
   @ApiProperty({ description: '路由路径', example: '/user', required: false })
   @IsOptional()
   @IsString()

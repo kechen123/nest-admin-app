@@ -63,7 +63,13 @@ export class MenuService {
    * 获取菜单树（只返回启用的菜单）
    */
   async getMenuTree(): Promise<Menu[]> {
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'menu.service.ts:65',message:'getMenuTree called',data:{orderConfig:{sort:'ASC',createdAt:'ASC'}},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     // 查询所有启用的菜单，按排序字段排序
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'menu.service.ts:68',message:'Before repository.find',data:{where:{status:1},order:{sort:'ASC',createdAt:'ASC'}},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     const menus = await this.menuRepository.find({
       where: { status: 1 },
       relations: ['children'],
@@ -71,8 +77,16 @@ export class MenuService {
         sort: 'ASC',
         createdAt: 'ASC',
       },
+    }).catch((error) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'menu.service.ts:75',message:'Repository.find error',data:{errorMessage:error.message,errorStack:error.stack,orderField:'sort'},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
+      throw error;
     });
 
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'menu.service.ts:78',message:'Repository.find success',data:{menuCount:menus.length,firstMenuSort:menus[0]?.sort},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     // 构建树形结构
     return this.buildTree(menus);
   }
@@ -81,6 +95,9 @@ export class MenuService {
    * 构建树形结构
    */
   private buildTree(menus: Menu[]): Menu[] {
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'menu.service.ts:97',message:'buildTree called',data:{menuCount:menus.length,sampleParentIds:menus.slice(0,5).map(m=>({id:m.id,parentId:m.parentId}))},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     const menuMap = new Map<number, Menu>();
     const rootMenus: Menu[] = [];
 
@@ -90,10 +107,16 @@ export class MenuService {
     });
 
     // 第二遍遍历：构建树形结构
+    let rootCount = 0;
+    let childCount = 0;
     menus.forEach((menu) => {
       const menuNode = menuMap.get(menu.id)!;
-      if (menu.parentId === null || menu.parentId === undefined) {
-        // 根节点
+      // #region agent log
+      const isRoot = menu.parentId === null || menu.parentId === undefined || menu.parentId === 0;
+      if (isRoot) rootCount++; else childCount++;
+      // #endregion
+      if (menu.parentId === null || menu.parentId === undefined || menu.parentId === 0) {
+        // 根节点（parentId为null、undefined或0都视为根节点）
         rootMenus.push(menuNode);
       } else {
         // 子节点，添加到父节点的children中
@@ -103,10 +126,17 @@ export class MenuService {
             parent.children = [];
           }
           parent.children.push(menuNode);
+        } else {
+          // #region agent log
+          fetch('http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'menu.service.ts:115',message:'Parent not found',data:{menuId:menu.id,parentId:menu.parentId},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
         }
       }
     });
 
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'menu.service.ts:122',message:'buildTree before sort',data:{rootCount,childCount,rootMenusCount:rootMenus.length},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     // 递归排序子节点
     const sortChildren = (nodes: Menu[]) => {
       nodes.forEach((node) => {
@@ -118,6 +148,9 @@ export class MenuService {
     };
 
     sortChildren(rootMenus);
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'menu.service.ts:135',message:'buildTree completed',data:{finalRootCount:rootMenus.length},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     return rootMenus;
   }
 

@@ -2,13 +2,8 @@
   <div class="tags">
     <el-scrollbar>
       <div class="container">
-        <div
-          class="item"
-          v-for="item in tagsStore.tags"
-          :key="item.name"
-          :class="[item.name === tagsStore.active.name ? 'active' : '']"
-          @click.stop="tagClick(item)"
-        >
+        <div class="item" v-for="item in tagsStore.tags" :key="item.name"
+          :class="[item.name === tagsStore.active.name ? 'active' : '']" @click.stop="tagClick(item)">
           <span class="name">
             {{ item.name }}
           </span>
@@ -49,6 +44,7 @@ const delPage = (name: string) => {
 
 // 设置标签
 const setTags = (route: any) => {
+  console.log('route', route)
   const isExist = tagsStore.tags.some((item) => {
     return item.path === route.fullPath
   })

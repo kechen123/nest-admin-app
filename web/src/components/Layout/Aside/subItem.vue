@@ -4,7 +4,7 @@
       <el-icon v-if="item.icon">
         <MIcon :iconName="item.icon" />
       </el-icon>
-      <span>{{ item.menu_name }}</span>
+      <span>{{ item.title }}</span>
     </template>
     <sub-item :key="index" :item="item1" v-for="(item1, index) in item.children" />
   </el-sub-menu>
@@ -13,7 +13,7 @@
       <el-icon v-if="item.icon">
         <MIcon :iconName="item.icon" />
       </el-icon>
-      <span>{{ item.menu_name }}</span>
+      <span>{{ item.title }}</span>
     </template>
   </el-menu-item>
 </template>
@@ -21,7 +21,7 @@
 <script setup lang="ts">
 interface Props {
   item: {
-    menu_name: string
+    title: string
     path: string
     route_name: string
     icon?: string

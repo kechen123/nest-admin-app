@@ -36,7 +36,7 @@ export const useTagsStore = defineStore(
           return node.path === routerVal.path
         }, menu)
         if (node) {
-          name = node.menu_name
+          name = node.title
           path = node.path
           key = node.path
         }
@@ -61,7 +61,7 @@ export const useTagsStore = defineStore(
       }
       if (node) {
         tag = {
-          name: node.menu_name,
+          name: node.title,
           path: node.path,
           key: node.path,
         }

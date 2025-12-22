@@ -8,7 +8,7 @@
             <el-icon v-if="item.icon">
               <MIcon :iconName="item.icon" />
             </el-icon>
-            <span>{{ item.menu_name }}</span>
+            <span>{{ item.title }}</span>
           </template>
           <template v-for="child in item.children" :key="child.id">
             <template v-if="child.children && child.children.length > 0">
@@ -17,7 +17,7 @@
                   <el-icon v-if="child.icon">
                     <MIcon :iconName="child.icon" />
                   </el-icon>
-                  <span>{{ child.menu_name }}</span>
+                  <span>{{ child.title }}</span>
                 </template>
                 <template v-for="sub in child.children" :key="sub.id">
                   <template v-if="sub.children && sub.children.length > 0">
@@ -26,7 +26,7 @@
                         <el-icon v-if="sub.icon">
                           <MIcon :iconName="sub.icon" />
                         </el-icon>
-                        <span>{{ sub.menu_name }}</span>
+                        <span>{{ sub.title }}</span>
                       </template>
                       <!-- 继续递归... 可按需扩展更深层级 -->
                     </el-sub-menu>
@@ -35,7 +35,7 @@
                     <el-icon v-if="sub.icon">
                       <MIcon :iconName="sub.icon" />
                     </el-icon>
-                    <span>{{ sub.menu_name }}</span>
+                    <span>{{ sub.title }}</span>
                   </el-menu-item>
                 </template>
               </el-sub-menu>
@@ -44,7 +44,7 @@
               <el-icon v-if="child.icon">
                 <MIcon :iconName="child.icon" />
               </el-icon>
-              <span>{{ child.menu_name }}</span>
+              <span>{{ child.title }}</span>
             </el-menu-item>
           </template>
         </el-sub-menu>
@@ -53,7 +53,7 @@
         <el-icon v-if="item.icon">
           <MIcon :iconName="item.icon" />
         </el-icon>
-        <span>{{ item.menu_name }}</span>
+        <span>{{ item.title }}</span>
       </el-menu-item>
     </template>
   </el-menu>
@@ -65,7 +65,7 @@ import { computed } from 'vue'
 
 interface MenuItem {
   id: string | number
-  menu_name: string
+  title: string
   route_name: string
   path: string
   icon?: string
