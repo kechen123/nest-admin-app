@@ -57,6 +57,7 @@ declare module 'vue' {
     IconPicker: typeof import('./../src/components/IconPicker/index.vue')['default']
     ImageUpload: typeof import('./../src/components/ImageUpload/index.vue')['default']
     Kc: typeof import('./../src/components/Kc/index.vue')['default']
+    KcComponentsFormFieldItem: typeof import('./../src/components/Kc/components/FormFieldItem.vue')['default']
     KcComponentsFormGenerator: typeof import('./../src/components/Kc/components/FormGenerator.vue')['default']
     KcForm: typeof import('./../src/components/Kc/Form/index.vue')['default']
     KcKcTable: typeof import('./../src/components/Kc/KcTable/index.vue')['default']

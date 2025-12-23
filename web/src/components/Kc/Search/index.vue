@@ -3,7 +3,7 @@
     <el-form :model="searchData" class="search-form">
       <div class="search-default" :style="{ maxHeight: containerMaxHeight, overflow: containerOverflow }">
         <transition-group name="fade" tag="div" class="search-fields">
-          <FormGenerator v-for="field in visibleFields" :key="field.key" :fields="[field]"
+          <FormFieldItem v-for="field in visibleFields" :key="field.key" :field="field"
             :field-width="config.fieldWidth" v-model="searchData" @change="handleFieldChange" />
           <!-- 展开按钮，紧跟搜索项末尾 -->
           <el-button v-if="hasMoreFields && !panelState" @click="toggleExpand" class="expand-btn">
@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { ArrowDown } from '@element-plus/icons-vue'
-import FormGenerator from '../components/FormGenerator.vue'
+import FormFieldItem from '../components/FormFieldItem.vue'
 import type { SearchConfig } from '../types'
 
 interface Props {

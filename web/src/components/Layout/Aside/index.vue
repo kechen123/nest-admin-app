@@ -78,11 +78,11 @@ const routerPath = computed<MenuItem[]>(() => routerSotre.roles)
 const isCollapse = ref(false)
 const defaultActive = ref(router.currentRoute.value.path)
 
-function findMenuItemByRouteName(menuList: MenuItem[], path: string): MenuItem | null {
+function findMenuItemByPath(menuList: MenuItem[], path: string): MenuItem | null {
   for (const item of menuList) {
     if (item.path === path) return item
     if (item.children && item.children.length > 0) {
-      const found = findMenuItemByRouteName(item.children, path)
+      const found = findMenuItemByPath(item.children, path)
       if (found) return found
     }
   }
@@ -90,10 +90,9 @@ function findMenuItemByRouteName(menuList: MenuItem[], path: string): MenuItem |
 }
 
 function handleMenuSelect(path: string) {
-  const menuItem = findMenuItemByRouteName(routerPath.value, path)
+  const menuItem = findMenuItemByPath(routerPath.value, path)
   if (menuItem) {
     router.push(menuItem.path)
-    window.history.replaceState(null, '', menuItem.path)
   }
 }
 

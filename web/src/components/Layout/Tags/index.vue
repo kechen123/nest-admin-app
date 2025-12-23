@@ -44,14 +44,12 @@ const delPage = (name: string) => {
 
 // 设置标签
 const setTags = (route: any) => {
-  console.log('route', route)
   const isExist = tagsStore.tags.some((item) => {
     return item.path === route.fullPath
   })
   if (isExist) {
     tagsStore.changeTag(route.fullPath)
   } else {
-    console.log(route.fullPath)
     tagsStore.addTag(route.fullPath)
   }
 }

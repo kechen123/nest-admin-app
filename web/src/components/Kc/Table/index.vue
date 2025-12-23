@@ -78,7 +78,6 @@ const requestTable = useTable({
   request: async (params) => {
     if (!request) return { list: [], total: 0, page: 1, size: 10 }
     const raw = await request(params)
-    console.log('raw', raw)
     return (responseAdapter || defaultAdapter)(raw, params)
   },
   defaultParams: props.config.defaultParams || {},
@@ -108,7 +107,6 @@ watch(
 
 // 统一状态
 const tableData = computed(() => {
-  console.log('tableData', isRequestMode.value ? requestTable.data.value : staticState.value.data)
   return isRequestMode.value ? requestTable.data.value : staticState.value.data
 })
 
@@ -201,18 +199,6 @@ if (!request && !staticData) {
         &::before {
           display: none;
         }
-
-        // [class*="el-table__row--level-"]:not(.el-table__row--level-0) {
-        //   background-color: color-mix(in srgb,
-        //       var(--el-table-tr-bg-color) 80%,
-        //       rgba(0, 120, 255, 0.4) 20%);
-
-        //   td:first-child {
-        //     .cell {
-        //       display: flex;
-        //     }
-        //   }
-        // }
 
         [class*="el-table__row--level-1"] {
           background-color: color-mix(in srgb,

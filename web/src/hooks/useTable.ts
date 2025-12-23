@@ -95,7 +95,6 @@ export function useTable<T = any>(options: UseTableOptions<T>): UseTableReturn<T
       const response = await request(finalParams)
       // 更新数据 - 明确类型转换
       data.value = response.list as T[]
-      console.log('response', data.value)
       total.value = response.total
 
       // 更新分页参数（如果服务端返回了分页信息）
