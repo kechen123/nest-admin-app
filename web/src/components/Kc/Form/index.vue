@@ -8,7 +8,7 @@
     <!-- 实际表单内容 -->
     <div v-show="isReady" class="form-content">
       <el-form ref="formRef" :model="formData" :rules="getRules() as any" :label-width="config.labelWidth || '100px'"
-        :inline="config.inline || false" class="kc-form">
+        :inline="config.inline || false" :validate-on-rule-change="false" class="kc-form">
         <FormGenerator :fields="config.fields" v-model="formData" :field-width="config.fieldWidth"
           @change="handleFieldChange">
           <template v-for="(_, name) in $slots" #[name]="slotData">

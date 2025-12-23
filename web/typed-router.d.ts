@@ -27,6 +27,8 @@ declare module 'vue-router/auto-routes' {
     '/menu': RouteRecordInfo<'/menu', '/menu', Record<never, never>, Record<never, never>>,
     '/sys_menu/': RouteRecordInfo<'/sys_menu/', '/sys_menu', Record<never, never>, Record<never, never>>,
     '/system/dept/': RouteRecordInfo<'/system/dept/', '/system/dept', Record<never, never>, Record<never, never>>,
+    '/system/dict/data/': RouteRecordInfo<'/system/dict/data/', '/system/dict/data', Record<never, never>, Record<never, never>>,
+    '/system/dict/type/': RouteRecordInfo<'/system/dict/type/', '/system/dict/type', Record<never, never>, Record<never, never>>,
     '/system/menu/': RouteRecordInfo<'/system/menu/', '/system/menu', Record<never, never>, Record<never, never>>,
     '/system/post/': RouteRecordInfo<'/system/post/', '/system/post', Record<never, never>, Record<never, never>>,
     '/system/role/': RouteRecordInfo<'/system/role/', '/system/role', Record<never, never>, Record<never, never>>,
