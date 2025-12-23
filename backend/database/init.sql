@@ -373,66 +373,42 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `nickname`, `phone`,
 -- ============================================
 -- 18. 插入菜单测试数据
 -- ============================================
-
--- 插入顶级菜单（目录）
-INSERT INTO `menus` (`id`, `name`, `title`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(1, 'System', '系统管理', 'M', '/system', 'Layout', 'Setting', 0, 1, 1, 1),
-(2, 'Monitor', '系统监控', 'M', '/monitor', 'Layout', 'Bell', 0, 2, 1, 1),
-(3, 'Tool', '系统工具', 'M', '/tool', 'Layout', 'CreditCard', 0, 3, 1, 1),
-(4, 'UserCenter', '个人中心', 'M', '/user', 'Layout', 'Food', 0, 4, 1, 1);
-
--- 插入系统管理子菜单
-INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(5, 'UserManage', '用户管理', 'system:user:list', 'C', '/system/user/', 'system/user/index', 'Avatar', 1, 1, 1, 1),
-(6, 'RoleManage', '角色管理', 'system:role:list', 'C', '/system/role/', 'system/role/index', 'Connection', 1, 2, 1, 1),
-(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', '/system/menu/', 'system/menu/index', 'Expand', 1, 3, 1, 1),
-(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept/', 'system/dept/index', 'Briefcase', 1, 4, 1, 1),
-(9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post/', 'system/post/index', 'Basketball', 1, 5, 1, 1),
-(10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict/', 'system/dict/index', 'Coin', 1, 6, 1, 1),
-(11, 'ConfigManage', '参数设置', 'system:config:list', 'C', '/system/config/', 'system/config/index', 'edit', 1, 7, 1, 1);
-
--- 插入系统监控子菜单
-INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(12, 'OnlineUser', '在线用户', 'monitor:online:list', 'C', '/monitor/online/', 'monitor/online/index', 'online', 2, 1, 1, 1),
-(13, 'OperLog', '操作日志', 'monitor:operlog:list', 'C', '/monitor/operlog/', 'monitor/operlog/index', 'form', 2, 2, 1, 1),
-(14, 'LoginLog', '登录日志', 'monitor:logininfor:list', 'C', '/monitor/logininfor/', 'monitor/logininfor/index', 'logininfor', 2, 3, 1, 1),
-(15, 'Server', '服务监控', 'monitor:server:list', 'C', '/monitor/server/', 'monitor/server/index', 'server', 2, 4, 1, 1),
-(16, 'Cache', '缓存监控', 'monitor:cache:list', 'C', '/monitor/cache/', 'monitor/cache/index', 'redis', 2, 5, 1, 1);
-
--- 插入系统工具子菜单
-INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(17, 'Build', '表单构建', 'tool:build:list', 'C', '/tool/build/', 'tool/build/index', 'build', 3, 1, 1, 1),
-(18, 'Swagger', '系统接口', 'tool:swagger:list', 'C', '/tool/swagger/', 'tool/swagger/index', 'swagger', 3, 2, 1, 1);
-
--- 插入个人中心子菜单
-INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(19, 'Profile', '个人中心', '', 'C', '/user/profile/', 'user/profile/index', 'user', 4, 1, 1, 1),
-(20, 'UserInfo', '用户信息', 'user:info:list', 'C', '/user/info/', 'user/info/index', 'user', 4, 2, 1, 1);
-
--- 插入按钮权限（用户管理按钮）
-INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(21, 'UserQuery', '用户查询', 'system:user:query', 'F', 5, 1, 1, 1),
-(22, 'UserAdd', '用户新增', 'system:user:add', 'F', 5, 2, 1, 1),
-(23, 'UserEdit', '用户修改', 'system:user:edit', 'F', 5, 3, 1, 1),
-(24, 'UserDelete', '用户删除', 'system:user:remove', 'F', 5, 4, 1, 1),
-(25, 'UserExport', '用户导出', 'system:user:export', 'F', 5, 5, 1, 1),
-(26, 'UserImport', '用户导入', 'system:user:import', 'F', 5, 6, 1, 1);
-
--- 插入按钮权限（角色管理按钮）
-INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(27, 'RoleQuery', '角色查询', 'system:role:query', 'F', 6, 1, 1, 1),
-(28, 'RoleAdd', '角色新增', 'system:role:add', 'F', 6, 2, 1, 1),
-(29, 'RoleEdit', '角色修改', 'system:role:edit', 'F', 6, 3, 1, 1),
-(30, 'RoleDelete', '角色删除', 'system:role:remove', 'F', 6, 4, 1, 1);
-
--- 插入首页菜单
-INSERT INTO `menus` (`id`, `name`, `title`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(31, 'Index', '首页', 'C', '/', 'index', 'Aim', 0, 0, 1, 1);
-
--- 插入测试数据
-INSERT INTO `menus` (`id`, `name`, `title`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`, `remark`) VALUES
-(100, '测试目录名称', '测试目录标题', 'M', '/test', '/test', 'Baseball', 0, 33, 1, 1, 'test111'),
-(101, '测试子菜单名称', '测试子菜单标题', 'C', '/test/testaa', '/test/testaa', 'ArrowUpBold', 100, 1, 1, 1, NULL);
+INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `query`, `is_frame`, `is_cache`, `visible`, `status`, `icon`, `parent_id`, `order_num`, `remark`) VALUES
+(1, 'System', '系统管理', NULL, 'M', '/system', 'Layout', NULL, 1, 0, 1, 1, 'Setting', 0, 1, NULL),
+(2, 'Monitor', '系统监控', NULL, 'M', '/monitor', 'Layout', NULL, 1, 0, 1, 1, 'Bell', 0, 2, NULL),
+(3, 'Tool', '系统工具', NULL, 'M', '/tool', 'Layout', NULL, 1, 0, 1, 1, 'CreditCard', 0, 3, NULL),
+(4, 'UserCenter', '个人中心', NULL, 'M', '/user', 'Layout', NULL, 1, 0, 1, 1, 'Food', 0, 4, NULL),
+(5, 'UserManage', '用户管理', 'system:user:list', 'C', '/system/user/', 'system/user/index', NULL, 1, 0, 1, 1, 'Avatar', 1, 1, NULL),
+(6, 'RoleManage', '角色管理', 'system:role:list', 'C', '/system/role/', 'system/role/index', NULL, 1, 0, 1, 1, 'Connection', 1, 2, NULL),
+(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', '/system/menu/', 'system/menu/index', NULL, 1, 0, 1, 1, 'Expand', 1, 3, NULL),
+(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept/', 'system/dept/index', NULL, 1, 0, 1, 1, 'Briefcase', 1, 4, NULL),
+(9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post/', 'system/post/index', NULL, 1, 0, 1, 1, 'Basketball', 1, 5, NULL),
+(10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict/', 'system/dict/index', NULL, 1, 0, 1, 1, 'Coin', 1, 6, NULL),
+(11, 'ConfigManage', '参数设置', 'system:config:list', 'C', '/system/config/', 'system/config/index', NULL, 1, 0, 1, 1, 'edit', 1, 7, NULL),
+(12, 'OnlineUser', '在线用户', 'monitor:online:list', 'C', '/monitor/online/', 'monitor/online/index', NULL, 1, 0, 1, 1, 'online', 2, 1, NULL),
+(13, 'OperLog', '操作日志', 'monitor:operlog:list', 'C', '/monitor/operlog/', 'monitor/operlog/index', NULL, 1, 0, 1, 1, 'form', 2, 2, NULL),
+(14, 'LoginLog', '登录日志', 'monitor:logininfor:list', 'C', '/monitor/logininfor/', 'monitor/logininfor/index', NULL, 1, 0, 1, 1, 'logininfor', 2, 3, NULL),
+(15, 'Server', '服务监控', 'monitor:server:list', 'C', '/monitor/server/', 'monitor/server/index', NULL, 1, 0, 1, 1, 'server', 2, 4, NULL),
+(16, 'Cache', '缓存监控', 'monitor:cache:list', 'C', '/monitor/cache/', 'monitor/cache/index', NULL, 1, 0, 1, 1, 'redis', 2, 5, NULL),
+(17, 'Build', '表单构建', 'tool:build:list', 'C', '/tool/build/', 'tool/build/index', NULL, 1, 0, 1, 1, 'build', 3, 1, NULL),
+(18, 'Swagger', '系统接口', 'tool:swagger:list', 'C', '/tool/swagger/', 'tool/swagger/index', NULL, 1, 0, 1, 1, 'swagger', 3, 2, NULL),
+(19, 'Profile', '个人中心', '', 'C', '/user/profile/', 'user/profile/index', NULL, 1, 0, 1, 1, 'user', 4, 1, NULL),
+(20, 'UserInfo', '用户信息', 'user:info:list', 'C', '/user/info/', 'user/info/index', NULL, 1, 0, 1, 1, 'user', 4, 2, NULL),
+(21, 'UserQuery', '用户查询', 'system:user:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 5, 1, NULL),
+(22, 'UserAdd', '用户新增', 'system:user:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 5, 2, NULL),
+(23, 'UserEdit', '用户修改', 'system:user:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 5, 3, NULL),
+(24, 'UserDelete', '用户删除', 'system:user:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 5, 4, NULL),
+(25, 'UserExport', '用户导出', 'system:user:export', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 5, 5, NULL),
+(26, 'UserImport', '用户导入', 'system:user:import', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 5, 6, NULL),
+(27, 'RoleQuery', '角色查询', 'system:role:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 1, NULL),
+(28, 'RoleAdd', '角色新增', 'system:role:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 2, NULL),
+(29, 'RoleEdit', '角色修改', 'system:role:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 3, NULL),
+(30, 'RoleDelete', '角色删除', 'system:role:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 4, NULL),
+(31, 'Index', '首页', NULL, 'C', '/', 'index', NULL, 1, 0, 1, 1, 'Aim', 0, 0, NULL),
+(100, '测试目录名称', '测试目录标题', NULL, 'M', '/test', '/test', NULL, 1, 0, 1, 1, 'Baseball', 0, 33, 'test111'),
+(101, '测试子菜单名称', '测试子菜单标题', NULL, 'C', '/test/testaa', '/test/testaa', NULL, 1, 0, 1, 1, 'ArrowUpBold', 100, 1, NULL),
+(102, '字典类型', '字典类型', NULL, 'C', '/system/dict/type/', '/system/dict/type', NULL, 0, 1, 1, 1, 'Basketball', 10, 1, NULL),
+(103, '字典数据', '字典数据', NULL, 'C', '/system/dict/data/', '/system/dict/data/', NULL, 0, 1, 1, 1, 'Calendar', 10, 2, NULL);
 
 -- ============================================
 -- 19. 插入字典类型测试数据
@@ -574,7 +550,7 @@ ALTER TABLE `users` AUTO_INCREMENT = 100;
 ALTER TABLE `departments` AUTO_INCREMENT = 100;
 ALTER TABLE `posts` AUTO_INCREMENT = 100;
 ALTER TABLE `roles` AUTO_INCREMENT = 100;
-ALTER TABLE `menus` AUTO_INCREMENT = 100;
+ALTER TABLE `menus` AUTO_INCREMENT = 104;
 ALTER TABLE `permissions` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_types` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_data` AUTO_INCREMENT = 100;

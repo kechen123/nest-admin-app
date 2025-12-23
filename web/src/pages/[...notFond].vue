@@ -3,7 +3,8 @@
     <div class="not-found-content">
       <!-- 404 数字动画 -->
       <div class="error-code">
-        <span class="code-item" v-for="(num, index) in errorCode" :key="index" :style="{ animationDelay: `${index * 0.1}s` }">
+        <span class="code-item" v-for="(num, index) in errorCode" :key="index"
+          :style="{ animationDelay: `${index * 0.1}s` }">
           {{ num }}
         </span>
       </div>
@@ -19,11 +20,15 @@
       <!-- 操作按钮 -->
       <div class="error-actions">
         <el-button type="primary" size="large" @click="goHome">
-          <el-icon><HomeFilled /></el-icon>
+          <el-icon>
+            <HomeFilled />
+          </el-icon>
           返回首页
         </el-button>
         <el-button size="large" @click="goBack">
-          <el-icon><ArrowLeft /></el-icon>
+          <el-icon>
+            <ArrowLeft />
+          </el-icon>
           返回上一页
         </el-button>
       </div>
@@ -190,13 +195,16 @@ const goBack = () => {
     opacity: 0;
     transform: scale(0.3) translateY(-100px);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.05) translateY(0);
   }
+
   70% {
     transform: scale(0.9);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -204,9 +212,12 @@ const goBack = () => {
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(180deg);
   }
@@ -268,12 +279,3 @@ const goBack = () => {
   }
 }
 </style>
-
-<route lang="json">
-{
-  "meta": {
-    "requiresAuth": false,
-    "layout": "custom"
-  }
-}
-</route>

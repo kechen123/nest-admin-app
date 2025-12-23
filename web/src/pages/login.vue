@@ -13,7 +13,8 @@
                   <el-input v-model="ruleForm.username" type="text" autocomplete="off" :prefix-icon="Search" />
                 </el-form-item>
                 <el-form-item prop="password">
-                  <el-input v-model="ruleForm.password" type="text" autocomplete="off" :prefix-icon="Calendar" />
+                  <el-input v-model="ruleForm.password" type="password" autocomplete="off" :prefix-icon="Calendar"
+                    show-password />
                 </el-form-item>
                 <el-form-item>
                   <el-button type="primary" class="loginSubmit" @click="submitForm(ruleFormRef)"
@@ -25,10 +26,12 @@
               <el-form class="form" ref="ruleFormRef" label-position="left" :model="ruleForm" status-icon
                 :rules="rules">
                 <el-form-item prop="username">
-                  <el-input v-model="ruleForm.username" type="password" autocomplete="off" :prefix-icon="Search" />
+                  <el-input v-model="ruleForm.username" type="text" autocomplete="off" :prefix-icon="Search"
+                    placeholder="请输入手机号" />
                 </el-form-item>
                 <el-form-item prop="password">
-                  <el-input v-model="ruleForm.password" type="text" autocomplete="off" :prefix-icon="Calendar" />
+                  <el-input v-model="ruleForm.password" type="password" autocomplete="off" :prefix-icon="Calendar"
+                    show-password />
                 </el-form-item>
                 <el-form-item>
                   <el-button type="primary" class="loginSubmit" @click="submitForm(ruleFormRef)"
@@ -97,9 +100,22 @@ const submitForm = async (formEl: FormInstance | undefined) => {
           // 保存新的 token 和用户信息
           tokenStorage.set(res.access_token)
           if (res.user) {
-            userStorage.set(res.user)
+            // 保存完整的用户信息
+            const userInfo = {
+              id: res.user.id,
+              username: res.user.username,
+              email: res.user.email,
+              role: res.user.role,
+              roles: res.user.roles || [],
+              permissions: res.user.permissions || [],
+              nickname: res.user.nickname,
+              avatar: res.user.avatar,
+              phone: res.user.phone,
+              gender: res.user.gender,
+            }
+            userStorage.set(userInfo)
             // 设置用户信息到 store
-            userStore.setUserInfo(res.user)
+            userStore.setUserInfo(userInfo)
           }
 
           // 初始化菜单

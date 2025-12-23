@@ -58,6 +58,8 @@ import { useRouterStore } from '@/stores/router'
 import { useUserStore } from '@/stores/user'
 import { clearAuthStorage } from '@/utils/storage'
 import { storeToRefs } from 'pinia'
+import { authApi } from '@/api/auth'
+import { ElMessage } from 'element-plus'
 import defaultAvatar from '@/assets/user.jpg'
 
 const router = useRouter()
@@ -83,7 +85,7 @@ const dropdownList = ref([
   {
     label: '个人中心',
     icon: 'User',
-    path: '/user'
+    path: '/profile'
   },
   {
     label: '设置',
@@ -97,12 +99,20 @@ const dropdownList = ref([
   }
 ])
 
-const handleCommand = (command: string | number | object) => {
+const handleCommand = async (command: string | number | object) => {
   if (command === 'logout') {
+    try {
+      // 调用退出登录接口
+      await authApi.logout()
+    } catch (error) {
+      // 即使接口失败也继续执行退出逻辑
+      console.warn('退出登录接口调用失败:', error)
+    }
     // 清除所有认证信息和菜单数据
     clearAuthStorage()
     routerStore.clearRoles()
     userStore.clearUserInfo()
+    ElMessage.success('已退出登录')
     router.push('/login')
   } else {
     router.push(command as string)

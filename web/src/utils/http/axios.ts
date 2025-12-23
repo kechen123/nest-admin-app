@@ -1,11 +1,13 @@
 import axios, { AxiosError } from 'axios'
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { errorCodeType } from './errorCode'
-import { ElMessage, ElLoading } from 'element-plus'
+import { ElMessage, ElLoading, ElMessageBox } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
 import 'element-plus/es/components/loading/style/css'
+import 'element-plus/es/components/message-box/style/css'
 import router from '@/modules/router'
 import { tokenStorage, clearAuthStorage } from '@/utils/storage'
+import { isTokenExpired, isTokenExpiringSoon } from '@/utils/jwt'
 
 // 响应数据接口
 export interface ApiResponse<T = any> {
@@ -136,6 +138,9 @@ const getToken = () => {
   return tokenStorage.get()
 }
 
+// Token 过期检查标记，避免重复提示
+let tokenExpiryWarningShown = false
+
 // 请求拦截器
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -144,6 +149,33 @@ service.interceptors.request.use(
     // 添加 token，使用 Bearer 格式适配 backend JWT 认证
     const token = getToken()
     if (token && config.headers) {
+      // 检查 token 是否已过期
+      if (isTokenExpired(token)) {
+        // Token 已过期，清除认证信息并跳转到登录页
+        clearAuthStorage()
+        ElMessageBox.alert('登录已过期，请重新登录', '提示', {
+          confirmButtonText: '确定',
+          type: 'warning',
+          callback: () => {
+            router.push('/login')
+          },
+        })
+        return Promise.reject(new Error('Token 已过期'))
+      }
+      
+      // 检查 token 是否即将过期（5分钟内）
+      if (isTokenExpiringSoon(token, 5) && !tokenExpiryWarningShown) {
+        tokenExpiryWarningShown = true
+        ElMessage.warning({
+          message: '登录即将过期，请及时保存数据',
+          duration: 5000,
+        })
+        // 5秒后重置标记，允许再次提示
+        setTimeout(() => {
+          tokenExpiryWarningShown = false
+        }, 5000)
+      }
+      
       config.headers['Authorization'] = `Bearer ${token}`
     }
 
@@ -205,9 +237,13 @@ service.interceptors.response.use(
       if (res.code === 401 && !isLogin) {
         // 401 未授权，清除认证信息并跳转到登录页（仅在非登录接口时执行）
         clearAuthStorage()
-        setTimeout(() => {
-          router.push('/login')
-        }, 100)
+        ElMessageBox.alert('登录已过期，请重新登录', '提示', {
+          confirmButtonText: '确定',
+          type: 'warning',
+          callback: () => {
+            router.push('/login')
+          },
+        })
       }
 
       // 提取错误消息（优先使用返回的 message）
@@ -286,9 +322,13 @@ service.interceptors.response.use(
           // 优先使用后端返回的 message，如果没有则使用默认消息
           message = responseData.message || '未授权，请重新登录'
           clearAuthStorage()
-          setTimeout(() => {
-            router.push('/login')
-          }, 100)
+          ElMessageBox.alert('登录已过期，请重新登录', '提示', {
+            confirmButtonText: '确定',
+            type: 'warning',
+            callback: () => {
+              router.push('/login')
+            },
+          })
         } else if (responseData.code === 401 || response.status === 401) {
           // 登录接口的 401 错误，使用后端返回的 message
           message = responseData.message || '登录失败'
@@ -307,9 +347,13 @@ service.interceptors.response.use(
             } else {
               message = dataMessage || '未授权，请重新登录'
               clearAuthStorage()
-              setTimeout(() => {
-                router.push('/login')
-              }, 100)
+              ElMessageBox.alert('登录已过期，请重新登录', '提示', {
+                confirmButtonText: '确定',
+                type: 'warning',
+                callback: () => {
+                  router.push('/login')
+                },
+              })
             }
             break
           case 403:
