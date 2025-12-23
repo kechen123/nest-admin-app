@@ -1,107 +1,148 @@
-# Slide Panel 统一数据传递功能
+# Slide Panel 模块说明
 
-## 功能说明
+用于在页面右侧快速打开滑出面板，支持内容区域/右栏自适应宽度、拖拽调整、统一数据传递与生命周期钩子。
 
-SlideContainer 现在支持统一的数据传递机制。你只需要传递一个 `data` 对象，系统会通过组件的 `init` 函数将所有数据传递给组件。
+## 组件与安装
 
-## 使用方法
+- `SlideContainer`：核心容器，负责右栏滑出、数据下发与布局计算。
+- `AsideContainer`：在左侧附带可折叠的辅助栏，并内置一个 `SlideContainer`。
 
-### 1. 调用时统一传递数据
+全局注册（建议在模块入口）：
 
-```javascript
-const openUserDetail = (rowId, type) => {
-  containerRef.value.open({
-    default: {
-      component: Detail,
-      data: {
-        // 所有数据都通过 init 函数传递
-        rowId,
-        type,
-        departmentList: departmentList.value,
-        positionList: positionList.value,
-        userConfig: { theme: 'dark', lang: 'zh' },
-      },
-      width: 600,
-      title: '用户详情',
-    },
-  })
-}
+```ts
+import slidePanel from '@/modules/slide-panel'
+app.use(slidePanel)
+// 或按需：app.component('SlideContainer', SlideContainer)
 ```
 
-### 2. 在组件中通过 init 函数接收数据
+## SlideContainer API
+
+### 插槽
+
+- 默认插槽：主内容区域。
+
+### 暴露方法（`ref` 获取）
+
+| 方法 | 说明 |
+| ---- | ---- |
+| `open(options)` | 打开右侧面板 |
+| `close(value?)` | 关闭右侧面板并传递可选值给 `onClose` |
+| `updateContentLayout()` | 手动触发布局重新计算 |
+
+#### `open(options)` 参数
+
+```ts
+open({
+  default: {
+    component,          // 必填，右侧要渲染的组件
+    props?,             // 传给组件的 props
+    method?: 'init',    // 组件暴露的方法名，默认 init
+    data?: object,      // 统一透传给组件的方法参数
+    width?: number,     // 右栏宽度，默认 400
+    title?: string,     // 右栏标题，默认“详情”
+    onOpen?: () => void,// 动画完成后触发
+    onClose?: (v:any)=>void // 关闭时回调
+  }
+})
+```
+
+### 组件侧接收数据
+
+右侧组件无需 props，只需暴露 `init`（或自定义 `method`）：
 
 ```vue
 <script setup lang="ts">
-// 不需要定义 props，所有数据通过 init 函数接收
-const departmentList = ref([])
-const positionList = ref([])
-
-const init = async (data) => {
-  // 从 init 函数参数中获取所有数据
-  const { rowId, type, departmentList: deptList, positionList: posList, userConfig } = data
-
-  // 设置组件内部状态
-  departmentList.value = deptList || []
-  positionList.value = posList || []
-
-  // 根据 rowId 获取用户数据
-  if (rowId) {
-    const res = await getUser(rowId)
-    Object.assign(formData.value, res.data[0])
-  }
-
-  console.log('用户配置:', userConfig)
+const init = async (data: { rowId?: number; list?: any[] }) => {
+  // 在这里获取所有透传数据
 }
-
 defineExpose({ init })
 </script>
 ```
 
-## 数据传递流程
+数据流：调用方传入 `data` → `SlideContainer` 缓存 → 组件挂载后调用 `method` 并传参 → 组件内部处理。
 
-1. **调用方**：传递 `data` 对象
-2. **SlideContainer**：保存数据，等待组件挂载
-3. **组件挂载**：调用组件的 `init` 函数
-4. **组件接收**：通过 `init` 函数参数获取所有数据
+### 右栏尺寸与拖拽
 
-## 优势
+- `width` 控制初始宽度。
+- 右栏可拖拽调整，主内容区域会自动缩放；需要时可手动调用 `updateContentLayout()`（例如容器尺寸变化）。
 
-1. **统一接口**：只需要传递一个 `data` 对象
-2. **简洁明了**：组件不需要定义 props 或使用 inject
-3. **DOM 干净**：没有任何数据暴露到 DOM 元素上
-4. **类型安全**：支持 TypeScript 类型定义
-5. **性能优化**：避免不必要的 props 传递和响应式处理
+## AsideContainer API
 
-## 示例场景
+封装左侧可折叠区域 + `SlideContainer`。
 
-### 场景1：表单组件
+### Props
 
-```javascript
-// 传递表单数据和选项
-data: {
-  formData: { name: 'John', age: 30 },
-  validationRules: [...],
-  submitUrl: '/api/users',
-  isEdit: true
+| 名称 | 类型 | 默认 | 说明 |
+| ---- | ---- | ---- | ---- |
+| `asideWidth` | `string \| number` | `400px` | 左侧区域宽度 |
+| `minimized` | `boolean` | `false` | 是否初始收起 |
+
+### AsideContainer 插槽
+
+- `asideTitle`：左侧标题区域。
+- `asideBody`：左侧主体内容。
+- 默认插槽：主内容区域（内部已包含 `SlideContainer`）。
+
+### 暴露方法
+
+| 方法 | 说明 |
+| ---- | ---- |
+| `open(options)` / `close()` | 代理内部 `SlideContainer` 的开关 |
+| `toggleAside()` | 展开/收起左侧区域 |
+
+## 快速示例
+
+```vue
+<template>
+  <SlideContainer ref="containerRef">
+    <MainTable @row-click="openDetail" />
+  </SlideContainer>
+</template>
+
+<script setup lang="ts">
+import Detail from './Detail.vue'
+const containerRef = ref()
+
+const openDetail = (row) => {
+  containerRef.value.open({
+    default: {
+      component: Detail,
+      data: { rowId: row.id, extra: row },
+      width: 600,
+      title: '用户详情',
+      onClose: (val) => console.log('closed with', val)
+    }
+  })
 }
+</script>
 ```
 
-### 场景2：列表组件
+组件内：
 
-```javascript
-// 传递列表数据和配置
-data: {
-  items: [...],
-  columns: [...],
-  pagination: { page: 1, size: 10 },
-  loading: false,
-  title: '用户列表'
+```vue
+<script setup lang="ts">
+const init = async ({ rowId, extra }) => {
+  // 加载详情
 }
+defineExpose({ init })
+</script>
 ```
 
-## 注意事项
+## 与 Kc.TableWithSlidePanel 联动
 
-1. 组件必须定义 `init` 函数并暴露给父组件
-2. `init` 函数会在组件挂载后自动调用
-3. 建议使用 `inheritAttrs: false` 防止 DOM 属性污染
-4. 所有数据都通过 `init` 函数参数传递，包括简单值和复杂对象
+`TableWithSlidePanel` 直接内置 `SlideContainer`，可通过 `openPanel` / `closePanel` 调起右栏：
+
+```ts
+tableRef.value.openPanel({
+  component: Detail,
+  data: { rowId },
+  width: 600,
+  title: '用户详情'
+})
+```
+
+## 使用建议
+
+- 右侧组件务必暴露 `init`（或自定义 `method`）以接收数据。
+- 如需避免布局抖动，拖拽时容器禁用动画，释放后自动过渡。
+- 当容器尺寸变化（窗口缩放、父级折叠）时可调用 `updateContentLayout()` 以重新计算宽高。
