@@ -5,6 +5,7 @@ import { ElMessage, ElLoading } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
 import 'element-plus/es/components/loading/style/css'
 import router from '@/modules/router'
+import { tokenStorage, clearAuthStorage } from '@/utils/storage'
 
 // 响应数据接口
 export interface ApiResponse<T = any> {
@@ -132,7 +133,7 @@ const hideLoading = () => {
 }
 
 const getToken = () => {
-  return localStorage.getItem('token')
+  return tokenStorage.get()
 }
 
 // 请求拦截器
@@ -202,8 +203,8 @@ service.interceptors.response.use(
     if (res.code !== 200) {
       // 处理特殊错误码（登录接口不执行清除 token 和跳转逻辑）
       if (res.code === 401 && !isLogin) {
-        // 401 未授权，清除 token 并跳转到登录页（仅在非登录接口时执行）
-        localStorage.removeItem('token')
+        // 401 未授权，清除认证信息并跳转到登录页（仅在非登录接口时执行）
+        clearAuthStorage()
         setTimeout(() => {
           router.push('/login')
         }, 100)
@@ -284,7 +285,7 @@ service.interceptors.response.use(
         if ((responseData.code === 401 || response.status === 401) && !isLogin) {
           // 优先使用后端返回的 message，如果没有则使用默认消息
           message = responseData.message || '未授权，请重新登录'
-          localStorage.removeItem('token')
+          clearAuthStorage()
           setTimeout(() => {
             router.push('/login')
           }, 100)
@@ -305,7 +306,7 @@ service.interceptors.response.use(
               message = dataMessage || '登录失败'
             } else {
               message = dataMessage || '未授权，请重新登录'
-              localStorage.removeItem('token')
+              clearAuthStorage()
               setTimeout(() => {
                 router.push('/login')
               }, 100)

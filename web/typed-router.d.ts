@@ -20,11 +20,8 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...notFond]': RouteRecordInfo<'/[...notFond]', '/:notFond(.*)', { notFond: ParamValue<true> }, { notFond: ParamValue<false> }>,
-    '/404': RouteRecordInfo<'/404', '/404', Record<never, never>, Record<never, never>>,
     '/about': RouteRecordInfo<'/about', '/about', Record<never, never>, Record<never, never>>,
-    '/auth': RouteRecordInfo<'/auth', '/auth', Record<never, never>, Record<never, never>>,
     '/login': RouteRecordInfo<'/login', '/login', Record<never, never>, Record<never, never>>,
-    '/menu': RouteRecordInfo<'/menu', '/menu', Record<never, never>, Record<never, never>>,
     '/sys_menu/': RouteRecordInfo<'/sys_menu/', '/sys_menu', Record<never, never>, Record<never, never>>,
     '/system/dept/': RouteRecordInfo<'/system/dept/', '/system/dept', Record<never, never>, Record<never, never>>,
     '/system/dict/data/': RouteRecordInfo<'/system/dict/data/', '/system/dict/data', Record<never, never>, Record<never, never>>,
@@ -33,10 +30,8 @@ declare module 'vue-router/auto-routes' {
     '/system/post/': RouteRecordInfo<'/system/post/', '/system/post', Record<never, never>, Record<never, never>>,
     '/system/role/': RouteRecordInfo<'/system/role/', '/system/role', Record<never, never>, Record<never, never>>,
     '/system/user/': RouteRecordInfo<'/system/user/', '/system/user', Record<never, never>, Record<never, never>>,
-    '/table': RouteRecordInfo<'/table', '/table', Record<never, never>, Record<never, never>>,
     '/table_demo/aside/': RouteRecordInfo<'/table_demo/aside/', '/table_demo/aside', Record<never, never>, Record<never, never>>,
     '/table_demo/base/': RouteRecordInfo<'/table_demo/base/', '/table_demo/base', Record<never, never>, Record<never, never>>,
-    '/upload': RouteRecordInfo<'/upload', '/upload', Record<never, never>, Record<never, never>>,
     '/user/list': RouteRecordInfo<'/user/list', '/user/list', Record<never, never>, Record<never, never>>,
   }
 }

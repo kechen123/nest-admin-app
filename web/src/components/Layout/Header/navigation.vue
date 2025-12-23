@@ -28,8 +28,8 @@
         <el-dropdown @command="handleCommand" trigger="click">
           <span class="el-dropdown-link">
             <div class="user">
-              <img src="@/assets/user.jpg" />
-              <span>柯大晨</span>
+              <img :src="displayAvatar" :alt="displayName" />
+              <span>{{ displayName }}</span>
               <el-icon class="el-icon--right">
                 <arrow-down />
               </el-icon>
@@ -53,13 +53,30 @@
 </template>
 
 <script setup lang="ts">
-
 import { useThemeTransition } from '@/hooks/useThemeTransition'
 import { useRouterStore } from '@/stores/router'
+import { useUserStore } from '@/stores/user'
+import { clearAuthStorage } from '@/utils/storage'
+import { storeToRefs } from 'pinia'
+import defaultAvatar from '@/assets/user.jpg'
 
 const router = useRouter()
 const routerStore = useRouterStore()
+const userStore = useUserStore()
 const { isDark, triggerTransition } = useThemeTransition()
+const { getUserName, getUserAvatar } = storeToRefs(userStore)
+
+// 计算显示的用户名和头像
+const displayName = computed(() => getUserName.value || '游客')
+const displayAvatar = computed(() => {
+  const avatar = getUserAvatar.value
+  // 如果有头像且是完整路径，直接使用
+  if (avatar && (avatar.startsWith('http') || avatar.startsWith('/'))) {
+    return avatar
+  }
+  // 默认头像
+  return defaultAvatar
+})
 
 
 const dropdownList = ref([
@@ -82,8 +99,10 @@ const dropdownList = ref([
 
 const handleCommand = (command: string | number | object) => {
   if (command === 'logout') {
-    localStorage.removeItem('token')
+    // 清除所有认证信息和菜单数据
+    clearAuthStorage()
     routerStore.clearRoles()
+    userStore.clearUserInfo()
     router.push('/login')
   } else {
     router.push(command as string)

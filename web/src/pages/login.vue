@@ -47,20 +47,23 @@
 import type { TabsPaneContext, FormInstance, FormRules } from 'element-plus'
 import { Calendar, Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { authApi } from '@/api/auth'
+import { authApi, type LoginResponse } from '@/api/auth'
 import { handleApiError } from '@/utils/http/axios'
 import Login from '@/assets/svg/login.svg'
 import { useRouterStore } from '@/stores/router'
+import { useUserStore } from '@/stores/user'
+import { tokenStorage, userStorage, clearAuthStorage } from '@/utils/storage'
 
 const router = useRouter()
 const routerStore = useRouterStore()
+const userStore = useUserStore()
 const ruleFormRef = ref<FormInstance>()
 const activeName = ref('first')
 const loading = ref(false)
 
 const ruleForm = reactive({
-  username: 'admin',
-  password: 'admin123'
+  username: '',
+  password: ''
 })
 
 const rules = reactive<FormRules<typeof ruleForm>>({
@@ -72,37 +75,54 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
   console.log(tab, event)
 }
 
-const submitForm = (formEl: FormInstance | undefined) => {
+const submitForm = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
-  formEl.validate((valid: any) => {
-    if (valid) {
-      loading.value = true
-      authApi.login(ruleForm)
-        .then((res) => {
-          // res 已经是 response.data，包含 access_token 和 user
-          if (res && res.access_token) {
-            localStorage.setItem('token', res.access_token)
-            // 可以根据需要设置用户角色信息
-            // routerStore.addRoles([res.user.role])
-            ElMessage.success('登录成功')
-            router.push('/')
-          } else {
-            ElMessage.error('登录失败：响应数据格式错误')
-          }
-        })
-        .catch((error) => {
-          // 页面自己处理错误，优先使用返回的 message
-          // handleApiError 会标记错误为已处理，避免 axios 拦截器重复显示错误提示
-          const errorMessage = error?._message || error?.message || '登录失败，请检查用户名和密码'
-          handleApiError(error, errorMessage)
-        })
-        .finally(() => {
-          loading.value = false
-        })
-    } else {
+  formEl.validate((valid: boolean) => {
+    if (!valid) {
       console.log('表单验证失败')
-      return false
+      return
     }
+
+    // 使用立即执行函数处理异步
+    ; (async () => {
+      loading.value = true
+      try {
+        const res = (await authApi.login(ruleForm)) as unknown as LoginResponse
+        // res 已经是 response.data，包含 access_token 和 user
+        if (res && res.access_token) {
+          // 清除旧的认证信息和菜单数据
+          clearAuthStorage()
+          routerStore.clearRoles()
+
+          // 保存新的 token 和用户信息
+          tokenStorage.set(res.access_token)
+          if (res.user) {
+            userStorage.set(res.user)
+            // 设置用户信息到 store
+            userStore.setUserInfo(res.user)
+          }
+
+          // 初始化菜单
+          try {
+            await routerStore.initMenu()
+          } catch (menuError) {
+            console.warn('菜单初始化失败，但不影响登录:', menuError)
+          }
+
+          ElMessage.success('登录成功')
+          router.push('/')
+        } else {
+          ElMessage.error('登录失败：响应数据格式错误')
+        }
+      } catch (error: any) {
+        // 页面自己处理错误，优先使用返回的 message
+        // handleApiError 会标记错误为已处理，避免 axios 拦截器重复显示错误提示
+        const errorMessage = error?._message || error?.message || '登录失败，请检查用户名和密码'
+        handleApiError(error, errorMessage)
+      } finally {
+        loading.value = false
+      }
+    })()
   })
 }
 </script>
