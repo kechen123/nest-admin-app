@@ -1,5 +1,11 @@
 <template>
   <TableWithSlidePanel :config="kcConfig" :column-display-config="columnDisplayConfig" ref="tableRef">
+    <template #icon="{ row }">
+      <el-icon v-if="row.icon && row.icon !== '#' && row.icon.trim() !== ''" :size="18">
+        <MIcon :iconName="row.icon" />
+      </el-icon>
+      <span v-else style="color: #999;">-</span>
+    </template>
     <template #actions="{ row }">
       <el-button type="primary" plain size="small" @click="openMenuDetail(row.id, 'edit')">编辑</el-button>
       <el-button type="success" plain size="small" @click="openMenuDetail(row.id, 'view')">查看详情</el-button>
@@ -44,16 +50,8 @@ const columnDisplayConfig = {
 const baseColumns: ColumnProps[] = [
   {
     type: 'text',
-    label: 'ID',
-    treeNodeColumn: true,
-    prop: 'id',
-    show: true,
-    width: 100,
-    align: 'center',
-  },
-  {
-    type: 'text',
     prop: 'title',
+    treeNodeColumn: true,
     align: 'left',
     show: true,
     label: '菜单名称',
@@ -62,13 +60,10 @@ const baseColumns: ColumnProps[] = [
   {
     prop: 'icon',
     label: '图标',
-    type: 'text',
+    type: 'slot',
     show: true,
     align: 'center',
     width: 100,
-    formatter: (row: any) => {
-      return row.icon || '-'
-    }
   },
   {
     label: '路由路径',
@@ -95,6 +90,23 @@ const baseColumns: ColumnProps[] = [
     }
   },
   {
+    prop: 'menuType',
+    label: '菜单类型',
+    type: 'tag',
+    show: true,
+    align: 'center',
+    width: 100,
+    options: [
+      { value: 'M', label: '目录', tagType: 'primary' },
+      { value: 'C', label: '菜单', tagType: 'success' },
+      { value: 'F', label: '按钮', tagType: 'warning' },
+    ],
+    formatter: (row: any) => {
+      const typeMap: Record<string, string> = { M: '目录', C: '菜单', F: '按钮' }
+      return typeMap[row.menuType] || '-'
+    }
+  },
+  {
     prop: 'status',
     label: '状态',
     type: 'tag',
@@ -104,6 +116,18 @@ const baseColumns: ColumnProps[] = [
     options: [
       { value: 0, label: '禁用', tagType: 'danger' },
       { value: 1, label: '启用', tagType: 'success' },
+    ]
+  },
+  {
+    prop: 'visible',
+    label: '显示状态',
+    type: 'tag',
+    show: true,
+    align: 'center',
+    width: 100,
+    options: [
+      { value: 0, label: '隐藏', tagType: 'info' },
+      { value: 1, label: '显示', tagType: 'success' },
     ]
   },
   {
@@ -150,6 +174,18 @@ const baseColumns: ColumnProps[] = [
     width: 80,
   },
   {
+    prop: 'isCache',
+    label: '是否缓存',
+    type: 'tag',
+    show: true,
+    align: 'center',
+    width: 100,
+    options: [
+      { value: 0, label: '缓存', tagType: 'success' },
+      { value: 1, label: '不缓存', tagType: 'warning' },
+    ]
+  },
+  {
     label: '操作',
     prop: 'actions',
     show: true,
@@ -161,8 +197,8 @@ const baseColumns: ColumnProps[] = [
 ]
 
 // 过滤树形数据的辅助函数
-const filterTree = (menus: BackendMenu[], filters: { name?: string; path?: string; status?: number }): BackendMenu[] => {
-  if (!filters.name && !filters.path && filters.status === undefined) {
+const filterTree = (menus: BackendMenu[], filters: { name?: string; path?: string; status?: number; menuType?: string }): BackendMenu[] => {
+  if (!filters.name && !filters.path && filters.status === undefined && !filters.menuType) {
     return menus
   }
 
@@ -171,8 +207,9 @@ const filterTree = (menus: BackendMenu[], filters: { name?: string; path?: strin
     const matchName = !filters.name || (menu.title && menu.title.includes(filters.name))
     const matchPath = !filters.path || (menu.path && menu.path.includes(filters.path))
     const matchStatus = filters.status === undefined || menu.status === filters.status
+    const matchMenuType = !filters.menuType || menu.menuType === filters.menuType
 
-    const currentMatch = matchName && matchPath && matchStatus
+    const currentMatch = matchName && matchPath && matchStatus && matchMenuType
 
     // 递归过滤子菜单
     let filteredChildren: BackendMenu[] = []
@@ -205,11 +242,12 @@ const requestMenuTree = async (params: any) => {
   let menuList: BackendMenu[] = res || []
 
   // 如果有搜索条件，在前端进行过滤
-  if (params.name || params.path || params.status !== undefined) {
+  if (params.name || params.path || params.status !== undefined || params.menuType) {
     menuList = filterTree(menuList, {
       name: params.name,
       path: params.path,
       status: params.status,
+      menuType: params.menuType,
     })
   }
 
@@ -354,6 +392,17 @@ const kcConfig = computed<KcConfig>(() => ({
           { label: '禁用', value: 0 }
         ]
       },
+      {
+        key: 'menuType',
+        label: '菜单类型',
+        type: 'select' as const,
+        placeholder: '请选择菜单类型',
+        options: [
+          { label: '目录', value: 'M' },
+          { label: '菜单', value: 'C' },
+          { label: '按钮', value: 'F' }
+        ]
+      },
     ],
     defaultCount: 2,
     fieldWidth: '250px',
@@ -376,7 +425,7 @@ const loadMenuTree = async () => {
 }
 
 onMounted(() => {
-  // loadMenuTree()
+  loadMenuTree()
 })
 
 const openMenuDetail = (rowId?: number, type?: string) => {
@@ -400,7 +449,7 @@ const openMenuDetail = (rowId?: number, type?: string) => {
       type: finalType,
       menuTree: menuTree.value,
     },
-    width: 600,
+    width: 800,
     title,
     onClose: async (refresh: boolean) => {
       if (refresh) {

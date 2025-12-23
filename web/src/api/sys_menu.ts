@@ -3,6 +3,7 @@ import axios from '@/utils/http/axios'
 // 后端菜单数据接口
 export interface BackendMenu {
   id: number
+  name: string
   title: string
   path?: string
   icon?: string
@@ -11,7 +12,12 @@ export interface BackendMenu {
   sort: number
   status: number
   permissionCode?: string
+  menuType?: string
   isExternal: number
+  visible?: number
+  isCache?: number
+  query?: string
+  remark?: string
   children?: BackendMenu[]
   createdAt: Date
   updatedAt: Date
@@ -76,6 +82,29 @@ export const getMenuTree = () => {
 export const getMenuTreeTransformed = async (): Promise<FrontendMenu[]> => {
   const menus = (await getMenuTree()) as any // axios拦截器已经返回了data字段，所以res就是BackendMenu[]
   return menus
+}
+
+/**
+ * 将后端菜单格式转换为前端菜单格式
+ */
+const transformBackendMenuToFrontend = (menu: BackendMenu): FrontendMenu => {
+  return {
+    id: menu.id,
+    title: menu.title,
+    path: menu.path || '',
+    route_name: menu.name || menu.component,
+    icon: menu.icon,
+    children: menu.children?.map(transformBackendMenuToFrontend),
+  }
+}
+
+/**
+ * 获取页面菜单树（登录后使用，已过滤按钮类型）
+ */
+export const getMenuPageTree = async (): Promise<FrontendMenu[]> => {
+  // axios拦截器已经返回了data字段，所以res就是BackendMenu[]
+  const menus = (await axios.get<BackendMenu[]>('/menus/page-tree')) as any as BackendMenu[]
+  return menus.map(transformBackendMenuToFrontend)
 }
 
 /**

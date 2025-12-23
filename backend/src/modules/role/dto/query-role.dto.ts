@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsOptional } from "class-validator";
+import { IsString, IsOptional, IsInt, IsIn } from "class-validator";
 import { PaginationDto } from "../../../common/dto/pagination.dto";
 
 export class QueryRoleDto extends PaginationDto {
@@ -12,4 +12,10 @@ export class QueryRoleDto extends PaginationDto {
   @IsOptional()
   @IsString()
   code?: string;
+
+  @ApiProperty({ description: "状态: 0-禁用, 1-正常", required: false })
+  @IsOptional()
+  @IsInt()
+  @IsIn([0, 1])
+  status?: number;
 }

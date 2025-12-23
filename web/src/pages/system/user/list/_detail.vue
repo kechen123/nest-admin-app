@@ -64,6 +64,8 @@ const statusOptions = ref<DictOption[]>([])
 const deptOptions = ref<Array<{ label: string; value: number }>>([])
 const postOptions = ref<Array<{ label: string; value: number }>>([])
 const roleOptions = ref<Array<{ label: string; value: string }>>([])
+// 完整的角色列表（包含ID），用于代码到ID的转换
+const roleList = ref<Role[]>([])
 
 // 加载字典数据
 const loadDicts = async () => {
@@ -100,6 +102,7 @@ const loadDeptAndPost = async () => {
     // 加载角色列表
     const roleRes = await roleApi.getAllRoles()
     if (roleRes && Array.isArray(roleRes)) {
+      roleList.value = roleRes
       roleOptions.value = roleRes.map((item: Role) => ({
         label: item.name,
         value: item.code,
@@ -295,6 +298,17 @@ const onSubmit = async (data: any) => {
       return
     }
 
+    // 将角色代码数组转换为角色ID数组
+    let roleIds: number[] | undefined = undefined
+    if (data.roles && Array.isArray(data.roles) && data.roles.length > 0) {
+      roleIds = data.roles
+        .map((code: string) => {
+          const role = roleList.value.find((r) => r.code === code)
+          return role?.id
+        })
+        .filter((id: any) => id !== undefined && id !== null) as number[]
+    }
+
     if (data.id) {
       // 更新用户
       const updateData: UpdateUserDto = {
@@ -306,9 +320,14 @@ const onSubmit = async (data: any) => {
         deptId: data.deptId,
         postId: data.postId,
         remark: data.remark,
-        role: data.role,
         status: data.status,
       }
+      
+      // 添加角色ID数组
+      if (roleIds && roleIds.length > 0) {
+        updateData.roleIds = roleIds
+      }
+      
       // 如果密码不为空且不是空字符串，则包含密码字段
       if (data.password && typeof data.password === 'string' && data.password.trim().length > 0) {
         updateData.password = data.password.trim()
@@ -328,9 +347,14 @@ const onSubmit = async (data: any) => {
         deptId: data.deptId,
         postId: data.postId,
         remark: data.remark,
-        role: data.role,
         status: data.status,
       }
+      
+      // 添加角色ID数组
+      if (roleIds && roleIds.length > 0) {
+        createData.roleIds = roleIds
+      }
+      
       await userApi.createUser(createData)
       ElMessage.success('创建成功')
     }
@@ -368,7 +392,10 @@ const init = async (data: any) => {
     formData.value = {
       ...user,
       password: '', // 不显示密码
-      roles: user.roles?.map((item: any) => item.code),
+      roles: user.roles?.map((item: any) => {
+        // 如果 item 是对象，取 code；如果是字符串，直接返回
+        return typeof item === 'object' && item.code ? item.code : item
+      }) || [],
       // 格式化只读字段
       loginDate: user.loginDate ? new Date(user.loginDate).toLocaleString('zh-CN') : '-',
       isAdminText: user.isAdmin === 1 ? '是' : user.isAdmin === 0 ? '否' : '-',

@@ -9,6 +9,7 @@ import {
   Query,
   ParseIntPipe,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -38,18 +39,27 @@ export class MenuController {
     return this.menuService.create(createMenuDto);
   }
 
+  @Get('tree')
+  @ApiOperation({ summary: '获取菜单树（只返回启用的菜单，管理页面使用）' })
+  @ApiResponse({ status: 200, type: [Menu] })
+  getMenuTree(@Req() req: any) {
+    // tree 接口用于管理页面，不根据角色过滤，返回所有启用的菜单
+    return this.menuService.getMenuTree();
+  }
+
+  @Get('page-tree')
+  @ApiOperation({ summary: '获取页面菜单树（登录后使用，根据角色权限过滤）' })
+  @ApiResponse({ status: 200, type: [Menu] })
+  getPageMenuTree(@Req() req: any) {
+    const userId = req.user?.userId;
+    return this.menuService.getPageMenuTree(userId);
+  }
+
   @Get()
   @ApiOperation({ summary: '分页查询菜单列表' })
   @ApiResponse({ status: 200, type: PaginationResponseDto })
   findAll(@Query() queryDto: QueryMenuDto) {
     return this.menuService.findAll(queryDto);
-  }
-
-  @Get('tree')
-  @ApiOperation({ summary: '获取菜单树（只返回启用的菜单）' })
-  @ApiResponse({ status: 200, type: [Menu] })
-  getMenuTree() {
-    return this.menuService.getMenuTree();
   }
 
   @Get(':id')

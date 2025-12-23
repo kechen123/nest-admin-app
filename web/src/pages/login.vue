@@ -10,7 +10,7 @@
               <el-form class="form" ref="ruleFormRef" label-position="left" :model="ruleForm" status-icon
                 :rules="rules">
                 <el-form-item prop="username">
-                  <el-input v-model="ruleForm.username" type="password" autocomplete="off" :prefix-icon="Search" />
+                  <el-input v-model="ruleForm.username" type="text" autocomplete="off" :prefix-icon="Search" />
                 </el-form-item>
                 <el-form-item prop="password">
                   <el-input v-model="ruleForm.password" type="text" autocomplete="off" :prefix-icon="Calendar" />

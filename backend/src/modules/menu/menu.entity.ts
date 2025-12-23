@@ -50,8 +50,27 @@ export class Menu extends BaseEntity {
   @Column({ name: "permission_code", length: 100, nullable: true })
   permissionCode?: string;
 
+  @ApiProperty({ description: "菜单类型: M-目录, C-菜单, F-按钮", example: "C", default: "C" })
+  @Column({ name: "menu_type", type: "char", length: 1, default: "C" })
+  menuType: string;
+
   @ApiProperty({ description: "是否外部链接: 0-否, 1-是", example: 0, default: 0 })
   @Column({ name: "is_frame", type: "tinyint", default: 0 })
   isExternal: number;
-}
 
+  @ApiProperty({ description: "显示状态: 0-隐藏, 1-显示", example: 1, default: 1 })
+  @Column({ type: "tinyint", default: 1 })
+  visible: number;
+
+  @ApiProperty({ description: "是否缓存: 0-缓存, 1-不缓存", example: 0, default: 0 })
+  @Column({ name: "is_cache", type: "tinyint", default: 0 })
+  isCache: number;
+
+  @ApiProperty({ description: "路由参数", example: "", required: false })
+  @Column({ length: 255, nullable: true })
+  query?: string;
+
+  @ApiProperty({ description: "备注", required: false })
+  @Column({ length: 500, nullable: true })
+  remark?: string;
+}

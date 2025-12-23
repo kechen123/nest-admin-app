@@ -202,10 +202,34 @@ if (!request && !staticData) {
           display: none;
         }
 
-        [class*="el-table__row--level-"]:not(.el-table__row--level-0) {
+        // [class*="el-table__row--level-"]:not(.el-table__row--level-0) {
+        //   background-color: color-mix(in srgb,
+        //       var(--el-table-tr-bg-color) 80%,
+        //       rgba(0, 120, 255, 0.4) 20%);
+
+        //   td:first-child {
+        //     .cell {
+        //       display: flex;
+        //     }
+        //   }
+        // }
+
+        [class*="el-table__row--level-1"] {
           background-color: color-mix(in srgb,
               var(--el-table-tr-bg-color) 80%,
-              rgba(0, 120, 255, 0.4) 20%);
+              rgba(0, 120, 255, 0.1) 20%);
+
+          td:first-child {
+            .cell {
+              display: flex;
+            }
+          }
+        }
+
+        [class*="el-table__row--level-2"] {
+          background-color: color-mix(in srgb,
+              var(--el-table-tr-bg-color) 80%,
+              rgba(0, 120, 255, 0.2) 20%);
 
           td:first-child {
             .cell {

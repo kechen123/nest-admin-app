@@ -1,17 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, Not, In, IsNull } from 'typeorm';
 import { Menu } from './menu.entity';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { QueryMenuDto } from './dto/query-menu.dto';
 import { IPaginationResponse } from '../../common/interfaces/response.interface';
+import { User } from '../user/user.entity';
+import { Role } from '../role/role.entity';
 
 @Injectable()
 export class MenuService {
   constructor(
     @InjectRepository(Menu)
     private readonly menuRepository: Repository<Menu>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
 
   /**
@@ -89,6 +95,114 @@ export class MenuService {
     // #endregion
     // 构建树形结构
     return this.buildTree(menus);
+  }
+
+  /**
+   * 获取页面菜单树（登录后使用，根据角色权限过滤）
+   * @param userId 用户ID，如果提供则根据用户角色过滤菜单
+   */
+  async getPageMenuTree(userId?: number): Promise<Menu[]> {
+    let allowedMenuIds: number[] = [];
+    let isAdmin = false;
+
+    // 如果提供了用户ID，根据用户角色过滤菜单
+    if (userId) {
+      // 查询用户及其角色
+      const user = await this.userRepository.findOne({
+        where: { id: userId, deletedAt: IsNull() },
+        relations: ['roles', 'roles.menus'],
+      });
+
+      if (!user) {
+        return [];
+      }
+
+      // 检查是否是超级管理员
+      if (user.isAdmin === 1) {
+        isAdmin = true;
+      } else if (user.roles && user.roles.length > 0) {
+        // 只查询启用状态的角色
+        const activeRoles = user.roles.filter((role) => role.status === 1);
+        
+        // 收集所有角色关联的菜单ID
+        const menuIdSet = new Set<number>();
+        activeRoles.forEach((role) => {
+          if (role.menus && role.menus.length > 0) {
+            role.menus.forEach((menu) => {
+              menuIdSet.add(menu.id);
+            });
+          }
+        });
+        allowedMenuIds = Array.from(menuIdSet);
+      }
+
+      // 如果不是管理员且没有找到任何菜单权限，返回空数组
+      if (!isAdmin && allowedMenuIds.length === 0) {
+        return [];
+      }
+    }
+
+    // 构建查询条件
+    const whereCondition: any = {
+      status: 1,
+      visible: 1,
+      menuType: Not('F'),
+      deletedAt: IsNull(),
+    };
+
+    // 如果不是管理员且有权限菜单，则只查询这些菜单
+    if (userId && !isAdmin && allowedMenuIds.length > 0) {
+      whereCondition.id = In(allowedMenuIds);
+    }
+
+    // 查询菜单
+    const menus = await this.menuRepository.find({
+      where: whereCondition,
+      relations: ['children'],
+      order: {
+        sort: 'ASC',
+        createdAt: 'ASC',
+      },
+    });
+
+    // 构建树形结构，并递归过滤隐藏的子菜单
+    const filteredMenus = this.filterVisibleMenus(menus);
+    const tree = this.buildTree(filteredMenus);
+
+    // 如果不是管理员，需要递归过滤掉没有权限的菜单
+    if (userId && !isAdmin && allowedMenuIds.length > 0) {
+      return this.filterMenusByPermission(tree, allowedMenuIds);
+    }
+
+    return tree;
+  }
+
+  /**
+   * 根据权限递归过滤菜单树
+   */
+  private filterMenusByPermission(menus: Menu[], allowedMenuIds: number[]): Menu[] {
+    return menus
+      .filter((menu) => allowedMenuIds.includes(menu.id))
+      .map((menu) => {
+        if (menu.children && menu.children.length > 0) {
+          menu.children = this.filterMenusByPermission(menu.children, allowedMenuIds);
+        }
+        return menu;
+      });
+  }
+
+  /**
+   * 递归过滤隐藏的菜单（visible = 0）
+   */
+  private filterVisibleMenus(menus: Menu[]): Menu[] {
+    return menus
+      .filter(menu => menu.visible === 1)
+      .map(menu => {
+        if (menu.children && menu.children.length > 0) {
+          menu.children = this.filterVisibleMenus(menu.children);
+        }
+        return menu;
+      });
   }
 
   /**
@@ -179,9 +293,22 @@ export class MenuService {
 
   /**
    * 删除菜单（软删除）
+   * 如果菜单有子菜单，不允许删除
    */
   async remove(id: number): Promise<void> {
     const menu = await this.findOne(id);
+    
+    // 检查是否有子菜单（只检查未删除的子菜单）
+    const childrenCount = await this.menuRepository
+      .createQueryBuilder('menu')
+      .where('menu.parentId = :parentId', { parentId: id })
+      .andWhere('menu.deletedAt IS NULL')
+      .getCount();
+    
+    if (childrenCount > 0) {
+      throw new BadRequestException(`菜单存在子菜单，无法删除`);
+    }
+    
     await this.menuRepository.softRemove(menu);
   }
 }

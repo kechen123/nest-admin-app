@@ -107,19 +107,19 @@
 // // const { count } = storeToRefs(useMainStore)
 // // const { increment } = useMainStore
 
-import { getMenuTreeTransformed, type FrontendMenu } from '@/api/sys_menu'
+import { getMenuPageTree, type FrontendMenu } from '@/api/sys_menu'
 
 export const useRouterStore = defineStore(
   'router',
   () => {
     const roles = ref<FrontendMenu[]>([])
-    
+
     /**
      * 初始化菜单（从后端获取菜单树并转换为前端格式）
      */
     const initMenu = async () => {
       try {
-        const menus = await getMenuTreeTransformed()
+        const menus = await getMenuPageTree()
         roles.value = menus
         return { status: 200, data: menus }
       } catch (error: any) {
@@ -127,15 +127,19 @@ export const useRouterStore = defineStore(
         return { status: error?.response?.status || 500, data: [] }
       }
     }
-    
+
     /**
      * 手动设置角色/菜单数据
      */
     const addRoles = (r: FrontendMenu[]) => {
       roles.value = r
     }
-    
-    return { roles, initMenu, addRoles }
+
+    const clearRoles = () => {
+      roles.value = []
+    }
+
+    return { roles, initMenu, addRoles, clearRoles }
   },
   {
     persist: true,

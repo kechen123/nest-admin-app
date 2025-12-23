@@ -160,7 +160,46 @@ CREATE TABLE `user_roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户角色关联表';
 
 -- ============================================
--- 7. 创建角色菜单关联表
+-- 7. 创建权限表
+-- ============================================
+DROP TABLE IF EXISTS `permissions`;
+CREATE TABLE `permissions` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT,
+  `name` VARCHAR(50) NOT NULL COMMENT '权限名称',
+  `code` VARCHAR(100) NOT NULL UNIQUE COMMENT '权限代码',
+  `type` VARCHAR(20) DEFAULT 'api' COMMENT '类型: menu-菜单, button-按钮, api-接口',
+  `parent_id` INT DEFAULT NULL COMMENT '父级权限ID',
+  `path` VARCHAR(200) COMMENT '路由路径',
+  `icon` VARCHAR(50) COMMENT '图标',
+  `sort` INT DEFAULT 0 COMMENT '排序',
+  `created_by` INT COMMENT '创建人',
+  `updated_by` INT COMMENT '更新人',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
+  INDEX idx_code (`code`),
+  INDEX idx_parent_id (`parent_id`),
+  INDEX idx_type (`type`),
+  INDEX idx_sort (`sort`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限表';
+
+-- ============================================
+-- 8. 创建角色权限关联表
+-- ============================================
+DROP TABLE IF EXISTS `role_permissions`;
+CREATE TABLE `role_permissions` (
+  `role_id` INT NOT NULL COMMENT '角色ID',
+  `permission_id` INT NOT NULL COMMENT '权限ID',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`role_id`, `permission_id`),
+  FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`permission_id`) REFERENCES `permissions`(`id`) ON DELETE CASCADE,
+  INDEX idx_role_id (`role_id`),
+  INDEX idx_permission_id (`permission_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色权限关联表';
+
+-- ============================================
+-- 9. 创建角色菜单关联表
 -- ============================================
 DROP TABLE IF EXISTS `role_menus`;
 CREATE TABLE `role_menus` (
@@ -201,7 +240,7 @@ CREATE TABLE `operation_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
 
 -- ============================================
--- 9. 创建字典类型表
+-- 11. 创建字典类型表
 -- ============================================
 DROP TABLE IF EXISTS `dict_types`;
 CREATE TABLE `dict_types` (
@@ -220,7 +259,7 @@ CREATE TABLE `dict_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典类型表';
 
 -- ============================================
--- 10. 创建字典数据表
+-- 12. 创建字典数据表
 -- ============================================
 DROP TABLE IF EXISTS `dict_data`;
 CREATE TABLE `dict_data` (
@@ -246,7 +285,7 @@ CREATE TABLE `dict_data` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典数据表';
 
 -- ============================================
--- 11. 创建系统参数表
+-- 13. 创建系统参数表
 -- ============================================
 DROP TABLE IF EXISTS `system_configs`;
 CREATE TABLE `system_configs` (
@@ -268,7 +307,7 @@ CREATE TABLE `system_configs` (
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
--- 12. 插入部门测试数据
+-- 14. 插入部门测试数据
 -- ============================================
 INSERT INTO `departments` (`id`, `name`, `parent_id`, `ancestors`, `leader`, `phone`, `email`, `order_num`, `status`, `remark`) VALUES
 (1, '总公司', 0, '0', '张总', '010-88888888', 'ceo@company.com', 1, 1, '公司总部'),
@@ -283,7 +322,7 @@ INSERT INTO `departments` (`id`, `name`, `parent_id`, `ancestors`, `leader`, `ph
 (10, '人事部', 1, '0,1', '王经理', '010-88880009', 'hr@company.com', 5, 1, '人力资源部门');
 
 -- ============================================
--- 13. 插入岗位测试数据
+-- 15. 插入岗位测试数据
 -- ============================================
 INSERT INTO `posts` (`id`, `code`, `name`, `order_num`, `status`, `remark`) VALUES
 (1, 'ceo', '董事长', 1, 1, '公司最高管理者'),
@@ -303,7 +342,7 @@ INSERT INTO `posts` (`id`, `code`, `name`, `order_num`, `status`, `remark`) VALU
 (15, 'hr_specialist', '人事专员', 15, 1, '人事专员');
 
 -- ============================================
--- 14. 插入角色测试数据
+-- 16. 插入角色测试数据
 -- ============================================
 INSERT INTO `roles` (`id`, `name`, `code`, `data_scope`, `order_num`, `status`, `remark`) VALUES
 (1, '超级管理员', 'super_admin', '1', 1, 1, '拥有所有权限，系统最高权限'),
@@ -316,7 +355,7 @@ INSERT INTO `roles` (`id`, `name`, `code`, `data_scope`, `order_num`, `status`, 
 (8, '普通用户', 'user', '5', 8, 1, '普通用户，只有查看权限');
 
 -- ============================================
--- 15. 插入用户测试数据
+-- 17. 插入用户测试数据
 -- ============================================
 -- 密码都是: admin123 (bcrypt加密)
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `nickname`, `phone`, `gender`, `dept_id`, `post_id`, `login_ip`, `login_date`, `status`, `is_admin`, `remark`) VALUES
@@ -332,7 +371,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `nickname`, `phone`,
 (10, 'demo', 'demo@company.com', '$2b$10$CyOrL4KfwIoJGYbFoVAPguVvhakw3jHnoNuZA2YxoRXsCl5LzrDN2', '演示用户', '13800000010', 0, 2, 7, '192.168.1.109', '2024-01-15 20:30:00', 1, 0, '演示账号，权限受限');
 
 -- ============================================
--- 16. 插入菜单测试数据
+-- 18. 插入菜单测试数据
 -- ============================================
 
 -- 插入顶级菜单（目录）
@@ -344,40 +383,40 @@ INSERT INTO `menus` (`id`, `name`, `title`, `menu_type`, `path`, `component`, `i
 
 -- 插入系统管理子菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(5, 'UserManage', '用户管理', 'system:user:list', 'C', '/system/user', 'system/user/index', 'user', 1, 1, 1, 1),
-(6, 'RoleManage', '角色管理', 'system:role:list', 'C', '/system/role', 'system/role/index', 'peoples', 1, 2, 1, 1),
-(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', '/system/menu', 'system/menu/index', 'tree-table', 1, 3, 1, 1),
-(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept', 'system/dept/index', 'tree', 1, 4, 1, 1),
-(9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post', 'system/post/index', 'post', 1, 5, 1, 1),
-(10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict', 'system/dict/index', 'dict', 1, 6, 1, 1),
-(11, 'ConfigManage', '参数设置', 'system:config:list', 'C', '/system/config', 'system/config/index', 'edit', 1, 7, 1, 1);
+(5, 'UserManage', '用户管理', 'system:user:list', 'C', '/system/user/', 'system/user/index', 'user', 1, 1, 1, 1),
+(6, 'RoleManage', '角色管理', 'system:role:list', 'C', '/system/role/', 'system/role/index', 'peoples', 1, 2, 1, 1),
+(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', '/system/menu/', 'system/menu/index', 'tree-table', 1, 3, 1, 1),
+(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept/', 'system/dept/index', 'tree', 1, 4, 1, 1),
+(9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post/', 'system/post/index', 'post', 1, 5, 1, 1),
+(10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict/', 'system/dict/index', 'dict', 1, 6, 1, 1),
+(11, 'ConfigManage', '参数设置', 'system:config:list', 'C', '/system/config/', 'system/config/index', 'edit', 1, 7, 1, 1);
 
 -- 插入系统监控子菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(12, 'OnlineUser', '在线用户', 'monitor:online:list', 'C', '/monitor/online', 'monitor/online/index', 'online', 2, 1, 1, 1),
-(13, 'OperLog', '操作日志', 'monitor:operlog:list', 'C', '/monitor/operlog', 'monitor/operlog/index', 'form', 2, 2, 1, 1),
-(14, 'LoginLog', '登录日志', 'monitor:logininfor:list', 'C', '/monitor/logininfor', 'monitor/logininfor/index', 'logininfor', 2, 3, 1, 1),
-(15, 'Server', '服务监控', 'monitor:server:list', 'C', '/monitor/server', 'monitor/server/index', 'server', 2, 4, 1, 1),
-(16, 'Cache', '缓存监控', 'monitor:cache:list', 'C', '/monitor/cache', 'monitor/cache/index', 'redis', 2, 5, 1, 1);
+(12, 'OnlineUser', '在线用户', 'monitor:online:list', 'C', '/monitor/online/', 'monitor/online/index', 'online', 2, 1, 1, 1),
+(13, 'OperLog', '操作日志', 'monitor:operlog:list', 'C', '/monitor/operlog/', 'monitor/operlog/index', 'form', 2, 2, 1, 1),
+(14, 'LoginLog', '登录日志', 'monitor:logininfor:list', 'C', '/monitor/logininfor/', 'monitor/logininfor/index', 'logininfor', 2, 3, 1, 1),
+(15, 'Server', '服务监控', 'monitor:server:list', 'C', '/monitor/server/', 'monitor/server/index', 'server', 2, 4, 1, 1),
+(16, 'Cache', '缓存监控', 'monitor:cache:list', 'C', '/monitor/cache/', 'monitor/cache/index', 'redis', 2, 5, 1, 1);
 
 -- 插入系统工具子菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(17, 'Build', '表单构建', 'tool:build:list', 'C', '/tool/build', 'tool/build/index', 'build', 3, 1, 1, 1),
-(18, 'Swagger', '系统接口', 'tool:swagger:list', 'C', '/tool/swagger', 'tool/swagger/index', 'swagger', 3, 2, 1, 1);
+(17, 'Build', '表单构建', 'tool:build:list', 'C', '/tool/build/', 'tool/build/index', 'build', 3, 1, 1, 1),
+(18, 'Swagger', '系统接口', 'tool:swagger:list', 'C', '/tool/swagger/', 'tool/swagger/index', 'swagger', 3, 2, 1, 1);
 
 -- 插入个人中心子菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(19, 'Profile', '个人中心', '', 'C', '/user/profile', 'user/profile/index', 'user', 4, 1, 1, 1),
-(20, 'UserInfo', '用户信息', 'user:info:list', 'C', '/user/info', 'user/info/index', 'user', 4, 2, 1, 1);
+(19, 'Profile', '个人中心', '', 'C', '/user/profile/', 'user/profile/index', 'user', 4, 1, 1, 1),
+(20, 'UserInfo', '用户信息', 'user:info:list', 'C', '/user/info/', 'user/info/index', 'user', 4, 2, 1, 1);
 
 -- 插入按钮权限（用户管理按钮）
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(21, 'UserQuery', '用户查询', 'system:user:query', 'F', 5, 1, 1, 1),
-(22, 'UserAdd', '用户新增', 'system:user:add', 'F', 5, 2, 1, 1),
-(23, 'UserEdit', '用户修改', 'system:user:edit', 'F', 5, 3, 1, 1),
-(24, 'UserDelete', '用户删除', 'system:user:remove', 'F', 5, 4, 1, 1),
-(25, 'UserExport', '用户导出', 'system:user:export', 'F', 5, 5, 1, 1),
-(26, 'UserImport', '用户导入', 'system:user:import', 'F', 5, 6, 1, 1);
+(21, 'UserQuery', '用户查询', 'system:user:query', 'F', 5, 1, 1, 0),
+(22, 'UserAdd', '用户新增', 'system:user:add', 'F', 5, 2, 1, 0),
+(23, 'UserEdit', '用户修改', 'system:user:edit', 'F', 5, 3, 1, 0),
+(24, 'UserDelete', '用户删除', 'system:user:remove', 'F', 5, 4, 1, 0),
+(25, 'UserExport', '用户导出', 'system:user:export', 'F', 5, 5, 1, 0),
+(26, 'UserImport', '用户导入', 'system:user:import', 'F', 5, 6, 1, 0);
 
 -- 插入按钮权限（角色管理按钮）
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `parent_id`, `order_num`, `visible`, `status`) VALUES
@@ -387,7 +426,7 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `par
 (30, 'RoleDelete', '角色删除', 'system:role:remove', 'F', 6, 4, 1, 1);
 
 -- ============================================
--- 17. 插入字典类型测试数据
+-- 19. 插入字典类型测试数据
 -- ============================================
 INSERT INTO `dict_types` (`id`, `dict_name`, `dict_type`, `status`, `remark`) VALUES
 (1, '用户性别', 'sys_user_sex', 1, '用户性别列表'),
@@ -401,7 +440,7 @@ INSERT INTO `dict_types` (`id`, `dict_name`, `dict_type`, `status`, `remark`) VA
 (9, '登录状态', 'sys_login_status', 1, '登录状态列表');
 
 -- ============================================
--- 18. 插入字典数据测试数据
+-- 20. 插入字典数据测试数据
 -- ============================================
 INSERT INTO `dict_data` (`id`, `dict_label`, `dict_value`, `dict_type`, `dict_sort`, `status`, `remark`) VALUES
 (1, '男', '1', 'sys_user_sex', 1, 1, '性别男'),
@@ -429,7 +468,7 @@ INSERT INTO `dict_data` (`id`, `dict_label`, `dict_value`, `dict_type`, `dict_so
 (23, '失败', '0', 'sys_login_status', 2, 1, '登录失败');
 
 -- ============================================
--- 19. 插入系统参数测试数据
+-- 21. 插入系统参数测试数据
 -- ============================================
 INSERT INTO `system_configs` (`id`, `config_name`, `config_key`, `config_value`, `config_type`, `remark`) VALUES
 (1, '主框架页-默认皮肤样式名称', 'sys.index.skinName', 'skin-blue', 1, '蓝色 skin-blue、绿色 skin-green、紫色 skin-purple、红色 skin-red、黄色 skin-yellow'),
@@ -443,7 +482,7 @@ INSERT INTO `system_configs` (`id`, `config_name`, `config_key`, `config_value`,
 (9, '版权信息', 'sys.app.copyright', '© 2024 版权所有', 1, '版权信息');
 
 -- ============================================
--- 20. 插入操作日志测试数据
+-- 22. 插入操作日志测试数据
 -- ============================================
 INSERT INTO `operation_logs` (`id`, `title`, `business_type`, `method`, `request_method`, `user_id`, `username`, `oper_url`, `oper_ip`, `oper_location`, `oper_param`, `json_result`, `status`, `oper_time`) VALUES
 (1, '用户管理', '查询', 'com.example.controller.UserController.list', 'GET', 1, 'admin', '/api/user/list', '192.168.1.100', '内网IP', '{\"page\":1,\"size\":10}', '{\"code\":200,\"data\":[...]}', 1, '2024-01-15 09:35:00'),
@@ -453,7 +492,7 @@ INSERT INTO `operation_logs` (`id`, `title`, `business_type`, `method`, `request
 (5, '部门管理', '查询', 'com.example.controller.DeptController.list', 'GET', 3, 'lisi', '/api/dept/list', '192.168.1.102', '内网IP', '{}', '{\"code\":200,\"data\":[...]}', 1, '2024-01-15 15:20:00');
 
 -- ============================================
--- 21. 插入用户角色关联测试数据
+-- 23. 插入用户角色关联测试数据
 -- ============================================
 INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (1, 1),  -- admin -> 超级管理员
@@ -471,7 +510,7 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (10, 8); -- demo -> 普通用户
 
 -- ============================================
--- 22. 插入角色菜单关联测试数据
+-- 24. 插入角色菜单关联测试数据
 -- ============================================
 
 -- 超级管理员拥有所有菜单权限
@@ -510,20 +549,31 @@ AND (id IN (4, 19, 20)  -- 个人中心相关
      OR `menu_type` = 'M' AND `name` = 'UserCenter');
 
 -- ============================================
--- 23. 重置自增ID起始值
+-- 25. 插入权限测试数据（可选）
+-- ============================================
+-- 如果需要使用权限功能，可以在这里插入权限数据
+-- INSERT INTO `permissions` (`id`, `name`, `code`, `type`, `parent_id`, `sort`) VALUES
+-- (1, '用户管理', 'user:manage', 'menu', NULL, 1),
+-- (2, '创建用户', 'user:create', 'button', 1, 1),
+-- (3, '编辑用户', 'user:edit', 'button', 1, 2),
+-- (4, '删除用户', 'user:delete', 'button', 1, 3);
+
+-- ============================================
+-- 26. 重置自增ID起始值
 -- ============================================
 ALTER TABLE `users` AUTO_INCREMENT = 100;
 ALTER TABLE `departments` AUTO_INCREMENT = 100;
 ALTER TABLE `posts` AUTO_INCREMENT = 100;
 ALTER TABLE `roles` AUTO_INCREMENT = 100;
 ALTER TABLE `menus` AUTO_INCREMENT = 100;
+ALTER TABLE `permissions` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_types` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_data` AUTO_INCREMENT = 100;
 ALTER TABLE `system_configs` AUTO_INCREMENT = 100;
 ALTER TABLE `operation_logs` AUTO_INCREMENT = 100;
 
 -- ============================================
--- 24. 创建视图
+-- 27. 创建视图
 -- ============================================
 CREATE OR REPLACE VIEW v_user_info AS
 SELECT 
@@ -581,7 +631,7 @@ WHERE m1.status = 1
 ORDER BY m1.parent_id, m1.order_num;
 
 -- ============================================
--- 25. 输出初始化完成信息
+-- 28. 输出初始化完成信息
 -- ============================================
 SELECT '============================================' AS '';
 SELECT '数据库初始化完成' AS '';

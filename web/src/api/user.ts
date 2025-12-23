@@ -49,6 +49,7 @@ export interface CreateUserDto {
   status?: number
   isAdmin?: number
   role?: string
+  roleIds?: number[]
 }
 
 export interface UpdateUserDto {
@@ -64,6 +65,7 @@ export interface UpdateUserDto {
   status?: number
   isAdmin?: number
   role?: string
+  roleIds?: number[]
 }
 
 export interface QueryUserParams {

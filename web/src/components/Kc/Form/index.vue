@@ -7,7 +7,7 @@
 
     <!-- 实际表单内容 -->
     <div v-show="isReady" class="form-content">
-      <el-form ref="formRef" :model="formData" :rules="getRules()" :label-width="config.labelWidth || '100px'"
+      <el-form ref="formRef" :model="formData" :rules="getRules() as any" :label-width="config.labelWidth || '100px'"
         :inline="config.inline || false" class="kc-form">
         <FormGenerator :fields="config.fields" v-model="formData" :field-width="config.fieldWidth"
           @change="handleFieldChange">
@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed, isRef } from 'vue'
+import { ref, watch, onMounted, isRef } from 'vue'
 import { ElForm, ElSkeleton } from 'element-plus'
 import FormGenerator from '../components/FormGenerator.vue'
 import type { FormField } from '../types'
@@ -116,9 +116,9 @@ defineExpose({
   .el-form-item {
     margin-bottom: 0;
     align-items: flex-start;
-    min-width: 250px;
-    flex: 0 0 250px;
     box-sizing: border-box;
+    // 移除固定宽度，使用动态宽度（通过 :style 设置）
+    // 注意：flex-basis 会被 :style 中的 width 覆盖，所以不需要设置 flex
 
     .el-form-item__label {
       text-align: right;

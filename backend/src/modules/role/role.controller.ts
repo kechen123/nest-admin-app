@@ -58,6 +58,13 @@ export class RoleController {
     return this.roleService.assignPermissions(id, assignPermissionsDto.permissionIds);
   }
 
+  @Post(":id/menus")
+  @ApiOperation({ summary: "分配菜单" })
+  @ApiResponse({ status: 200, type: Role })
+  assignMenus(@Param("id", ParseIntPipe) id: number, @Body() assignMenusDto: { menuIds: number[] }) {
+    return this.roleService.assignMenus(id, assignMenusDto.menuIds);
+  }
+
   @Delete(":id")
   @ApiOperation({ summary: "删除角色" })
   @ApiResponse({ status: 200 })

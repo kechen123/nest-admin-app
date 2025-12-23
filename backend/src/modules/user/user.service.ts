@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -22,7 +22,7 @@ export class UserService {
    * 创建用户
    */
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const { password, role, ...rest } = createUserDto;
+    const { password, role, roleIds, ...rest } = createUserDto;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = this.userRepository.create({
@@ -30,8 +30,11 @@ export class UserService {
       password: hashedPassword,
     });
 
-    // 如果提供了 role，通过关联表设置角色
-    if (role) {
+    // 处理角色关联（优先使用 roleIds，如果没有则使用 role）
+    if (roleIds && roleIds.length > 0) {
+      const roleEntities = await this.roleRepository.findBy({ id: In(roleIds) });
+      user.roles = roleEntities;
+    } else if (role) {
       const roleEntity = await this.roleRepository.findOne({ where: { code: role } });
       if (roleEntity) {
         user.roles = [roleEntity];
@@ -136,9 +139,18 @@ export class UserService {
       delete updateUserDto.password;
     }
     
-    // 处理 role 字段（通过关联表）
-    const { role, ...restDto } = updateUserDto;
-    if (role !== undefined) {
+    // 处理角色关联（优先使用 roleIds，如果没有则使用 role）
+    const { role, roleIds, ...restDto } = updateUserDto;
+    if (roleIds !== undefined) {
+      if (roleIds.length > 0) {
+        const roleEntities = await this.roleRepository.findBy({ id: In(roleIds) });
+        user.roles = roleEntities;
+      } else {
+        // 如果 roleIds 是空数组，清空角色关联
+        user.roles = [];
+      }
+    } else if (role !== undefined) {
+      // 兼容旧的单个角色方式
       const roleEntity = await this.roleRepository.findOne({ where: { code: role } });
       if (roleEntity) {
         user.roles = [roleEntity];

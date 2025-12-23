@@ -77,8 +77,13 @@ export class UpdateUserDto {
   @IsIn([0, 1])
   isAdmin?: number;
 
-  @ApiProperty({ description: '角色', required: false })
+  @ApiProperty({ description: '角色代码（单个）', required: false })
   @IsOptional()
   @IsString()
   role?: string;
+
+  @ApiProperty({ description: '角色ID数组（多个角色）', required: false, type: [Number] })
+  @IsOptional()
+  @IsInt({ each: true })
+  roleIds?: number[];
 }

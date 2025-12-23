@@ -1,27 +1,41 @@
 import axios from '@/utils/http/axios'
 import type { Permission } from './permission'
+import type { FrontendMenu } from './sys_menu'
 
 export interface Role {
   id: number
   name: string
   code: string
-  description?: string
-  createdAt: string
+  dataScope?: string
+  orderNum?: number
+  status?: number
+  remark?: string
+  createdAt?: string
+  updatedAt?: string
   permissions?: Permission[] | number[]
+  menus?: FrontendMenu[] | number[]
 }
 
 export interface CreateRoleDto {
   name: string
   code: string
-  description?: string
+  dataScope?: string
+  orderNum?: number
+  status?: number
+  remark?: string
   permissions?: number[]
+  menuIds?: number[]
 }
 
 export interface UpdateRoleDto {
   name?: string
   code?: string
-  description?: string
+  dataScope?: string
+  orderNum?: number
+  status?: number
+  remark?: string
   permissions?: number[]
+  menuIds?: number[]
 }
 
 export interface QueryRoleParams {
@@ -29,6 +43,7 @@ export interface QueryRoleParams {
   pageSize?: number
   name?: string
   code?: string
+  status?: number
 }
 
 export interface PaginationResponse<T> {
@@ -73,5 +88,10 @@ export const roleApi = {
   // 分配权限
   assignPermissions(roleId: number, permissionIds: number[]) {
     return axios.post(`/roles/${roleId}/permissions`, { permissionIds })
+  },
+
+  // 分配菜单
+  assignMenus(roleId: number, menuIds: number[]) {
+    return axios.post(`/roles/${roleId}/menus`, { menuIds })
   },
 }

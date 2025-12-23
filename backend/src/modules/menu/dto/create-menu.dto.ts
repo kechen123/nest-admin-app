@@ -65,5 +65,35 @@ export class CreateMenuDto {
   @IsInt()
   @IsIn([0, 1])
   isExternal?: number;
+
+  @ApiProperty({ description: '菜单类型: M-目录, C-菜单, F-按钮', example: 'C', default: 'C', required: false })
+  @IsOptional()
+  @IsString()
+  @IsIn(['M', 'C', 'F'])
+  menuType?: string;
+
+  @ApiProperty({ description: '显示状态: 0-隐藏, 1-显示', example: 1, default: 1, required: false })
+  @IsOptional()
+  @IsInt()
+  @IsIn([0, 1])
+  visible?: number;
+
+  @ApiProperty({ description: '是否缓存: 0-缓存, 1-不缓存', example: 0, default: 0, required: false })
+  @IsOptional()
+  @IsInt()
+  @IsIn([0, 1])
+  isCache?: number;
+
+  @ApiProperty({ description: '路由参数', example: '', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  query?: string;
+
+  @ApiProperty({ description: '备注', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  remark?: string;
 }
 
