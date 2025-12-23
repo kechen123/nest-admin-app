@@ -376,19 +376,19 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `nickname`, `phone`,
 
 -- 插入顶级菜单（目录）
 INSERT INTO `menus` (`id`, `name`, `title`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(1, 'System', '系统管理', 'M', '/system', 'Layout', 'system', 0, 1, 1, 1),
-(2, 'Monitor', '系统监控', 'M', '/monitor', 'Layout', 'monitor', 0, 2, 1, 1),
-(3, 'Tool', '系统工具', 'M', '/tool', 'Layout', 'tool', 0, 3, 1, 1),
-(4, 'UserCenter', '个人中心', 'M', '/user', 'Layout', 'user', 0, 4, 1, 1);
+(1, 'System', '系统管理', 'M', '/system', 'Layout', 'Setting', 0, 1, 1, 1),
+(2, 'Monitor', '系统监控', 'M', '/monitor', 'Layout', 'Bell', 0, 2, 1, 1),
+(3, 'Tool', '系统工具', 'M', '/tool', 'Layout', 'CreditCard', 0, 3, 1, 1),
+(4, 'UserCenter', '个人中心', 'M', '/user', 'Layout', 'Food', 0, 4, 1, 1);
 
 -- 插入系统管理子菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(5, 'UserManage', '用户管理', 'system:user:list', 'C', '/system/user/', 'system/user/index', 'user', 1, 1, 1, 1),
-(6, 'RoleManage', '角色管理', 'system:role:list', 'C', '/system/role/', 'system/role/index', 'peoples', 1, 2, 1, 1),
-(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', '/system/menu/', 'system/menu/index', 'tree-table', 1, 3, 1, 1),
-(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept/', 'system/dept/index', 'tree', 1, 4, 1, 1),
-(9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post/', 'system/post/index', 'post', 1, 5, 1, 1),
-(10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict/', 'system/dict/index', 'dict', 1, 6, 1, 1),
+(5, 'UserManage', '用户管理', 'system:user:list', 'C', '/system/user/', 'system/user/index', 'Avatar', 1, 1, 1, 1),
+(6, 'RoleManage', '角色管理', 'system:role:list', 'C', '/system/role/', 'system/role/index', 'Connection', 1, 2, 1, 1),
+(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', '/system/menu/', 'system/menu/index', 'Expand', 1, 3, 1, 1),
+(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept/', 'system/dept/index', 'Briefcase', 1, 4, 1, 1),
+(9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post/', 'system/post/index', 'Basketball', 1, 5, 1, 1),
+(10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict/', 'system/dict/index', 'Coin', 1, 6, 1, 1),
 (11, 'ConfigManage', '参数设置', 'system:config:list', 'C', '/system/config/', 'system/config/index', 'edit', 1, 7, 1, 1);
 
 -- 插入系统监控子菜单
@@ -411,12 +411,12 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `pat
 
 -- 插入按钮权限（用户管理按钮）
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `parent_id`, `order_num`, `visible`, `status`) VALUES
-(21, 'UserQuery', '用户查询', 'system:user:query', 'F', 5, 1, 1, 0),
-(22, 'UserAdd', '用户新增', 'system:user:add', 'F', 5, 2, 1, 0),
-(23, 'UserEdit', '用户修改', 'system:user:edit', 'F', 5, 3, 1, 0),
-(24, 'UserDelete', '用户删除', 'system:user:remove', 'F', 5, 4, 1, 0),
-(25, 'UserExport', '用户导出', 'system:user:export', 'F', 5, 5, 1, 0),
-(26, 'UserImport', '用户导入', 'system:user:import', 'F', 5, 6, 1, 0);
+(21, 'UserQuery', '用户查询', 'system:user:query', 'F', 5, 1, 1, 1),
+(22, 'UserAdd', '用户新增', 'system:user:add', 'F', 5, 2, 1, 1),
+(23, 'UserEdit', '用户修改', 'system:user:edit', 'F', 5, 3, 1, 1),
+(24, 'UserDelete', '用户删除', 'system:user:remove', 'F', 5, 4, 1, 1),
+(25, 'UserExport', '用户导出', 'system:user:export', 'F', 5, 5, 1, 1),
+(26, 'UserImport', '用户导入', 'system:user:import', 'F', 5, 6, 1, 1);
 
 -- 插入按钮权限（角色管理按钮）
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `parent_id`, `order_num`, `visible`, `status`) VALUES
@@ -424,6 +424,15 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `par
 (28, 'RoleAdd', '角色新增', 'system:role:add', 'F', 6, 2, 1, 1),
 (29, 'RoleEdit', '角色修改', 'system:role:edit', 'F', 6, 3, 1, 1),
 (30, 'RoleDelete', '角色删除', 'system:role:remove', 'F', 6, 4, 1, 1);
+
+-- 插入首页菜单
+INSERT INTO `menus` (`id`, `name`, `title`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`) VALUES
+(31, 'Index', '首页', 'C', '/', 'index', 'Aim', 0, 0, 1, 1);
+
+-- 插入测试数据
+INSERT INTO `menus` (`id`, `name`, `title`, `menu_type`, `path`, `component`, `icon`, `parent_id`, `order_num`, `visible`, `status`, `remark`) VALUES
+(100, '测试目录名称', '测试目录标题', 'M', '/test', '/test', 'Baseball', 0, 33, 1, 1, 'test111'),
+(101, '测试子菜单名称', '测试子菜单标题', 'C', '/test/testaa', '/test/testaa', 'ArrowUpBold', 100, 1, 1, 1, NULL);
 
 -- ============================================
 -- 19. 插入字典类型测试数据

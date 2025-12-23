@@ -33,6 +33,8 @@ import { getPreviewUrl } from '@/utils/common'
 import { getDictOptions } from '@/utils/dict'
 import type { DictOption } from '@/api/dict'
 import axios from '@/utils/http/axios'
+import { departmentApi } from '@/api/department'
+import { postApi } from '@/api/post'
 
 // 选中的行数据
 const selectedRows = ref<UserType[]>([])
@@ -64,7 +66,7 @@ const loadDeptAndPost = async () => {
     // 获取部门列表
     // axios拦截器已经返回了res.data，所以这里直接使用返回的数组
     try {
-      const deptList = await axios.get('/department')
+      const deptList = await departmentApi.getAllDepartments()
       if (Array.isArray(deptList)) {
         const map: Record<number, string> = {}
         deptList.forEach((item: any) => {
@@ -81,7 +83,7 @@ const loadDeptAndPost = async () => {
     // 获取岗位列表
     // axios拦截器已经返回了res.data，所以这里直接使用返回的数组
     try {
-      const postList = await axios.get('/position')
+      const postList = await postApi.getAllPosts()
       if (Array.isArray(postList)) {
         const map: Record<number, string> = {}
         postList.forEach((item: any) => {

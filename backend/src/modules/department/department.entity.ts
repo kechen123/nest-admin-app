@@ -1,4 +1,4 @@
-import { Entity, Column } from "typeorm";
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { ApiProperty } from "@nestjs/swagger";
 import { BaseEntity } from "../../common/entities/base.entity";
 
@@ -11,6 +11,13 @@ export class Department extends BaseEntity {
   @ApiProperty({ description: "父部门ID", example: 0, default: 0 })
   @Column({ name: "parent_id", default: 0 })
   parentId: number;
+
+  @ManyToOne(() => Department, (dept) => dept.children, { nullable: true, onDelete: "CASCADE", createForeignKeyConstraints: false })
+  @JoinColumn({ name: "parent_id" })
+  parent?: Department;
+
+  @OneToMany(() => Department, (dept) => dept.parent, { cascade: true })
+  children?: Department[];
 
   @ApiProperty({ description: "祖级列表", required: false })
   @Column({ length: 500, nullable: true })
