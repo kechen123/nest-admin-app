@@ -43,10 +43,10 @@ export class AuthService {
       throw new UnauthorizedException("用户已被禁用");
     }
 
-    // 加载用户的角色和权限
+    // 加载用户的角色、权限和菜单
     const userWithRoles = await this.userRepository.findOne({
       where: { id: user.id },
-      relations: ["roles", "roles.permissions"],
+      relations: ["roles", "roles.permissions", "roles.menus"],
     });
 
     // 提取角色代码和权限代码
@@ -57,9 +57,21 @@ export class AuthService {
     if (userWithRoles?.roles) {
       userWithRoles.roles.forEach((role) => {
         roles.push(role.code);
+        
+        // 1. 从独立的权限表中提取权限（role_permissions）
         if (role.permissions) {
           role.permissions.forEach((permission) => {
             permissionSet.add(permission.code);
+          });
+        }
+        
+        // 2. 从菜单表中提取权限代码（role_menus）
+        // 提取所有有 permissionCode 的菜单（包括按钮类型 menuType === 'F'）
+        if (role.menus) {
+          role.menus.forEach((menu) => {
+            if (menu.permissionCode) {
+              permissionSet.add(menu.permissionCode);
+            }
           });
         }
       });

@@ -534,17 +534,87 @@ AND (id IN (4, 19, 20)  -- 个人中心相关
      OR `menu_type` = 'M' AND `name` = 'UserCenter');
 
 -- ============================================
--- 25. 插入权限测试数据（可选）
+-- 25. 插入权限数据
 -- ============================================
--- 如果需要使用权限功能，可以在这里插入权限数据
--- INSERT INTO `permissions` (`id`, `name`, `code`, `type`, `parent_id`, `sort`) VALUES
--- (1, '用户管理', 'user:manage', 'menu', NULL, 1),
--- (2, '创建用户', 'user:create', 'button', 1, 1),
--- (3, '编辑用户', 'user:edit', 'button', 1, 2),
--- (4, '删除用户', 'user:delete', 'button', 1, 3);
+INSERT INTO `permissions` (`id`, `name`, `code`, `type`, `parent_id`, `sort`, `created_at`, `updated_at`) VALUES
+-- 用户管理权限
+(1, '用户管理', 'user:manage', 'menu', NULL, 1, NOW(), NOW()),
+(2, '创建用户', 'user:create', 'button', 1, 1, NOW(), NOW()),
+(3, '编辑用户', 'user:edit', 'button', 1, 2, NOW(), NOW()),
+(4, '查看用户', 'user:view', 'button', 1, 3, NOW(), NOW()),
+(5, '删除用户', 'user:delete', 'button', 1, 4, NOW(), NOW()),
+
+-- 角色管理权限
+(6, '角色管理', 'role:manage', 'menu', NULL, 2, NOW(), NOW()),
+(7, '创建角色', 'role:create', 'button', 6, 1, NOW(), NOW()),
+(8, '编辑角色', 'role:edit', 'button', 6, 2, NOW(), NOW()),
+(9, '查看角色', 'role:view', 'button', 6, 3, NOW(), NOW()),
+(10, '删除角色', 'role:delete', 'button', 6, 4, NOW(), NOW()),
+
+-- 菜单管理权限
+(11, '菜单管理', 'menu:manage', 'menu', NULL, 3, NOW(), NOW()),
+(12, '创建菜单', 'menu:create', 'button', 11, 1, NOW(), NOW()),
+(13, '编辑菜单', 'menu:edit', 'button', 11, 2, NOW(), NOW()),
+(14, '查看菜单', 'menu:view', 'button', 11, 3, NOW(), NOW()),
+(15, '删除菜单', 'menu:delete', 'button', 11, 4, NOW(), NOW()),
+
+-- 部门管理权限
+(16, '部门管理', 'dept:manage', 'menu', NULL, 4, NOW(), NOW()),
+(17, '创建部门', 'dept:create', 'button', 16, 1, NOW(), NOW()),
+(18, '编辑部门', 'dept:edit', 'button', 16, 2, NOW(), NOW()),
+(19, '查看部门', 'dept:view', 'button', 16, 3, NOW(), NOW()),
+(20, '删除部门', 'dept:delete', 'button', 16, 4, NOW(), NOW()),
+
+-- 岗位管理权限
+(21, '岗位管理', 'post:manage', 'menu', NULL, 5, NOW(), NOW()),
+(22, '创建岗位', 'post:create', 'button', 21, 1, NOW(), NOW()),
+(23, '编辑岗位', 'post:edit', 'button', 21, 2, NOW(), NOW()),
+(24, '查看岗位', 'post:view', 'button', 21, 3, NOW(), NOW()),
+(25, '删除岗位', 'post:delete', 'button', 21, 4, NOW(), NOW()),
+
+-- 字典管理权限
+(26, '字典管理', 'dict:manage', 'menu', NULL, 6, NOW(), NOW()),
+(27, '创建字典', 'dict:create', 'button', 26, 1, NOW(), NOW()),
+(28, '编辑字典', 'dict:edit', 'button', 26, 2, NOW(), NOW()),
+(29, '查看字典', 'dict:view', 'button', 26, 3, NOW(), NOW()),
+(30, '删除字典', 'dict:delete', 'button', 26, 4, NOW(), NOW());
 
 -- ============================================
--- 26. 重置自增ID起始值
+-- 26. 插入角色权限关联数据
+-- ============================================
+
+-- 超级管理员拥有所有权限
+INSERT INTO `role_permissions` (`role_id`, `permission_id`, `created_at`)
+SELECT 1, id, NOW() FROM `permissions`
+WHERE `deleted_at` IS NULL;
+
+-- 系统管理员拥有用户、角色、菜单、部门、岗位、字典管理权限
+INSERT INTO `role_permissions` (`role_id`, `permission_id`, `created_at`)
+SELECT 2, id, NOW() FROM `permissions`
+WHERE `code` IN (
+  'user:manage', 'user:create', 'user:edit', 'user:view', 'user:delete',
+  'role:manage', 'role:create', 'role:edit', 'role:view', 'role:delete',
+  'menu:manage', 'menu:create', 'menu:edit', 'menu:view', 'menu:delete',
+  'dept:manage', 'dept:create', 'dept:edit', 'dept:view', 'dept:delete',
+  'post:manage', 'post:create', 'post:edit', 'post:view', 'post:delete',
+  'dict:manage', 'dict:create', 'dict:edit', 'dict:view', 'dict:delete'
+);
+
+-- 部门管理员拥有用户查看和编辑权限
+INSERT INTO `role_permissions` (`role_id`, `permission_id`, `created_at`)
+SELECT 3, id, NOW() FROM `permissions`
+WHERE `code` IN (
+  'user:view', 'user:edit',
+  'dept:view', 'dept:edit'
+);
+
+-- 开发工程师拥有查看权限
+INSERT INTO `role_permissions` (`role_id`, `permission_id`, `created_at`)
+SELECT 5, id, NOW() FROM `permissions`
+WHERE `code` LIKE '%:view';
+
+-- ============================================
+-- 27. 重置自增ID起始值
 -- ============================================
 ALTER TABLE `users` AUTO_INCREMENT = 100;
 ALTER TABLE `departments` AUTO_INCREMENT = 100;
@@ -558,7 +628,7 @@ ALTER TABLE `system_configs` AUTO_INCREMENT = 100;
 ALTER TABLE `operation_logs` AUTO_INCREMENT = 100;
 
 -- ============================================
--- 27. 创建视图
+-- 28. 创建视图
 -- ============================================
 CREATE OR REPLACE VIEW v_user_info AS
 SELECT 
@@ -616,7 +686,7 @@ WHERE m1.status = 1
 ORDER BY m1.parent_id, m1.order_num;
 
 -- ============================================
--- 28. 输出初始化完成信息
+-- 29. 输出初始化完成信息
 -- ============================================
 SELECT '============================================' AS '';
 SELECT '数据库初始化完成' AS '';

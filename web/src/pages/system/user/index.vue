@@ -15,9 +15,18 @@
       <span v-if="!row.roles || row.roles.length === 0" style="color: #999;">-</span>
     </template>
     <template #actions="{ row }">
-      <el-button type="primary" plain size="small" @click="openUserDetail(row.id, 'edit')">编辑</el-button>
-      <el-button type="success" plain size="small" @click="openUserDetail(row.id, 'view')">查看详情</el-button>
-      <el-button type="danger" plain size="small" @click="handleDelete(row.id)">删除</el-button>
+      <el-button v-if="hasPermission('system:user:edit')" type="primary" plain size="small"
+        @click="openUserDetail(row.id, 'edit')">
+        编辑
+      </el-button>
+      <el-button v-if="hasPermission('system:user:query')" type="success" plain size="small"
+        @click="openUserDetail(row.id, 'view')">
+        查看详情
+      </el-button>
+      <el-button v-if="hasPermission('system:user:remove')" type="danger" plain size="small"
+        @click="handleDelete(row.id)">
+        删除
+      </el-button>
     </template>
   </TableWithSlidePanel>
 </template>
@@ -32,9 +41,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPreviewUrl } from '@/utils/common'
 import { getDictOptions } from '@/utils/dict'
 import type { DictOption } from '@/api/dict'
-import axios from '@/utils/http/axios'
 import { departmentApi } from '@/api/department'
 import { postApi } from '@/api/post'
+import { hasPermission } from '@/utils/permission'
 
 // 选中的行数据
 const selectedRows = ref<UserType[]>([])
@@ -366,17 +375,24 @@ const tableConfig: TableConfig = {
 }
 
 // 动态生成工具栏配置
-const toolbarConfig = computed(() => ({
-  leftButtons: [
-    {
+const toolbarConfig = computed(() => {
+  const leftButtons = []
+
+  // 新增用户按钮
+  if (hasPermission('system:user:add')) {
+    leftButtons.push({
       key: 'add',
       label: '新增用户',
       type: 'primary' as const,
       onClick: () => {
         openUserDetail()
       }
-    },
-    {
+    })
+  }
+
+  // 批量删除按钮
+  if (hasPermission('system:user:remove')) {
+    leftButtons.push({
       key: 'batchDelete',
       label: `批量删除${selectedRows.value.length > 0 ? `(${selectedRows.value.length})` : ''}`,
       type: 'danger' as const,
@@ -406,21 +422,25 @@ const toolbarConfig = computed(() => ({
           }
         }
       }
-    }
-  ],
-  rightButtons: [
-    {
-      key: 'refresh',
-      label: '刷新',
-      type: 'info' as const,
-      icon: 'Refresh',
-      onClick: async () => {
-        await tableRef.value?.refresh()
-        ElMessage.success('刷新成功')
+    })
+  }
+
+  return {
+    leftButtons,
+    rightButtons: [
+      {
+        key: 'refresh',
+        label: '刷新',
+        type: 'info' as const,
+        icon: 'Refresh',
+        onClick: async () => {
+          await tableRef.value?.refresh()
+          ElMessage.success('刷新成功')
+        }
       }
-    }
-  ]
-}))
+    ]
+  }
+})
 
 const kcConfig = computed<KcConfig>(() => ({
   toolbar: toolbarConfig.value,

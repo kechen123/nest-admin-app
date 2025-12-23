@@ -95,6 +95,7 @@ declare module 'vue' {
     LayoutTable: typeof import('./../src/components/Layout/Table/index.vue')['default']
     LayoutTags: typeof import('./../src/components/Layout/Tags/index.vue')['default']
     MIcon: typeof import('./../src/components/mIcon.vue')['default']
+    PermissionButton: typeof import('./../src/components/PermissionButton/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SmartTable: typeof import('./../src/components/SmartTable/index.vue')['default']
