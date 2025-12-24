@@ -1,5 +1,12 @@
 <template>
   <div class="body">
+    <!-- 左侧：折叠按钮 + 面包屑 -->
+    <div class="header-left">
+      <LayoutHeaderLeft />
+      <LayoutHeaderBreadcrumb />
+    </div>
+    
+    <!-- 右侧：导航栏 -->
     <LayoutHeaderNavigation />
   </div>
 </template>
@@ -20,5 +27,13 @@
   border-bottom-width: 1px;
   border-bottom-style: solid;
   border-bottom-color: var(--el-border-color);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0; // 允许 flex 子元素收缩
 }
 </style>

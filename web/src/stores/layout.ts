@@ -15,7 +15,16 @@ export const useLayoutStore = defineStore(
         show: false,
       },
     })
-    return { mainLayout }
+
+    // 侧边栏折叠状态
+    const isCollapse = ref(false)
+
+    // 切换侧边栏折叠状态
+    const toggleCollapse = () => {
+      isCollapse.value = !isCollapse.value
+    }
+
+    return { mainLayout, isCollapse, toggleCollapse }
   },
   // {
   //   persist: true,

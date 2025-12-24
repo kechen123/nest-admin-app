@@ -5,10 +5,19 @@
       <template v-if="item.children && item.children.length > 0">
         <el-sub-menu :index="item.path" :key="item.id">
           <template #title>
-            <el-icon v-if="item.icon">
-              <MIcon :iconName="item.icon" />
-            </el-icon>
-            <span>{{ item.title }}</span>
+            <el-tooltip v-if="isCollapse" :content="item.title" placement="right" effect="dark">
+              <div class="sub-menu-title-wrapper">
+                <el-icon v-if="item.icon">
+                  <MIcon :iconName="item.icon" />
+                </el-icon>
+              </div>
+            </el-tooltip>
+            <template v-else>
+              <el-icon v-if="item.icon">
+                <MIcon :iconName="item.icon" />
+              </el-icon>
+              <span>{{ item.title }}</span>
+            </template>
           </template>
           <template v-for="child in item.children" :key="child.id">
             <template v-if="child.children && child.children.length > 0">
@@ -50,10 +59,17 @@
         </el-sub-menu>
       </template>
       <el-menu-item v-else :index="item.path" :key="item.id">
-        <el-icon v-if="item.icon">
-          <MIcon :iconName="item.icon" />
-        </el-icon>
-        <span>{{ item.title }}</span>
+        <el-tooltip v-if="isCollapse" :content="item.title" placement="right" effect="dark">
+          <el-icon v-if="item.icon">
+            <MIcon :iconName="item.icon" />
+          </el-icon>
+        </el-tooltip>
+        <template v-else>
+          <el-icon v-if="item.icon">
+            <MIcon :iconName="item.icon" />
+          </el-icon>
+          <span>{{ item.title }}</span>
+        </template>
       </el-menu-item>
     </template>
   </el-menu>
@@ -61,6 +77,8 @@
 
 <script lang="ts" setup>
 import { useRouterStore } from '@/stores/router'
+import { useLayoutStore } from '@/stores/layout'
+import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 
 interface MenuItem {
@@ -74,8 +92,9 @@ interface MenuItem {
 
 const router = useRouter()
 const routerSotre = useRouterStore()
+const layoutStore = useLayoutStore()
 const routerPath = computed<MenuItem[]>(() => routerSotre.roles)
-const isCollapse = ref(false)
+const { isCollapse } = storeToRefs(layoutStore)
 const defaultActive = ref(router.currentRoute.value.path)
 
 function findMenuItemByPath(menuList: MenuItem[], path: string): MenuItem | null {
@@ -142,15 +161,47 @@ watch(
   --el-menu-sub-item-height: 40px;
   --el-menu-base-level-padding: 12px;
   --el-menu-level-padding: 12px;
-  padding: 0 14px;
+  padding: 8px;
+  transition: padding 0.3s ease-in-out;
 
+  // 折叠状态下的样式
+  &.el-menu--collapse {
+    padding: 8px 0;
+    width: 100%;
+    
+    .el-menu-item,
+    .el-sub-menu__title {
+      justify-content: center;
+      padding: 0 !important;
+      margin: 4px 8px;
+      height: 40px;
+      line-height: 40px;
+      
+      .el-icon {
+        margin: 0 !important;
+        font-size: 20px;
+      }
+    }
+    
+    .el-sub-menu__icon-arrow {
+      display: none;
+    }
+    
+    // 确保 tooltip 容器正确显示
+    .el-tooltip {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
 }
-
 
 .el-menu-vertical:not(.el-menu--collapse) {
   width: 100%;
   min-height: 400px;
   border: none;
+  padding: 0 14px;
 
   .el-menu-item {
     // padding-left: 6px !important;
@@ -176,19 +227,34 @@ watch(
 .el-sub-menu__title {
   border-radius: 10px;
   margin-bottom: 10px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
 
   i,
   span {
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease;
   }
 
   &:hover {
-
+    background-color: var(--el-color-info-light-8);
+    
     i {
       animation: scale-pop 0.3s ease;
     }
-
-
+  }
+  
+  // 折叠状态下的样式
+  .el-menu--collapse & {
+    justify-content: center;
+    margin: 4px 8px;
+    border-radius: 8px;
+    width: calc(100% - 16px);
+    
+    .el-icon {
+      margin: 0 !important;
+      font-size: 20px;
+    }
   }
 }
 
@@ -197,5 +263,33 @@ watch(
 .el-menu-item.is-active {
   background-color: var(--el-color-primary-light-7);
   color: var(--el-color-primary);
+  font-weight: 500;
+  
+  // 折叠状态下的激活样式
+  .el-menu--collapse & {
+    background: linear-gradient(135deg, var(--el-color-primary-light-8), var(--el-color-primary-light-9));
+    border-radius: 8px;
+  }
+}
+
+// 折叠状态下子菜单的样式优化
+.el-menu--collapse {
+  .el-sub-menu {
+    .el-sub-menu__title {
+      padding: 0 !important;
+      justify-content: center;
+    }
+    
+    // 子菜单弹出层应该正常显示文字（Element Plus 会自动处理）
+    // 弹出层中的菜单项不受折叠状态影响，会正常显示
+  }
+  
+  // 子菜单标题包装器样式
+  .sub-menu-title-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
 }
 </style>

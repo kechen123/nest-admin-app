@@ -1,6 +1,6 @@
 <template>
   <el-container class="layout-container">
-    <el-aside class="sidebar">
+    <el-aside class="sidebar" :class="{ 'is-collapse': isCollapse }">
       <LayoutAside />
     </el-aside>
     <el-container>
@@ -23,7 +23,13 @@
   </el-container>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useLayoutStore } from '@/stores/layout'
+import { storeToRefs } from 'pinia'
+
+const layoutStore = useLayoutStore()
+const { isCollapse } = storeToRefs(layoutStore)
+</script>
 
 <style scoped lang="less">
 .layout-container {
@@ -33,13 +39,19 @@
   .sidebar {
     // background-color: var(--sidebar-bg);
     width: 200px;
-    transition: all 0.3s ease-in-out;
+    transition: width 0.3s ease-in-out;
     transform: translateX(0);
     // border-right: var(--sidebar-border);
     // box-shadow: var(--border);
     border-right-width: 1px;
     border-right-style: solid;
     border-right-color: var(--el-border-color);
+    overflow: hidden;
+    background-color: var(--el-bg-color);
+    
+    &.is-collapse {
+      width: 64px;
+    }
   }
 
   .header {

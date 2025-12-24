@@ -141,7 +141,6 @@ const handleCommand = async (command: string | number | object) => {
 .navbar-collapse {
   display: flex;
   align-items: center;
-  width: 100%;
 
   ul {
     display: flex;
