@@ -2,11 +2,205 @@
 
 本文档提供从零开始初始化项目的完整步骤。
 
+> 👋 **如果你是第一次使用这个项目，完全不懂编程，请直接跳到"🎓 第一次使用完整流程"部分。**
+
 ## 📋 前置要求
 
 - Node.js >= 18.0.0
 - Docker >= 20.10.0
 - Docker Compose >= 2.0.0
+
+## 📦 前置条件安装指南
+
+### 1. 安装 Node.js
+
+**什么是 Node.js？**
+Node.js 是一个运行 JavaScript 的环境，我们的项目需要它来运行。
+
+**如何安装？**
+1. 访问 https://nodejs.org/
+2. 下载 LTS 版本（推荐，更稳定）
+3. 双击安装包，一路点击"下一步"完成安装
+4. **重要**：安装时确保勾选"添加到 PATH"选项
+
+**如何检查是否安装成功？**
+打开命令行（Windows: 按 Win+R，输入 `cmd`，回车；Mac: 按 Cmd+Space，输入 `terminal`，回车；Linux: 按 Ctrl+Alt+T），输入：
+```bash
+node --version
+```
+应该显示类似 `v18.0.0` 的版本号。如果显示"不是内部或外部命令"或"command not found"，说明没有安装成功。
+
+**如何检查 npm？**
+npm 是 Node.js 自带的包管理工具，输入：
+```bash
+npm --version
+```
+应该显示版本号，如 `9.0.0`。
+
+**如果命令找不到怎么办？**
+1. 确认 Node.js 已安装
+2. **关闭并重新打开命令行窗口**（这很重要！）
+3. 如果还是不行，重新安装 Node.js，确保勾选"添加到 PATH"
+
+### 2. 安装 Docker
+
+**什么是 Docker？**
+Docker 是一个容器化平台，可以让你轻松运行应用程序，不需要手动配置环境。
+
+**如何安装？**
+- **Windows/Mac**: 访问 https://www.docker.com/products/docker-desktop/ 下载 Docker Desktop
+- **Linux (Ubuntu/Debian)**: 
+  ```bash
+  sudo apt update
+  sudo apt install docker.io docker-compose
+  sudo systemctl start docker
+  sudo systemctl enable docker
+  ```
+
+**如何检查是否安装成功？**
+```bash
+docker --version
+```
+应该显示版本号，如 `Docker version 20.10.0`。
+
+**如何启动 Docker？**
+- **Windows/Mac**: 双击桌面上的 Docker Desktop 图标，等待启动完成
+- **Linux**: Docker 服务通常会自动启动，如果没有，运行 `sudo systemctl start docker`
+
+**如何检查 Docker 是否运行？**
+```bash
+docker ps
+```
+如果显示容器列表（可能是空的，显示 "CONTAINER ID" 等表头），说明 Docker 正在运行。如果显示错误信息，说明 Docker 没有启动。
+
+**Docker 启动失败的常见原因：**
+- Windows: 需要启用 WSL 2 或 Hyper-V
+- Mac: 需要给 Docker Desktop 足够的系统权限
+- Linux: 需要将用户添加到 docker 组：`sudo usermod -aG docker $USER`，然后重新登录
+
+### 3. 验证所有前置条件
+
+运行以下命令，确认所有工具都已安装：
+
+```bash
+node --version    # 应该显示 v18.0.0 或更高版本
+npm --version     # 应该显示版本号
+docker --version  # 应该显示 Docker version 20.10.0 或更高版本
+docker ps         # 应该显示容器列表（可能是空的）
+```
+
+如果所有命令都能正常显示版本号，说明准备工作完成！✅
+
+## 🎓 第一次使用完整流程（零基础版）
+
+如果你是第一次使用这个项目，完全不懂编程，请按照以下步骤操作：
+
+### 准备工作（只需做一次）
+
+1. **安装必要软件**
+   - [ ] 安装 Node.js（见上面的"前置条件安装指南"）
+   - [ ] 安装 Docker Desktop（见上面的"前置条件安装指南"）
+   - [ ] （可选）安装 VS Code 编辑器：https://code.visualstudio.com/
+
+2. **验证安装**
+   ```bash
+   node --version    # 应该显示版本号
+   npm --version     # 应该显示版本号
+   docker --version  # 应该显示版本号
+   ```
+
+3. **启动 Docker**
+   - 双击桌面上的 Docker Desktop 图标
+   - 等待启动完成（系统托盘图标不再闪烁，Windows 右下角或 Mac 右上角）
+
+### 第一次运行项目
+
+**步骤 1：打开命令行**
+- **Windows**: 按 Win+R，输入 `cmd`，回车
+- **Mac**: 按 Cmd+Space，输入 `terminal`，回车
+- **Linux**: 按 Ctrl+Alt+T
+
+**步骤 2：进入项目文件夹**
+```bash
+# Windows 示例（假设项目在 D:\code\me\yl）
+cd D:\code\me\yl
+
+# Mac/Linux 示例（假设在 ~/code/yl）
+cd ~/code/yl
+```
+
+**如何确认位置正确？**
+运行以下命令：
+- **Windows**: `dir`，应该能看到 `package.json` 文件
+- **Mac/Linux**: `ls`，应该能看到 `package.json` 文件
+
+如果看不到 `package.json`，说明位置不对，需要重新进入正确的文件夹。
+
+**步骤 3：检查环境变量文件**
+```bash
+# Windows
+dir backend\.env
+
+# Mac/Linux
+ls backend/.env
+```
+
+如果显示"找不到文件"或"No such file"，需要创建 `.env` 文件（见下面的"配置环境变量"部分）。
+
+**步骤 4：启动服务（Docker 模式）**
+```bash
+npm run dev:up
+```
+
+**等待 30-60 秒**，这个过程中会：
+- 下载 Docker 镜像（第一次需要，可能较慢）
+- 启动 MySQL 数据库
+- 启动后端服务
+- 启动前端服务
+
+**如何判断启动成功？**
+运行：
+```bash
+npm run ps
+```
+
+应该看到三个容器都在运行：
+- `yl-mysql-dev` - MySQL 数据库
+- `yl-backend-dev` - 后端服务
+- `yl-web-dev` - 前端服务
+
+如果看到 "Up" 或 "healthy" 状态，说明启动成功！
+
+**步骤 5：初始化数据库**
+```bash
+npm run backend:init-db
+```
+
+**成功的标志：** 看到 "数据库初始化完成！" 和 "✅ 数据库 xxx 创建成功"
+
+**如果失败怎么办？**
+- 等待更长时间（MySQL 可能需要 30-60 秒才能完全启动）
+- 查看日志：`npm run mysql:logs`
+- 查看本文档的"常见错误"部分
+
+**步骤 6：访问应用**
+打开浏览器（Chrome、Firefox、Edge 都可以），访问：
+- **前端应用**: http://localhost:4000 （应该能看到登录页面）
+- **后端 API**: http://localhost:3000/api （应该能看到 Swagger 文档页面）
+
+**如果打不开怎么办？**
+- 确认服务已启动：`npm run ps`
+- 检查服务健康状态：`npm run health`
+- 查看日志：`npm run dev:logs`
+
+**步骤 7：登录测试**
+在登录页面输入：
+- **用户名**：`admin`
+- **密码**：`admin123`
+
+点击登录，如果能看到系统主页面，说明一切正常！🎉
+
+**恭喜你！** 项目已经成功运行了！
 
 ## 🧹 清理现有环境（如果需要）
 
@@ -118,7 +312,168 @@ npm run ps
 
 **注意**：数据库初始化脚本会自动配置外部连接权限，无需额外操作。如果遇到连接问题，可以重新运行初始化脚本。
 
+### 5. 如何判断命令是否成功？
+
+#### 启动服务的判断标准
+
+**启动 MySQL：**
+```bash
+npm run mysql:start
+```
+
+**成功的标志：**
+- 最后一行显示类似 `yl-mysql-dev` 的容器名称
+- 没有红色的错误信息
+- 等待 10-20 秒后，运行 `npm run ps` 能看到 MySQL 容器状态为 "Up" 或 "healthy"
+
+**失败的标志：**
+- 显示红色错误信息
+- 提示"端口已被占用"（说明 3306 端口被其他程序使用）
+- 提示"权限不足"（需要管理员权限）
+
+**启动所有服务：**
+```bash
+npm run dev:up
+```
+
+**成功的标志：**
+- 显示三个容器的启动信息
+- 没有红色错误信息
+- 运行 `npm run ps` 看到三个容器都在运行
+
+**失败的标志：**
+- 显示 "ERROR" 或 "Failed" 信息
+- 容器状态显示 "Exited" 或 "Restarting"
+
+#### 初始化数据库的判断标准
+
+**运行初始化：**
+```bash
+npm run backend:init-db
+```
+
+**成功的标志：**
+- 显示 "✅ 数据库 xxx 创建成功"
+- 显示 "数据库初始化完成！"
+- 显示数据库信息（数据库名、管理员账号等）
+- 最后显示 "⚠️  请在生产环境中修改默认密码！"
+
+**失败的标志：**
+- 显示 "❌ 数据库认证失败"
+- 显示 "错误: 创建数据库失败"
+- 显示红色错误信息
+- 提示密码不一致
+
+#### 服务运行状态的判断标准
+
+**检查服务状态：**
+```bash
+npm run ps
+```
+
+**正常的标志：**
+- 看到三个容器：`yl-mysql-dev`、`yl-backend-dev`、`yl-web-dev`
+- 状态显示 "Up" 或 "healthy"
+- 没有 "Exited" 或 "Restarting" 状态
+
+**不正常的标志：**
+- 容器数量少于 3 个
+- 状态显示 "Exited"（已退出）
+- 状态显示 "Restarting"（不断重启）
+- 状态显示 "Unhealthy"（不健康）
+
+**健康检查：**
+```bash
+npm run health
+```
+
+**正常的标志：**
+- 所有服务显示 ✅ 和 "正常"
+- 显示 "所有服务运行正常！"
+
+**不正常的标志：**
+- 某些服务显示 ❌ 和 "异常"
+- 显示 "部分服务异常，请检查上述信息"
+
 ### 6. 查看日志（如遇问题）
+
+#### 什么是日志？
+日志就是程序运行过程中记录的信息，包括错误、警告、正常操作等。当出现问题时，查看日志可以帮助你找到原因。
+
+#### 如何查看日志？
+
+**查看所有服务日志：**
+```bash
+npm run dev:logs
+```
+这会显示所有服务的实时日志，按 Ctrl+C 可以停止。
+
+**查看单个服务日志：**
+```bash
+npm run backend:logs   # 后端日志
+npm run web:logs       # 前端日志
+npm run mysql:logs     # MySQL 日志
+```
+
+#### 如何理解日志？
+
+**正常日志示例：**
+```
+[INFO] Server is running on port 3000
+[INFO] Database connected successfully
+[Nest] Application successfully started
+```
+这些是正常信息，说明服务运行正常。
+
+**错误日志示例：**
+```
+[ERROR] Cannot connect to database
+[ERROR] Port 3000 is already in use
+[ERROR] Access denied for user 'root'@'localhost'
+```
+这些是错误信息，需要根据错误内容解决问题。
+
+#### 常见日志错误及解决
+
+**"Cannot connect to database"**
+- **原因**：无法连接到数据库
+- **解决**：检查 MySQL 是否启动（`npm run ps`），检查 `.env` 配置
+
+**"Port xxx is already in use"**
+- **原因**：端口被占用
+- **解决**：停止占用端口的程序，或修改配置使用其他端口
+
+**"Access denied for user"**
+- **原因**：数据库用户名或密码错误
+- **解决**：检查 `.env` 文件中的 `DB_USERNAME` 和 `DB_PASSWORD`
+
+### 7. 服务运行检查清单
+
+运行项目后，按照以下清单检查是否一切正常：
+
+#### Docker 模式检查清单
+
+- [ ] Docker Desktop 正在运行（系统托盘有 Docker 图标）
+- [ ] 运行 `npm run ps` 看到三个容器都在运行
+- [ ] 运行 `npm run health` 所有服务显示 ✅
+- [ ] 浏览器访问 http://localhost:4000 能看到登录页面
+- [ ] 浏览器访问 http://localhost:3000/api 能看到 Swagger 文档
+- [ ] 使用 admin/admin123 能成功登录
+
+#### 本地模式检查清单
+
+- [ ] Docker Desktop 正在运行
+- [ ] MySQL 容器正在运行（`npm run ps` 能看到 yl-mysql-dev）
+- [ ] 后端服务正在运行（命令行窗口显示 "Server is running"）
+- [ ] 浏览器访问 http://localhost:3000/api 能看到 Swagger 文档
+- [ ] （如果启动了前端）浏览器访问 http://localhost:4000 能看到登录页面
+
+#### 如果检查失败怎么办？
+
+1. **查看日志**：运行 `npm run dev:logs` 或单个服务的日志命令
+2. **检查配置**：确认 `.env` 文件配置正确
+3. **重启服务**：运行 `npm run dev:restart` 或单个服务的重启命令
+4. **查看本文档的"常见错误"部分**
 
 ```bash
 # 查看所有服务日志
@@ -338,6 +693,177 @@ npm run quick-start
 3. 等待 MySQL 就绪
 4. 初始化数据库
 
+## 🆘 常见错误及解决方案（小白专用）
+
+### 错误 1: "npm 不是内部或外部命令" 或 "command not found: npm"
+
+**原因：** Node.js 没有安装或没有添加到系统路径
+
+**解决方案：**
+1. 重新安装 Node.js（从 https://nodejs.org/ 下载）
+2. 安装时确保勾选"添加到 PATH"选项
+3. 安装完成后，**关闭并重新打开命令行窗口**（这很重要！）
+4. 再次尝试运行命令
+
+**如何验证修复成功？**
+运行 `npm --version`，应该显示版本号。
+
+### 错误 2: "docker 不是内部或外部命令" 或 "command not found: docker"
+
+**原因：** Docker 没有安装或没有启动
+
+**解决方案：**
+1. 确认已安装 Docker Desktop
+2. 双击桌面上的 Docker Desktop 图标启动
+3. 等待 Docker 启动完成（系统托盘图标不再闪烁）
+4. 重新运行命令
+
+**如何验证修复成功？**
+运行 `docker ps`，应该显示容器列表（可能是空的）。
+
+### 错误 3: "端口 3306 已被占用" 或 "Port 3306 is already in use"
+
+**原因：** 你的电脑上已经有其他程序在使用 3306 端口（可能是另一个 MySQL）
+
+**解决方案：**
+
+**方案 1：停止占用端口的程序（推荐）**
+- **Windows**: 
+  1. 打开任务管理器（Ctrl+Shift+Esc）
+  2. 找到 MySQL 相关进程（如 mysqld.exe）
+  3. 右键点击 → 结束任务
+- **Mac/Linux**: 
+  ```bash
+  # 查看占用端口的程序
+  sudo lsof -i :3306
+  # 停止程序（替换 PID 为实际的进程号）
+  sudo kill -9 <PID>
+  ```
+
+**方案 2：修改端口（不推荐，需要修改配置）**
+编辑 `docker-compose.dev.yml`，将 `3306:3306` 改为 `3307:3306`（或其他未被占用的端口）
+
+### 错误 4: "权限不足" 或 "Access Denied" 或 "Permission denied"
+
+**原因：** 需要管理员权限
+
+**解决方案：**
+- **Windows**: 右键点击命令行图标 → 选择"以管理员身份运行"
+- **Mac/Linux**: 在命令前加上 `sudo`（如 `sudo npm run mysql:start`）
+
+**注意**：使用 `sudo` 时要小心，确保命令正确。
+
+### 错误 5: "找不到 backend/.env 文件" 或 "No such file or directory"
+
+**原因：** 文件不存在或路径不对
+
+**解决方案：**
+1. 确认你在项目根目录（能看到 `package.json` 文件）
+2. 确认 `backend` 文件夹存在
+3. 如果文件不存在，需要创建：
+   - 在 `backend` 文件夹中新建一个文本文件
+   - 重命名为 `.env`（注意前面有个点）
+   - 复制以下内容进去：
+     ```env
+     DB_HOST=localhost
+     DB_PORT=3306
+     DB_USERNAME=root
+     DB_PASSWORD=root
+     DB_DATABASE=myapp_db
+     NODE_ENV=development
+     PORT=3000
+     JWT_SECRET=dev-secret-key
+     CORS_ORIGIN=http://localhost:4000
+     ```
+
+### 错误 6: 命令执行后没有任何反应
+
+**可能的原因和解决方案：**
+
+1. **命令还在执行中**：某些命令需要等待，比如启动 MySQL 需要 10-20 秒，启动所有服务需要 30-60 秒
+   - **解决方法**：等待一段时间，然后运行 `npm run ps` 检查状态
+
+2. **命令执行成功但没有输出**：这是正常的，没有错误就是成功
+   - **解决方法**：运行 `npm run ps` 或 `npm run health` 确认服务已启动
+
+3. **命令卡住了**：按 Ctrl+C 停止，然后检查日志
+   - **解决方法**：运行 `npm run mysql:logs` 查看 MySQL 日志，或 `npm run dev:logs` 查看所有日志
+
+### 错误 7: "Cannot connect to database" 或数据库连接失败
+
+**原因：** 无法连接到 MySQL 数据库
+
+**检查步骤：**
+1. 确认 MySQL 容器已启动：`npm run ps`
+2. 确认 MySQL 容器状态为 "healthy" 或 "Up"
+3. 检查 `.env` 文件中的数据库配置
+
+**解决方案：**
+```bash
+# 重启 MySQL 容器
+npm run mysql:stop
+npm run mysql:start
+
+# 等待 20-30 秒后，再次尝试
+```
+
+### 错误 8: "数据库认证失败" 或密码不一致
+
+**原因：** MySQL 容器的密码与 `.env` 文件中的 `DB_PASSWORD` 不一致
+
+**解决方案：**
+
+**方案 1：删除数据卷并重新初始化（推荐）**
+```bash
+npm run mysql:stop
+docker volume rm yl_mysql_data
+npm run mysql:start
+# 等待 MySQL 启动后
+npm run backend:init-db
+```
+
+**方案 2：修改 .env 文件使用当前密码**
+编辑 `backend/.env`，将 `DB_PASSWORD` 改为 MySQL 容器的实际密码（通常是 `root`）
+
+### 错误 9: 浏览器无法访问 http://localhost:4000 或 http://localhost:3000
+
+**原因：** 服务没有启动或端口被占用
+
+**检查步骤：**
+1. 运行 `npm run ps` 确认容器在运行
+2. 运行 `npm run health` 检查服务健康状态
+3. 检查浏览器地址栏是否正确（应该是 `localhost` 不是 `127.0.0.1`，虽然两者通常一样）
+
+**解决方案：**
+```bash
+# 重启所有服务
+npm run dev:restart
+
+# 或重启单个服务
+npm run backend:restart
+npm run web:restart
+```
+
+### 错误 10: Docker Desktop 启动失败
+
+**Windows 常见原因：**
+- WSL 2 未启用
+- Hyper-V 未启用
+- 虚拟化未启用
+
+**解决方案：**
+1. 确保 Windows 功能中启用了"适用于 Linux 的 Windows 子系统"和"虚拟机平台"
+2. 重启电脑
+3. 如果还是不行，查看 Docker Desktop 的错误提示
+
+**Mac 常见原因：**
+- 系统权限不足
+- 资源不足
+
+**解决方案：**
+1. 给 Docker Desktop 足够的系统权限
+2. 确保有足够的磁盘空间和内存
+
 ## 🔧 常见问题排查
 
 ### 问题 1: 后端服务无法启动
@@ -402,6 +928,43 @@ npm run backend:init-db
 
 # 或重新初始化数据库
 npm run backend:init-db
+```
+
+### 问题 5: 登录后页面空白或报错
+
+**检查步骤：**
+1. 打开浏览器开发者工具（F12）
+2. 查看 Console 标签页的错误信息
+3. 查看 Network 标签页，看哪些请求失败了
+
+**解决方案：**
+```bash
+# 检查后端服务是否正常
+npm run backend:logs
+
+# 检查前端服务是否正常
+npm run web:logs
+
+# 重启服务
+npm run dev:restart
+```
+
+### 问题 6: 修改代码后没有生效
+
+**Docker 模式：**
+- 后端代码修改后会自动热重载（等待几秒）
+- 前端代码修改后会自动刷新（立即生效）
+
+**本地模式：**
+- 确保使用 `npm run start:dev` 启动（不是 `npm run start`）
+- 检查命令行窗口是否有错误信息
+
+**如果还是没有生效：**
+```bash
+# 重启服务
+npm run dev:restart
+# 或
+npm run backend:restart
 ```
 
 ## 📝 常用命令速查
