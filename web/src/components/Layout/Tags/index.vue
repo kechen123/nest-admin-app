@@ -78,6 +78,7 @@ const setTags = (route: any) => {
     display: flex;
     align-items: center;
     height: 32px;
+    flex-wrap: nowrap; // 确保标签不换行
 
     .item {
       display: flex;
@@ -86,10 +87,18 @@ const setTags = (route: any) => {
       border-right: solid 1px var(--el-border-color);
       padding: 0 4px 0 16px;
       cursor: pointer;
+      flex-shrink: 0; // 标签不收缩
+      white-space: nowrap; // 标签内容不换行
+      max-width: 200px; // 设置标签最大宽度
 
       .name {
         font-size: 14px;
         color: var(--tag-text-color);
+        white-space: nowrap; // 文字不换行
+        overflow: hidden; // 超出隐藏
+        text-overflow: ellipsis; // 超出显示省略号
+        flex: 1; // 占据可用空间
+        min-width: 0; // 允许文字收缩以显示省略号
       }
 
       &:hover {

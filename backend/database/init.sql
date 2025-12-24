@@ -284,26 +284,6 @@ CREATE TABLE `dict_data` (
   FOREIGN KEY (`dict_type`) REFERENCES `dict_types`(`dict_type`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典数据表';
 
--- ============================================
--- 13. 创建系统参数表
--- ============================================
-DROP TABLE IF EXISTS `system_configs`;
-CREATE TABLE `system_configs` (
-  `id` INT PRIMARY KEY AUTO_INCREMENT,
-  `config_name` VARCHAR(100) NOT NULL COMMENT '参数名称',
-  `config_key` VARCHAR(100) NOT NULL UNIQUE COMMENT '参数键名',
-  `config_value` TEXT NOT NULL COMMENT '参数键值',
-  `config_type` TINYINT DEFAULT 0 COMMENT '系统内置: 0-否, 1-是',
-  `remark` VARCHAR(500) COMMENT '备注',
-  `created_by` INT COMMENT '创建人',
-  `updated_by` INT COMMENT '更新人',
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
-  INDEX idx_config_key (`config_key`),
-  INDEX idx_config_type (`config_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统参数表';
-
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
@@ -384,12 +364,9 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `pat
 (8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept/', 'system/dept/index', NULL, 1, 0, 1, 1, 'Briefcase', 1, 4, NULL),
 (9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post/', 'system/post/index', NULL, 1, 0, 1, 1, 'Basketball', 1, 5, NULL),
 (10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict/', 'system/dict/index', NULL, 1, 0, 1, 1, 'Coin', 1, 6, NULL),
-(11, 'ConfigManage', '参数设置', 'system:config:list', 'C', '/system/config/', 'system/config/index', NULL, 1, 0, 1, 1, 'edit', 1, 7, NULL),
-(12, 'OnlineUser', '在线用户', 'monitor:online:list', 'C', '/monitor/online/', 'monitor/online/index', NULL, 1, 0, 1, 1, 'online', 2, 1, NULL),
 (13, 'OperLog', '操作日志', 'monitor:operlog:list', 'C', '/monitor/operlog/', 'monitor/operlog/index', NULL, 1, 0, 1, 1, 'form', 2, 2, NULL),
 (14, 'LoginLog', '登录日志', 'monitor:logininfor:list', 'C', '/monitor/logininfor/', 'monitor/logininfor/index', NULL, 1, 0, 1, 1, 'logininfor', 2, 3, NULL),
 (15, 'Server', '服务监控', 'monitor:server:list', 'C', '/monitor/server/', 'monitor/server/index', NULL, 1, 0, 1, 1, 'server', 2, 4, NULL),
-(16, 'Cache', '缓存监控', 'monitor:cache:list', 'C', '/monitor/cache/', 'monitor/cache/index', NULL, 1, 0, 1, 1, 'redis', 2, 5, NULL),
 (17, 'Build', '表单构建', 'tool:build:list', 'C', '/tool/build/', 'tool/build/index', NULL, 1, 0, 1, 1, 'build', 3, 1, NULL),
 (18, 'Swagger', '系统接口', 'tool:swagger:list', 'C', '/tool/swagger/', 'tool/swagger/index', NULL, 1, 0, 1, 1, 'swagger', 3, 2, NULL),
 (19, 'Profile', '个人中心', '', 'C', '/user/profile/', 'user/profile/index', NULL, 1, 0, 1, 1, 'user', 4, 1, NULL),
@@ -451,20 +428,6 @@ INSERT INTO `dict_data` (`id`, `dict_label`, `dict_value`, `dict_type`, `dict_so
 (21, '前台用户', '01', 'sys_user_type', 2, 1, '前台用户'),
 (22, '成功', '1', 'sys_login_status', 1, 1, '登录成功'),
 (23, '失败', '0', 'sys_login_status', 2, 1, '登录失败');
-
--- ============================================
--- 21. 插入系统参数测试数据
--- ============================================
-INSERT INTO `system_configs` (`id`, `config_name`, `config_key`, `config_value`, `config_type`, `remark`) VALUES
-(1, '主框架页-默认皮肤样式名称', 'sys.index.skinName', 'skin-blue', 1, '蓝色 skin-blue、绿色 skin-green、紫色 skin-purple、红色 skin-red、黄色 skin-yellow'),
-(2, '用户管理-账号初始密码', 'sys.user.initPassword', '123456', 1, '初始化密码 123456'),
-(3, '主框架页-侧边栏主题', 'sys.index.sideTheme', 'theme-dark', 1, '深色主题theme-dark，浅色主题theme-light'),
-(4, '账号自助-是否开启用户注册功能', 'sys.account.registerUser', 'false', 1, '是否开启注册用户功能（true开启，false关闭）'),
-(5, '用户登录-黑名单列表', 'sys.login.blackIPList', '', 1, '设置登录IP黑名单限制，多个匹配项以;分隔'),
-(6, '系统名称', 'sys.app.name', 'RBAC管理系统', 1, '系统名称'),
-(7, '系统版本', 'sys.app.version', '1.0.0', 1, '系统版本号'),
-(8, '公司名称', 'sys.app.company', '技术有限公司', 1, '公司名称'),
-(9, '版权信息', 'sys.app.copyright', '© 2024 版权所有', 1, '版权信息');
 
 -- ============================================
 -- 22. 插入操作日志测试数据
@@ -624,7 +587,6 @@ ALTER TABLE `menus` AUTO_INCREMENT = 104;
 ALTER TABLE `permissions` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_types` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_data` AUTO_INCREMENT = 100;
-ALTER TABLE `system_configs` AUTO_INCREMENT = 100;
 ALTER TABLE `operation_logs` AUTO_INCREMENT = 100;
 
 -- ============================================
