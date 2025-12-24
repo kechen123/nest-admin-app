@@ -8,10 +8,12 @@ import { AuthController } from "./auth.controller";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { UserModule } from "../modules/user/user.module";
 import { User } from "../modules/user/user.entity";
+import { LoginLogModule } from "../modules/login-log/login-log.module";
 
 @Module({
   imports: [
     UserModule,
+    LoginLogModule,
     TypeOrmModule.forFeature([User]),
     PassportModule,
     JwtModule.registerAsync({

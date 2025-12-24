@@ -240,6 +240,25 @@ CREATE TABLE `operation_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
 
 -- ============================================
+-- 10. 创建登录日志表
+-- ============================================
+DROP TABLE IF EXISTS `login_logs`;
+CREATE TABLE `login_logs` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT,
+  `username` VARCHAR(50) COMMENT '登录账号',
+  `ipaddr` VARCHAR(50) COMMENT '登录IP地址',
+  `login_location` VARCHAR(255) COMMENT '登录地点',
+  `browser` VARCHAR(50) COMMENT '浏览器类型',
+  `os` VARCHAR(50) COMMENT '操作系统',
+  `status` TINYINT DEFAULT 1 COMMENT '登录状态: 0-失败, 1-成功',
+  `msg` VARCHAR(255) COMMENT '提示消息',
+  `login_time` DATETIME COMMENT '登录时间',
+  INDEX idx_username (`username`),
+  INDEX idx_login_time (`login_time`),
+  INDEX idx_status (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录日志表';
+
+-- ============================================
 -- 11. 创建字典类型表
 -- ============================================
 DROP TABLE IF EXISTS `dict_types`;
@@ -356,21 +375,16 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `nickname`, `phone`,
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `query`, `is_frame`, `is_cache`, `visible`, `status`, `icon`, `parent_id`, `order_num`, `remark`) VALUES
 (1, 'System', '系统管理', NULL, 'M', '/system', 'Layout', NULL, 1, 0, 1, 1, 'Setting', 0, 1, NULL),
 (2, 'Monitor', '系统监控', NULL, 'M', '/monitor', 'Layout', NULL, 1, 0, 1, 1, 'Bell', 0, 2, NULL),
-(3, 'Tool', '系统工具', NULL, 'M', '/tool', 'Layout', NULL, 1, 0, 1, 1, 'CreditCard', 0, 3, NULL),
-(4, 'UserCenter', '个人中心', NULL, 'M', '/user', 'Layout', NULL, 1, 0, 1, 1, 'Food', 0, 4, NULL),
-(5, 'UserManage', '用户管理', 'system:user:list', 'C', '/system/user/', 'system/user/index', NULL, 1, 0, 1, 1, 'Avatar', 1, 1, NULL),
-(6, 'RoleManage', '角色管理', 'system:role:list', 'C', '/system/role/', 'system/role/index', NULL, 1, 0, 1, 1, 'Connection', 1, 2, NULL),
-(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', '/system/menu/', 'system/menu/index', NULL, 1, 0, 1, 1, 'Expand', 1, 3, NULL),
-(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept/', 'system/dept/index', NULL, 1, 0, 1, 1, 'Briefcase', 1, 4, NULL),
-(9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post/', 'system/post/index', NULL, 1, 0, 1, 1, 'Basketball', 1, 5, NULL),
-(10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict/', 'system/dict/index', NULL, 1, 0, 1, 1, 'Coin', 1, 6, NULL),
-(13, 'OperLog', '操作日志', 'monitor:operlog:list', 'C', '/monitor/operlog/', 'monitor/operlog/index', NULL, 1, 0, 1, 1, 'form', 2, 2, NULL),
-(14, 'LoginLog', '登录日志', 'monitor:logininfor:list', 'C', '/monitor/logininfor/', 'monitor/logininfor/index', NULL, 1, 0, 1, 1, 'logininfor', 2, 3, NULL),
-(15, 'Server', '服务监控', 'monitor:server:list', 'C', '/monitor/server/', 'monitor/server/index', NULL, 1, 0, 1, 1, 'server', 2, 4, NULL),
-(17, 'Build', '表单构建', 'tool:build:list', 'C', '/tool/build/', 'tool/build/index', NULL, 1, 0, 1, 1, 'build', 3, 1, NULL),
-(18, 'Swagger', '系统接口', 'tool:swagger:list', 'C', '/tool/swagger/', 'tool/swagger/index', NULL, 1, 0, 1, 1, 'swagger', 3, 2, NULL),
-(19, 'Profile', '个人中心', '', 'C', '/user/profile/', 'user/profile/index', NULL, 1, 0, 1, 1, 'user', 4, 1, NULL),
-(20, 'UserInfo', '用户信息', 'user:info:list', 'C', '/user/info/', 'user/info/index', NULL, 1, 0, 1, 1, 'user', 4, 2, NULL),
+(4, 'Profile', '个人中心', NULL, 'C', '/profile', 'profile/index', NULL, 1, 0, 1, 1, 'User', 0, 4, NULL),
+(5, 'UserManage', '用户管理', 'system:user:list', 'C', '/system/user/', 'system/user/index', NULL, 1, 0, 1, 1, 'UserFilled', 1, 1, NULL),
+(6, 'RoleManage', '角色管理', 'system:role:list', 'C', '/system/role/', 'system/role/index', NULL, 1, 0, 1, 1, 'User', 1, 2, NULL),
+(7, 'MenuManage', '菜单管理', 'system:menu:list', 'C', '/system/menu/', 'system/menu/index', NULL, 1, 0, 1, 1, 'Menu', 1, 3, NULL),
+(8, 'DeptManage', '部门管理', 'system:dept:list', 'C', '/system/dept/', 'system/dept/index', NULL, 1, 0, 1, 1, 'OfficeBuilding', 1, 4, NULL),
+(9, 'PostManage', '岗位管理', 'system:post:list', 'C', '/system/post/', 'system/post/index', NULL, 1, 0, 1, 1, 'Suitcase', 1, 5, NULL),
+(10, 'DictManage', '字典管理', 'system:dict:list', 'C', '/system/dict/', 'system/dict/index', NULL, 1, 0, 1, 1, 'Notebook', 1, 6, NULL),
+(13, 'OperLog', '操作日志', 'monitor:operlog:list', 'C', '/monitor/operlog/', 'monitor/operlog/index', NULL, 1, 0, 1, 1, 'Document', 2, 2, NULL),
+(14, 'LoginLog', '登录日志', 'monitor:logininfor:list', 'C', '/monitor/logininfor/', 'monitor/logininfor/index', NULL, 1, 0, 1, 1, 'Lock', 2, 3, NULL),
+(15, 'Server', '服务监控', 'monitor:server:list', 'C', '/monitor/server/', 'monitor/server/index', NULL, 1, 0, 1, 1, 'DataLine', 2, 4, NULL),
 (21, 'UserQuery', '用户查询', 'system:user:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 5, 1, NULL),
 (22, 'UserAdd', '用户新增', 'system:user:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 5, 2, NULL),
 (23, 'UserEdit', '用户修改', 'system:user:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 5, 3, NULL),
@@ -381,11 +395,11 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `pat
 (28, 'RoleAdd', '角色新增', 'system:role:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 2, NULL),
 (29, 'RoleEdit', '角色修改', 'system:role:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 3, NULL),
 (30, 'RoleDelete', '角色删除', 'system:role:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 4, NULL),
-(31, 'Index', '首页', NULL, 'C', '/', 'index', NULL, 1, 0, 1, 1, 'Aim', 0, 0, NULL),
-(100, '测试目录名称', '测试目录标题', NULL, 'M', '/test', '/test', NULL, 1, 0, 1, 1, 'Baseball', 0, 33, 'test111'),
-(101, '测试子菜单名称', '测试子菜单标题', NULL, 'C', '/test/testaa', '/test/testaa', NULL, 1, 0, 1, 1, 'ArrowUpBold', 100, 1, NULL),
-(102, '字典类型', '字典类型', NULL, 'C', '/system/dict/type/', '/system/dict/type', NULL, 0, 1, 1, 1, 'Basketball', 10, 1, NULL),
-(103, '字典数据', '字典数据', NULL, 'C', '/system/dict/data/', '/system/dict/data/', NULL, 0, 1, 1, 1, 'Calendar', 10, 2, NULL);
+(31, 'Index', '首页', NULL, 'C', '/', 'index', NULL, 1, 0, 1, 1, 'HomeFilled', 0, 0, NULL),
+(100, '测试目录名称', '测试目录标题', NULL, 'M', '/test', '/test', NULL, 1, 0, 1, 1, 'Tools', 0, 33, 'test111'),
+(101, '测试子菜单名称', '测试子菜单标题', NULL, 'C', '/test/testaa', '/test/testaa', NULL, 1, 0, 1, 1, 'Document', 100, 1, NULL),
+(102, '字典类型', '字典类型', NULL, 'C', '/system/dict/type/', '/system/dict/type', NULL, 0, 1, 1, 1, 'Collection', 10, 1, NULL),
+(103, '字典数据', '字典数据', NULL, 'C', '/system/dict/data/', '/system/dict/data/', NULL, 0, 1, 1, 1, 'List', 10, 2, NULL);
 
 -- ============================================
 -- 19. 插入字典类型测试数据
@@ -478,7 +492,7 @@ SELECT 3, id FROM `menus`
 WHERE `status` = 1 
 AND (`permission_code` LIKE 'system:dept:%' 
      OR `permission_code` LIKE 'monitor:%'
-     OR id IN (19, 20));  -- 个人中心相关
+     OR id = 4);  -- 个人中心相关
 
 -- 开发工程师拥有查看权限
 INSERT INTO `role_menus` (`role_id`, `menu_id`)
@@ -487,14 +501,13 @@ WHERE `status` = 1
 AND (`permission_code` LIKE '%:list' 
      OR `permission_code` LIKE '%:query'
      OR `menu_type` = 'M'
-     OR id IN (19, 20));
+     OR id = 4);
 
 -- 普通用户只有个人中心
 INSERT INTO `role_menus` (`role_id`, `menu_id`)
 SELECT 8, id FROM `menus` 
 WHERE `status` = 1 
-AND (id IN (4, 19, 20)  -- 个人中心相关
-     OR `menu_type` = 'M' AND `name` = 'UserCenter');
+AND id = 4;  -- 个人中心相关
 
 -- ============================================
 -- 25. 插入权限数据
@@ -588,6 +601,7 @@ ALTER TABLE `permissions` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_types` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_data` AUTO_INCREMENT = 100;
 ALTER TABLE `operation_logs` AUTO_INCREMENT = 100;
+ALTER TABLE `login_logs` AUTO_INCREMENT = 100;
 
 -- ============================================
 -- 28. 创建视图

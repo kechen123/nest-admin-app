@@ -70,6 +70,15 @@ export default defineConfig({
     open: false, // 设置服务启动时是否自动打开浏览器
     cors: true, // 允许跨域
 
+    // 文件监听配置 - 解决 Docker 环境中文件变化无法检测的问题
+    // 在 Docker 环境中，文件系统事件可能无法正确传递，使用轮询模式
+    watch: {
+      usePolling: process.env.DOCKER_ENV === 'true', // 在 Docker 环境中启用轮询
+      interval: 1000, // 轮询间隔（毫秒）
+      // 排除 node_modules 等不需要监听的目录，提高性能
+      ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
+    },
+
     // 设置代理，指向 backend 服务
     // 在 Docker 环境中，使用服务名 'backend' 访问后端服务
     // 在本地开发环境中，使用 'localhost'

@@ -7,6 +7,7 @@ import { User } from "../modules/user/user.entity";
 import { LoginDto } from "./dto/login.dto";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
+import { LoginLogService } from "../modules/login-log/login-log.service";
 import * as bcrypt from "bcrypt";
 
 @Injectable()
@@ -15,7 +16,8 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
+    private readonly loginLogService: LoginLogService
   ) {}
 
   async validateUser(username: string, password: string): Promise<any> {
@@ -33,13 +35,50 @@ export class AuthService {
     return result;
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, req?: any) {
+    // 获取请求信息
+    let ip = 'unknown';
+    if (req) {
+      // 优先从 x-forwarded-for 获取（代理服务器）
+      ip = req.headers?.['x-forwarded-for']?.split(',')[0]?.trim() || 
+           req.headers?.['x-real-ip'] || 
+           req.ip || 
+           req.connection?.remoteAddress || 
+           req.socket?.remoteAddress ||
+           'unknown';
+    }
+    const userAgent = req?.headers?.['user-agent'] || 'unknown';
+    
+    // 解析 User-Agent 获取浏览器和操作系统信息
+    const browser = this.parseBrowser(userAgent);
+    const os = this.parseOS(userAgent);
+
     const user = await this.validateUser(loginDto.username, loginDto.password);
     if (!user) {
+      // 记录登录失败日志
+      await this.loginLogService.create({
+        username: loginDto.username,
+        ipaddr: ip,
+        browser,
+        os,
+        status: 0,
+        msg: '用户名或密码错误',
+        loginTime: new Date(),
+      });
       throw new UnauthorizedException("用户名或密码错误");
     }
 
     if (!user.status) {
+      // 记录登录失败日志（用户被禁用）
+      await this.loginLogService.create({
+        username: loginDto.username,
+        ipaddr: ip,
+        browser,
+        os,
+        status: 0,
+        msg: '用户已被禁用',
+        loginTime: new Date(),
+      });
       throw new UnauthorizedException("用户已被禁用");
     }
 
@@ -79,6 +118,22 @@ export class AuthService {
 
     permissions.push(...Array.from(permissionSet));
 
+    // 更新用户最后登录信息
+    user.loginIp = ip;
+    user.loginDate = new Date();
+    await this.userRepository.save(user);
+
+    // 记录登录成功日志
+    await this.loginLogService.create({
+      username: user.username,
+      ipaddr: ip,
+      browser,
+      os,
+      status: 1,
+      msg: '登录成功',
+      loginTime: new Date(),
+    });
+
     const payload = { username: user.username, sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
@@ -91,6 +146,41 @@ export class AuthService {
         permissions,
       },
     };
+  }
+
+  /**
+   * 解析浏览器类型
+   */
+  private parseBrowser(userAgent: string): string {
+    if (!userAgent) return 'Unknown';
+    
+    if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) return 'Chrome';
+    if (userAgent.includes('Firefox')) return 'Firefox';
+    if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'Safari';
+    if (userAgent.includes('Edg')) return 'Edge';
+    if (userAgent.includes('Opera') || userAgent.includes('OPR')) return 'Opera';
+    if (userAgent.includes('MSIE') || userAgent.includes('Trident')) return 'IE';
+    
+    return 'Unknown';
+  }
+
+  /**
+   * 解析操作系统
+   */
+  private parseOS(userAgent: string): string {
+    if (!userAgent) return 'Unknown';
+    
+    if (userAgent.includes('Windows NT 10.0')) return 'Windows 10';
+    if (userAgent.includes('Windows NT 6.3')) return 'Windows 8.1';
+    if (userAgent.includes('Windows NT 6.2')) return 'Windows 8';
+    if (userAgent.includes('Windows NT 6.1')) return 'Windows 7';
+    if (userAgent.includes('Windows')) return 'Windows';
+    if (userAgent.includes('Mac OS X')) return 'macOS';
+    if (userAgent.includes('Linux')) return 'Linux';
+    if (userAgent.includes('Android')) return 'Android';
+    if (userAgent.includes('iOS') || userAgent.includes('iPhone') || userAgent.includes('iPad')) return 'iOS';
+    
+    return 'Unknown';
   }
 
   /**

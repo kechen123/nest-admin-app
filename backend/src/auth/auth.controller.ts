@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Patch, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, UseGuards, Req, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -40,8 +40,8 @@ export class AuthController {
       },
     },
   })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Req() req) {
+    return this.authService.login(loginDto, req);
   }
 
   @Get('profile')
@@ -49,7 +49,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '获取当前用户信息' })
   @ApiResponse({ status: 200, description: '获取成功' })
-  async getProfile(@Request() req) {
+  async getProfile(@Req() req) {
     return this.authService.getProfile(req.user.userId);
   }
 
@@ -58,7 +58,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '更新个人信息' })
   @ApiResponse({ status: 200, description: '更新成功' })
-  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+  async updateProfile(@Req() req, @Body() updateProfileDto: UpdateProfileDto) {
     return this.authService.updateProfile(req.user.userId, updateProfileDto);
   }
 
@@ -67,7 +67,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '修改密码' })
   @ApiResponse({ status: 200, description: '修改成功' })
-  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+  async changePassword(@Req() req, @Body() changePasswordDto: ChangePasswordDto) {
     return this.authService.changePassword(req.user.userId, changePasswordDto);
   }
 

@@ -11,6 +11,9 @@ import { UploadModule } from "./modules/upload/upload.module";
 import { DictModule } from "./modules/dict/dict.module";
 import { DepartmentModule } from "./modules/department/department.module";
 import { PostModule } from "./modules/post/post.module";
+import { OperationLogModule } from "./modules/operation-log/operation-log.module";
+import { LoginLogModule } from "./modules/login-log/login-log.module";
+import { MonitorModule } from "./modules/monitor/monitor.module";
 
 @Module({
   imports: [
@@ -60,6 +63,9 @@ import { PostModule } from "./modules/post/post.module";
     DictModule,
     DepartmentModule,
     PostModule,
+    OperationLogModule,
+    LoginLogModule,
+    MonitorModule,
   ],
 })
 export class AppModule {}

@@ -23,11 +23,11 @@ const checkHasRoute: CheckFun = ({ to, from, router }) => {
 
 const checkLogin: CheckFun = ({ to, from }) => {
   const hasToken = tokenStorage.has()
-  // 检查是否是登录页（支持名称和路径匹配）
+  // 检查是否是登录页（只匹配精确的登录路径，避免误判包含 "login" 的其他路由）
   const isLoginPage = 
-    (to.name && (to.name as string).indexOf('login') > -1) ||
     to.path === '/login' ||
-    to.path.startsWith('/login/')
+    to.path.startsWith('/login/') ||
+    (to.name && (to.name as string) === 'login')
   
   // 如果已登录但访问登录页，重定向到首页
   if (hasToken && isLoginPage) {

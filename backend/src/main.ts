@@ -18,6 +18,9 @@ async function bootstrap() {
   // 全局前缀
   app.setGlobalPrefix('api');
 
+  // 配置信任代理，以便正确获取客户端 IP 地址
+  app.set('trust proxy', true);
+
   // 配置静态文件服务
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads',
