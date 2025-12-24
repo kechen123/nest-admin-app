@@ -122,9 +122,12 @@ npm run dev:logs        # 查看日志
 npm run backend:init-db    # 初始化数据库
 npm run mysql:fix-access   # 手动修复 MySQL 外部连接权限（通常不需要，初始化时已自动配置）
 
-# 数据库管理
-npm run backend:init-db    # 初始化数据库
-npm run mysql:fix-access   # 手动修复 MySQL 外部连接权限（通常不需要，初始化时已自动配置）
+# 健康检查和验证
+npm run health             # 检查所有服务健康状态
+npm run verify             # 检查服务状态并显示容器信息
+
+# 快速启动
+npm run quick-start        # 一键启动 MySQL 并初始化数据库（本地模式）
 
 # 单独控制服务
 npm run backend:start      # 启动后端

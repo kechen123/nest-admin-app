@@ -130,6 +130,214 @@ npm run web:logs
 npm run mysql:logs
 ```
 
+## 🚀 方式二：本地运行模式（独立运行）
+
+**适用场景**：后端在本地运行，MySQL 在 Docker 容器中
+
+### 前置要求
+
+- Node.js >= 18.0.0
+- Docker（仅用于 MySQL 容器）
+- npm 或 pnpm
+
+### 初始化步骤
+
+#### 1. 配置环境变量
+
+```bash
+cd backend
+
+# 确保 backend/.env 文件存在
+# 编辑 backend/.env，设置以下配置：
+```
+
+**backend/.env 配置示例**：
+```env
+# 数据库配置（本地模式）
+DB_HOST=localhost          # 本地模式必须使用 localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=your_password  # 请修改为安全密码
+DB_DATABASE=myapp_db
+
+# 应用配置
+NODE_ENV=development
+PORT=3000
+JWT_SECRET=dev-secret-key
+CORS_ORIGIN=http://localhost:4000
+```
+
+**重要提示**：
+- `DB_HOST` 必须设置为 `localhost`（不是 `mysql`）
+- `DB_PASSWORD` 必须与 MySQL 容器启动时使用的密码一致
+
+#### 2. 启动 MySQL 容器
+
+```bash
+# 在项目根目录运行
+npm run mysql:start
+```
+
+等待 MySQL 启动完成（约 10-20 秒）
+
+#### 3. 检查 MySQL 状态
+
+```bash
+# 查看容器状态
+npm run ps
+
+# 查看 MySQL 日志（可选）
+npm run mysql:logs
+```
+
+#### 4. 初始化数据库
+
+```bash
+# 在 backend 目录运行
+cd backend
+npm run db:init
+```
+
+**预期输出**：
+```
+✅ 已从文件加载配置: backend/.env
+正在初始化数据库 myapp_db...
+检测到本地环境，使用 MySQL 容器: yl-mysql-dev
+✅ 数据库 myapp_db 创建成功
+数据库初始化完成！
+```
+
+#### 5. 启动后端服务
+
+```bash
+# 在 backend 目录
+npm run start:dev
+```
+
+后端服务将在 http://localhost:3000 启动
+
+#### 6. 启动前端服务（可选）
+
+```bash
+# 在项目根目录
+cd web
+npm install
+npm run dev
+```
+
+前端服务将在 http://localhost:4000 启动
+
+### 验证服务
+
+#### 检查服务状态
+
+```bash
+# 在项目根目录
+npm run health
+```
+
+#### 访问服务
+
+- **后端 API**: http://localhost:3000/api
+- **Swagger 文档**: http://localhost:3000/api
+- **前端应用**: http://localhost:4000（如果已启动）
+
+### 本地模式常见问题
+
+#### 问题 1: 数据库初始化失败，提示密码不一致
+
+**原因**：MySQL 容器的密码与 `backend/.env` 中的 `DB_PASSWORD` 不一致
+
+**解决方案**：
+
+**方案 1：删除数据卷并重新初始化（推荐）**
+```bash
+# 在项目根目录
+npm run mysql:stop
+docker volume rm yl_mysql_data
+npm run mysql:start
+# 等待 MySQL 启动后
+cd backend
+npm run db:init
+```
+
+**方案 2：修改 .env 文件使用当前密码**
+```bash
+# 编辑 backend/.env，将 DB_PASSWORD 改为 MySQL 容器的实际密码
+# 然后重新运行
+cd backend
+npm run db:init
+```
+
+#### 问题 2: 无法连接到 MySQL
+
+**检查步骤**：
+1. 确认 MySQL 容器已启动：`npm run ps`
+2. 检查端口 3306 是否被占用
+3. 确认 `DB_HOST=localhost` 在 `.env` 文件中
+
+**解决方案**：
+```bash
+# 重启 MySQL 容器
+npm run mysql:stop
+npm run mysql:start
+```
+
+#### 问题 3: 后端服务无法启动
+
+**检查步骤**：
+1. 确认 MySQL 容器已启动并健康
+2. 检查 `backend/.env` 配置是否正确
+3. 查看后端日志
+
+**解决方案**：
+```bash
+# 检查服务状态
+npm run health
+
+# 查看 MySQL 日志
+npm run mysql:logs
+```
+
+### 本地模式常用命令
+
+```bash
+# MySQL 管理
+npm run mysql:start      # 启动 MySQL 容器
+npm run mysql:stop       # 停止 MySQL 容器
+npm run mysql:logs       # 查看 MySQL 日志
+npm run mysql:shell      # 进入 MySQL 命令行
+
+# 数据库操作（在 backend 目录）
+cd backend
+npm run db:init          # 初始化数据库
+npm run db:fix-external-access  # 修复外部连接权限
+
+# 后端服务（在 backend 目录）
+npm run start:dev        # 启动开发服务器
+npm run build            # 构建生产版本
+npm run start:prod       # 启动生产服务器
+
+# 健康检查（在项目根目录）
+npm run health           # 检查所有服务状态
+npm run verify           # 检查服务状态并显示容器信息
+```
+
+### 快速启动（本地模式）
+
+使用快速启动脚本可以一键完成 MySQL 启动和数据库初始化：
+
+```bash
+# 在项目根目录
+npm run quick-start
+```
+
+脚本会自动：
+1. 检查 `.env` 文件
+2. 启动 MySQL 容器
+3. 等待 MySQL 就绪
+4. 初始化数据库
+
 ## 🔧 常见问题排查
 
 ### 问题 1: 后端服务无法启动
@@ -198,6 +406,8 @@ npm run backend:init-db
 
 ## 📝 常用命令速查
 
+### Docker 模式命令
+
 ```bash
 # 服务管理
 npm run dev:up          # 启动所有服务
@@ -205,6 +415,8 @@ npm run dev:down        # 停止所有服务
 npm run dev:restart     # 重启所有服务
 npm run dev:logs        # 查看所有日志
 npm run ps              # 查看服务状态
+npm run health          # 检查服务健康状态
+npm run verify          # 检查服务状态并显示容器信息
 
 # 后端服务
 npm run backend:start      # 启动后端
@@ -231,6 +443,35 @@ npm run mysql:fix-access   # 手动修复外部连接权限（通常不需要，
 # 构建和清理
 npm run rebuild         # 重新构建镜像（无缓存）
 npm run clean          # 清理 Docker 系统
+npm run reset           # 重置开发环境（交互式）
+npm run reset:all       # 重置开发环境（删除所有数据）
+```
+
+### 本地模式命令
+
+```bash
+# MySQL 管理（在项目根目录）
+npm run mysql:start      # 启动 MySQL 容器
+npm run mysql:stop       # 停止 MySQL 容器
+npm run mysql:logs       # 查看 MySQL 日志
+npm run mysql:shell      # 进入 MySQL 命令行
+
+# 数据库操作（在 backend 目录）
+cd backend
+npm run db:init          # 初始化数据库
+npm run db:fix-external-access  # 修复外部连接权限
+
+# 后端服务（在 backend 目录）
+npm run start:dev        # 启动开发服务器
+npm run build            # 构建生产版本
+npm run start:prod       # 启动生产服务器
+
+# 健康检查（在项目根目录）
+npm run health           # 检查所有服务状态
+npm run verify           # 检查服务状态并显示容器信息
+
+# 快速启动
+npm run quick-start      # 一键启动 MySQL 并初始化数据库
 ```
 
 ## 🎯 下一步
