@@ -65,15 +65,17 @@ export default defineConfig({
   },
   base: '/', // 设置打包路径
   server: {
+    host: '0.0.0.0', // 监听所有网络接口，允许从容器外部访问
     port: 4000, // 设置服务启动端口号
     open: false, // 设置服务启动时是否自动打开浏览器
     cors: true, // 允许跨域
 
     // 设置代理，指向 backend 服务
-    // 这样可以避免 CORS 问题，因为请求是从同一个源发出的
+    // 在 Docker 环境中，使用服务名 'backend' 访问后端服务
+    // 在本地开发环境中，使用 'localhost'
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.VITE_API_TARGET || 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
         // backend 已经有全局前缀 /api，所以不需要重写路径

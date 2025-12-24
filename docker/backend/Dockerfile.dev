@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+# 安装必要的工具（包括 mysql-client 用于数据库初始化，wget/curl 用于健康检查）
+RUN apk add --no-cache git mysql-client wget curl netcat-openbsd
+
+WORKDIR /app
+
+# 复制 package 文件
+COPY package*.json ./
+
+# 安装依赖
+RUN npm install
+
+# 复制源代码（会被 volume 覆盖，但确保初始状态正确）
+COPY . .
+
+# 暴露端口
+EXPOSE 3000
+
+# 使用 NestJS watch 模式，支持热重载
+CMD ["npm", "run", "start:dev"]
+

@@ -1,0 +1,98 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: yl-mysql-dev
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_DATABASE:-myapp_db}
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./backend/database/allow-external-access.sql:/docker-entrypoint-initdb.d/02-allow-external-access.sql:ro
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend/Dockerfile.dev
+    container_name: yl-backend-dev
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/src:/app/src:ro
+      - ./backend/database:/app/database:ro
+      - ./backend/uploads:/app/uploads
+      - /app/node_modules
+      # 注意：不挂载 /app/dist，让它在容器内自由创建和删除，避免 EBUSY 错误
+      - ./backend/.env:/app/.env:ro
+      - ./backend/nest-cli.json:/app/nest-cli.json:ro
+      - ./backend/tsconfig.json:/app/tsconfig.json:ro
+    environment:
+      # Docker 环境特殊配置：数据库主机名改为容器名
+      - DB_HOST=mysql
+      # 注意：其他数据库配置（DB_PORT, DB_USERNAME, DB_PASSWORD, DB_DATABASE）从 env_file (backend/.env) 读取
+      # 如果 backend/.env 中没有这些变量，init-db.js 会使用默认值
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=${PORT:-3000}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:4000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      # 使用简单的端口检查，避免健康检查失败导致容器停止
+      test: ["CMD-SHELL", "nc -z localhost 3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - app-network
+
+  web:
+    build:
+      context: ./web
+      dockerfile: ../docker/web/Dockerfile.dev
+    container_name: yl-web-dev
+    restart: "no"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    environment:
+      # Docker 环境配置：使用服务名访问后端
+      - VITE_API_TARGET=http://backend:3000
+      - DOCKER_ENV=true
+    ports:
+      - "4000:4000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+

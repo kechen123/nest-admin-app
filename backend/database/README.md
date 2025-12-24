@@ -1,6 +1,6 @@
 # 数据库初始化说明
 
-## 文件说明
+## 📋 文件说明
 
 - `init.sql` - 完整的数据库初始化脚本，包含表结构和初始数据
 - `init-db.js` - 自动化初始化脚本（推荐使用）
@@ -8,141 +8,198 @@
 - `check-parent-id.js` - 检查权限表 parent_id 的工具
 - `test-password.js` - 测试密码哈希的工具
 
-## 快速开始（推荐）
+## 🚀 快速开始
 
 ### 方法一：使用自动化脚本（推荐）
 
 这是最简单快捷的方式，脚本会自动：
 
-1. 创建数据库
-2. 执行初始化 SQL
-3. 查询并显示实际的数据库信息
+1. 从 `backend/.env` 文件读取配置
+2. 创建数据库
+3. 执行初始化 SQL
+4. 配置 MySQL 外部连接权限
+5. 查询并显示实际的数据库信息
 
-**前提条件：**
+## 🎯 两种运行模式
 
-- 已启动 MySQL 容器（`docker-compose up -d`）
-- 已配置 `.env` 文件（或使用默认配置）
+### 模式一：Docker 容器内运行（完整 Docker 环境）
 
-**执行步骤：**
+**适用场景**：所有服务都在 Docker 容器中运行
+
+**执行步骤**：
 
 ```bash
-# 1. 启动 MySQL 容器（如果尚未启动）
+# 1. 在项目根目录启动所有服务
+npm run dev:up
+
+# 2. 等待 MySQL 启动完成（约 20-30 秒）
+
+# 3. 在容器内执行初始化
+npm run backend:init-db
+```
+
+**特点**：
+- 脚本自动检测 Docker 环境
+- 使用 Docker 服务名 `mysql` 连接数据库
+- 配置从 `backend/.env` 读取，但 `DB_HOST` 会被自动设置为 `mysql`
+
+### 模式二：本地运行（独立运行模式）
+
+**适用场景**：后端在本地运行，MySQL 在 Docker 容器中
+
+**执行步骤**：
+
+```bash
+# 1. 在项目根目录启动 MySQL 容器
+npm run mysql:start
+
+# 2. 等待 MySQL 启动完成（约 10-20 秒）
+
+# 3. 在 backend 目录执行初始化
 cd backend
-docker-compose up -d
-
-# 2. 等待 MySQL 启动完成（约10秒）
-sleep 10  # Linux/Mac
-# 或
-Start-Sleep -Seconds 10  # PowerShell
-
-# 3. 执行初始化脚本
-pnpm run db:init
-# 或
 npm run db:init
 ```
 
-**输出示例：**
+**特点**：
+- 脚本检测到本地环境
+- 使用 `docker exec` 执行 MySQL 命令
+- 所有配置从 `backend/.env` 文件读取
+- 支持 Windows、Linux、Mac 跨平台
 
-```text
-正在初始化数据库 kechen-admin...
+## ⚙️ 环境变量配置
 
-数据库初始化完成！
+初始化脚本会从 `backend/.env` 文件中读取以下配置：
 
-数据库信息:
-  数据库名: kechen-admin
-  默认管理员账号: admin
-  默认管理员密码: admin123
-
-⚠️  请在生产环境中修改默认密码！
-```
-
-## 其他初始化方法
-
-### 方法二：使用 MySQL 命令行
-
-**Bash/Linux/Mac:**
-
-```bash
-# 1. 确保数据库已创建
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS myapp_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-
-# 2. 执行初始化脚本
-mysql -u root -p myapp_db < database/init.sql
-```
-
-**PowerShell (Windows):**
-
-```powershell
-# 1. 确保数据库已创建
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS myapp_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-
-# 2. 执行初始化脚本
-Get-Content database/init.sql | mysql -u root -p myapp_db
-```
-
-### 方法三：使用 Docker Compose
-
-**Bash/Linux/Mac:**
-
-```bash
-# 1. 启动 MySQL 容器
-cd backend
-docker-compose up -d
-
-# 2. 等待 MySQL 启动完成（约10秒）
-sleep 10
-
-# 3. 执行初始化脚本
-docker exec -i myapp-mysql mysql -uroot -proot myapp_db < database/init.sql
-```
-
-**PowerShell (Windows):**
-
-```powershell
-# 1. 启动 MySQL 容器
-cd backend
-docker-compose up -d
-
-# 2. 等待 MySQL 启动完成（约10秒）
-Start-Sleep -Seconds 10
-
-# 3. 执行初始化脚本
-Get-Content database/init.sql | docker exec -i myapp-mysql mysql -uroot -proot myapp_db
-```
-
-### 方法四：使用 MySQL Workbench 或其他客户端
-
-1. 连接到 MySQL 数据库
-2. 创建数据库（如果不存在）：`CREATE DATABASE IF NOT EXISTS myapp_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
-3. 选择 `myapp_db` 数据库
-4. 打开 `database/init.sql` 文件
-5. 执行整个脚本
-
-## 环境变量配置
-
-初始化脚本会从 `.env` 文件中读取以下配置：
-
-```bash
-DB_HOST=localhost
+```env
+# 数据库配置
+DB_HOST=localhost          # Docker 模式: mysql, 本地模式: localhost
 DB_PORT=3306
 DB_USERNAME=root
-DB_PASSWORD=root
-DB_DATABASE=myapp_db
+DB_PASSWORD=your_password  # 请修改为安全密码
+DB_DATABASE=myapp_db       # 数据库名称
+
+# 应用配置（可选）
+NODE_ENV=development
+PORT=3000
+JWT_SECRET=dev-secret-key
+CORS_ORIGIN=http://localhost:4000
 ```
 
-如果未配置，将使用默认值：
+**配置优先级**：
+1. 系统环境变量（docker-compose env_file）
+2. `.env` 文件
+3. 默认值
 
+**默认值**：
 - 数据库名：`myapp_db`
 - 用户名：`root`
 - 密码：`root`
+- 端口：`3306`
+- 主机：`localhost`（本地模式）或 `mysql`（Docker 模式）
 
-## 默认数据
+## 📝 配置说明
+
+### Docker 模式配置
+
+在 Docker 模式下，`docker-compose.dev.yml` 会自动：
+- 将 `DB_HOST` 设置为 `mysql`（容器服务名）
+- 从 `backend/.env` 读取其他配置
+
+**重要提示**：
+- MySQL 容器的 root 密码是在首次启动时设置的
+- 如果修改了 `backend/.env` 中的 `DB_PASSWORD`，必须删除数据卷并重新初始化
+
+### 本地模式配置
+
+在本地模式下，所有配置都从 `backend/.env` 文件读取：
+
+**重要提示**：
+- 确保 `DB_PASSWORD` 与 MySQL 容器启动时使用的密码一致
+- 如果密码不匹配，脚本会提供详细的解决方案
+
+## 🔧 常见问题
+
+### Q: 初始化失败，提示密码不一致
+
+**A:** 这通常是因为 MySQL 容器的密码与 `.env` 文件中的配置不一致。
+
+**解决方案**：
+
+**方案 1：删除数据卷并重新初始化（推荐）**
+
+```bash
+# 在项目根目录
+npm run mysql:stop
+docker volume rm yl_mysql_data
+npm run mysql:start
+# 等待 MySQL 启动后
+cd backend
+npm run db:init
+```
+
+**方案 2：修改 .env 文件使用当前密码**
+
+```bash
+# 编辑 backend/.env，将 DB_PASSWORD 改为 MySQL 容器的实际密码
+# 然后重新运行
+cd backend
+npm run db:init
+```
+
+### Q: 如何修改默认管理员密码？
+
+**A:**
+
+1. 使用 `generate-password.js` 生成新密码的哈希值：
+   ```bash
+   cd backend
+   node database/generate-password.js <your-password>
+   ```
+
+2. 在 `init.sql` 文件中找到管理员用户的 INSERT 语句
+
+3. 替换密码哈希值
+
+4. 重新执行初始化脚本
+
+### Q: 如何重置数据库？
+
+**A:**
+
+1. 删除数据库：
+   ```bash
+   # 在本地模式
+   docker exec yl-mysql-dev mysql -uroot -p<password> -e "DROP DATABASE IF EXISTS myapp_db;"
+   
+   # 或在 Docker 模式
+   docker exec yl-backend-dev mysql -hmysql -uroot -p<password> -e "DROP DATABASE IF EXISTS myapp_db;"
+   ```
+
+2. 重新执行初始化脚本
+
+### Q: 脚本如何检测运行环境？
+
+**A:** 脚本通过以下方式检测：
+
+1. 检查是否存在 `/.dockerenv` 文件（Docker 容器标志）
+2. 检查 `DB_HOST` 是否为 `mysql`（Docker 服务名）
+3. 检查 `DB_HOST` 是否为容器名
+4. 检查环境变量配置
+
+### Q: Windows PowerShell 支持吗？
+
+**A:** 完全支持！脚本已经针对 Windows PowerShell 进行了优化：
+- 使用系统临时目录（兼容 Windows）
+- 正确处理引号和转义
+- 使用 `docker exec -i` 通过 stdin 传递 SQL
+
+## 📊 默认数据
 
 ### 默认管理员账号
 
 - **用户名**: `admin`
 - **密码**: `admin123`
-- **邮箱**: `admin@example.com`
+- **邮箱**: `admin@company.com`
 - **角色**: `super_admin`（超级管理员）
 
 ⚠️ **重要**: 请在生产环境中立即修改默认密码！
@@ -150,50 +207,24 @@ DB_DATABASE=myapp_db
 ### 默认角色
 
 1. **超级管理员** (`super_admin`) - 拥有所有权限
-2. **普通用户** (`user`) - 基础用户角色
-3. **编辑者** (`editor`) - 内容编辑角色
+2. **系统管理员** (`admin`) - 系统管理权限
+3. **部门管理员** (`dept_admin`) - 管理本部门及下属部门
+4. **项目经理** (`project_manager`) - 管理本项目组
+5. **开发工程师** (`developer`) - 开发人员角色
+6. **测试工程师** (`tester`) - 测试人员角色
+7. **产品经理** (`product_manager`) - 产品人员角色
+8. **普通用户** (`user`) - 普通用户，只有查看权限
 
-### 默认权限结构
-
-```text
-用户管理 (user)
-├── 用户列表 (user:list)
-├── 创建用户 (user:create)
-├── 编辑用户 (user:edit)
-├── 删除用户 (user:delete)
-└── 查看用户详情 (user:view)
-
-角色管理 (role)
-├── 角色列表 (role:list)
-├── 创建角色 (role:create)
-├── 编辑角色 (role:edit)
-├── 删除角色 (role:delete)
-└── 分配权限 (role:assign)
-
-权限管理 (permission)
-├── 权限列表 (permission:list)
-├── 创建权限 (permission:create)
-├── 编辑权限 (permission:edit)
-└── 删除权限 (permission:delete)
-
-系统设置 (system)
-├── 菜单管理 (menu:manage)
-└── 系统配置 (system:config)
-```
-
-## 工具脚本
+## 🛠️ 工具脚本
 
 ### 生成密码哈希
 
-如果需要生成新的密码哈希值：
-
 ```bash
-pnpm run db:generate-password <your-password>
-# 或
+cd backend
 node database/generate-password.js <your-password>
 ```
 
-**示例：**
+**示例**：
 
 ```bash
 node database/generate-password.js admin123
@@ -201,7 +232,7 @@ node database/generate-password.js admin123
 
 输出：
 
-```text
+```
 密码哈希值:
 $2b$10$CyOrL4KfwIoJGYbFoVAPguVvhakw3jHnoNuZA2YxoRXsCl5LzrDN2
 
@@ -210,33 +241,19 @@ $2b$10$CyOrL4KfwIoJGYbFoVAPguVvhakw3jHnoNuZA2YxoRXsCl5LzrDN2
 
 ### 检查权限表 parent_id
 
-检查权限表中的 parent_id 是否正确：
-
 ```bash
+cd backend
 node database/check-parent-id.js
 ```
 
 ### 测试密码哈希
 
-验证密码哈希是否正确：
-
 ```bash
+cd backend
 node database/test-password.js
 ```
 
-## 密码说明
-
-脚本中使用的密码哈希值对应明文密码 `admin123`，使用 bcrypt 算法加密（salt rounds: 10）。
-
-**当前使用的哈希值：**
-
-```text
-$2b$10$CyOrL4KfwIoJGYbFoVAPguVvhakw3jHnoNuZA2YxoRXsCl5LzrDN2
-```
-
-如果需要生成新的密码哈希，可以使用 `generate-password.js` 工具脚本。
-
-## 表结构说明
+## 📖 表结构说明
 
 ### users (用户表)
 
@@ -271,41 +288,16 @@ $2b$10$CyOrL4KfwIoJGYbFoVAPguVvhakw3jHnoNuZA2YxoRXsCl5LzrDN2
 - 支持多级菜单（通过 `parent_id` 关联）
 - 与权限表通过 `permission_code` 关联
 
-## 注意事项
+## ⚠️ 注意事项
 
 1. **外键约束**: 删除用户或角色时会自动删除关联数据（CASCADE）
 2. **字符集**: 使用 `utf8mb4` 支持完整的 Unicode 字符（包括 emoji）
 3. **索引**: 已为常用查询字段添加索引，提升查询性能
 4. **时间戳**: 使用 MySQL 的 `TIMESTAMP` 类型自动管理创建和更新时间
 5. **密码安全**: 默认密码仅用于开发环境，生产环境必须修改
+6. **MySQL 版本**: 脚本兼容 MySQL 8.0+，使用 `--ssl-mode=DISABLED` 选项
 
-## 常见问题
-
-### Q: 初始化失败，提示无法连接到数据库
-
-**A:** 确保 MySQL 容器已启动，并且等待足够的时间让 MySQL 完全启动（通常需要 10-15 秒）。
-
-### Q: 如何修改默认管理员密码？
-
-**A:**
-
-1. 使用 `generate-password.js` 生成新密码的哈希值
-2. 在 `init.sql` 文件中找到管理员用户的 INSERT 语句
-3. 替换密码哈希值
-4. 重新执行初始化脚本
-
-### Q: 如何重置数据库？
-
-**A:**
-
-1. 删除数据库：`DROP DATABASE myapp_db;`
-2. 重新执行初始化脚本
-
-### Q: parent_id 检查工具显示有无效记录？
-
-**A:** 检查 `init.sql` 中的权限插入顺序，确保父级权限先于子级权限插入。
-
-## 后续开发
+## 🔄 后续开发
 
 执行初始化脚本后，需要：
 
@@ -313,3 +305,9 @@ $2b$10$CyOrL4KfwIoJGYbFoVAPguVvhakw3jHnoNuZA2YxoRXsCl5LzrDN2
 2. 实现角色和权限的业务逻辑
 3. 添加基于角色的权限控制（RBAC）中间件
 4. 更新前端权限控制逻辑
+
+## 📞 更多帮助
+
+- 查看项目根目录的 [README.md](../../README.md) 获取完整项目说明
+- 查看 [SETUP.md](../../SETUP.md) 获取详细初始化步骤
+- 查看 [DOCKER.md](../../DOCKER.md) 获取 Docker 使用说明

@@ -1,0 +1,48 @@
+{
+  "name": "yl-project",
+  "version": "1.0.0",
+  "description": "全栈项目 Docker 管理",
+  "private": true,
+  "scripts": {
+    "help": "echo 查看 DOCKER.md 获取完整命令说明",
+    
+    "dev": "powershell -ExecutionPolicy Bypass -File ./scripts/load-env-and-run.ps1 \"docker-compose -f docker-compose.dev.yml up\"",
+    "dev:up": "powershell -ExecutionPolicy Bypass -File ./scripts/load-env-and-run.ps1 \"docker-compose -f docker-compose.dev.yml up -d\"",
+    "dev:down": "docker-compose -f docker-compose.dev.yml down",
+    "dev:restart": "powershell -ExecutionPolicy Bypass -File ./scripts/load-env-and-run.ps1 \"docker-compose -f docker-compose.dev.yml restart\"",
+    "dev:logs": "docker-compose -f docker-compose.dev.yml logs -f",
+    
+    "backend:start": "powershell -ExecutionPolicy Bypass -File ./scripts/load-env-and-run.ps1 \"docker-compose -f docker-compose.dev.yml up -d backend\"",
+    "backend:stop": "docker-compose -f docker-compose.dev.yml stop backend",
+    "backend:restart": "powershell -ExecutionPolicy Bypass -File ./scripts/load-env-and-run.ps1 \"docker-compose -f docker-compose.dev.yml restart backend\"",
+    "backend:logs": "docker-compose -f docker-compose.dev.yml logs -f backend",
+    "backend:shell": "docker-compose -f docker-compose.dev.yml exec backend sh",
+    "backend:init-db": "docker-compose -f docker-compose.dev.yml run --rm backend npm run db:init",
+    "mysql:fix-access": "docker-compose -f docker-compose.dev.yml run --rm backend node database/fix-external-access.js",
+    
+    "web:start": "docker-compose -f docker-compose.dev.yml up -d web",
+    "web:stop": "docker-compose -f docker-compose.dev.yml stop web",
+    "web:restart": "docker-compose -f docker-compose.dev.yml restart web",
+    "web:logs": "docker-compose -f docker-compose.dev.yml logs -f web",
+    "web:shell": "docker-compose -f docker-compose.dev.yml exec web sh",
+    
+    "mysql:start": "powershell -ExecutionPolicy Bypass -File ./scripts/load-env-and-run.ps1 \"docker-compose -f docker-compose.dev.yml up -d mysql\"",
+    "mysql:stop": "docker-compose -f docker-compose.dev.yml stop mysql",
+    "mysql:logs": "docker-compose -f docker-compose.dev.yml logs -f mysql",
+    "mysql:shell": "docker-compose -f docker-compose.dev.yml exec mysql mysql -uroot -p${DB_PASSWORD:-root} ${DB_DATABASE:-myapp_db}",
+    
+    "build": "docker-compose -f docker-compose.prod.yml build",
+    "prod": "docker-compose -f docker-compose.prod.yml up",
+    "prod:up": "docker-compose -f docker-compose.prod.yml up -d",
+    "prod:down": "docker-compose -f docker-compose.prod.yml down",
+    "prod:restart": "docker-compose -f docker-compose.prod.yml restart",
+    "prod:logs": "docker-compose -f docker-compose.prod.yml logs -f",
+    
+    "ps": "docker-compose -f docker-compose.dev.yml ps",
+    "clean": "docker system prune -f",
+    "rebuild": "docker-compose -f docker-compose.dev.yml build --no-cache",
+    "reset": "powershell -ExecutionPolicy Bypass -File ./scripts/reset-dev.ps1",
+    "reset:all": "docker-compose -f docker-compose.dev.yml down -v && docker volume rm yl_mysql_data 2>$null || docker volume rm yl_mysql_data || echo '数据卷已删除或不存在'"
+  }
+}
+

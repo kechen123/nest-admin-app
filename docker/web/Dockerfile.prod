@@ -1,0 +1,32 @@
+# Stage 1: 构建阶段
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# 复制 package 文件
+COPY package*.json ./
+
+# 安装依赖（使用 --legacy-peer-deps 解决依赖冲突）
+RUN npm ci --legacy-peer-deps
+
+# 复制源代码（包括环境变量文件）
+COPY . .
+
+# 构建应用（Vite 会自动使用 .env.production）
+RUN npm run build
+
+# Stage 2: Nginx 服务
+FROM nginx:alpine
+
+# 复制构建产物到 Nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# 复制 Nginx 配置
+COPY docker/web/nginx.conf /etc/nginx/conf.d/default.conf
+
+# 暴露端口
+EXPOSE 80
+
+# 启动 Nginx
+CMD ["nginx", "-g", "daemon off;"]
+
