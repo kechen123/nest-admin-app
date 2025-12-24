@@ -1,6 +1,6 @@
 /**
  * 数据库初始化脚本
- * 
+ *
  * 功能：
  * 1. 自动检测运行环境（Docker 容器内 或 本地环境）
  * 2. 从 backend/.env 文件读取配置
@@ -8,24 +8,24 @@
  * 4. 执行初始化 SQL
  * 5. 配置 MySQL 外部连接权限
  * 6. 显示数据库连接信息
- * 
+ *
  * 支持的运行模式：
  * - 模式一：Docker 容器内运行（所有服务在 Docker 中）
  *   - 使用 Docker 服务名 "mysql" 连接数据库
  *   - 通过 spawn 直接执行 mysql 命令
  *   - 执行命令：npm run backend:init-db
- * 
+ *
  * - 模式二：本地运行（后端在本地，MySQL 在 Docker 中）
  *   - 使用 localhost 连接数据库
  *   - 通过 docker exec 执行 MySQL 命令
  *   - 执行命令：cd backend && npm run db:init
- * 
+ *
  * 配置来源：
  * - 优先级：系统环境变量 > .env 文件 > 默认值
  * - 配置文件：backend/.env
- * 
+ *
  * 兼容性：
- * - MySQL 8.0+（使用 --ssl-mode=DISABLED）
+ * - MySQL 8.0+ / MariaDB（使用 --ssl=0 兼容两者）
  * - Windows、Linux、Mac 跨平台支持
  * - Windows PowerShell 完全支持
  */
@@ -62,8 +62,8 @@ const execAsync = promisify(exec);
 // ============================================================================
 
 // 检测操作系统，Windows 上不使用 shell，让 Node.js 使用默认的 cmd.exe
-const isWindows = process.platform === 'win32';
-const shellOption = isWindows ? undefined : '/bin/sh';
+const isWindows = process.platform === "win32";
+const shellOption = isWindows ? undefined : "/bin/sh";
 
 const sqlFile = path.join(__dirname, "init.sql");
 // Docker 容器名称（根据 docker-compose 配置）
@@ -94,10 +94,7 @@ const dbHost = process.env.DB_HOST || "localhost";
 const hasDockerenv = fs.existsSync("/.dockerenv");
 const dbHostIsMysql = process.env.DB_HOST === "mysql";
 const dbHostIsContainer = process.env.DB_HOST === "yl-mysql-dev";
-const isInDocker = hasDockerenv ||
-                    dbHostIsMysql || 
-                    dbHostIsContainer ||
-                    (process.env.NODE_ENV === "development" && process.env.DB_HOST && process.env.DB_HOST !== "localhost");
+const isInDocker = hasDockerenv || dbHostIsMysql || dbHostIsContainer || (process.env.NODE_ENV === "development" && process.env.DB_HOST && process.env.DB_HOST !== "localhost");
 
 // 根据运行环境确定 MySQL 主机
 // 在 Docker 容器内，使用服务名 "mysql"；在本地，使用 .env 中的 DB_HOST
@@ -125,18 +122,29 @@ const createDbSql = `CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET u
 // 辅助函数
 // ============================================================================
 
+/**
+ * 获取禁用 SSL 的参数（兼容 MySQL 和 MariaDB）
+ * Alpine Linux 中的 mysql-client 实际上是 MariaDB 客户端
+ * - MySQL 8.0+: 支持 --ssl-mode=DISABLED 和 --ssl=0
+ * - MariaDB: 使用 --ssl=0
+ * 使用 --ssl=0 可以同时兼容两者
+ */
+function getSslDisableParam() {
+  return "--ssl=0";
+}
+
 // 查询管理员用户名
 async function queryAdminUsername() {
   let queryCommand;
   if (isInDocker) {
     // 在容器内，直接使用 mysql 命令
-    // 使用 --ssl-mode=DISABLED 禁用 SSL（MySQL 8.0+ 兼容）
-    queryCommand = `mysql --ssl-mode=DISABLED -h${mysqlHost} -P${mysqlPort} -u${dbUser} -p${dbPassword} ${dbName} -e "SELECT username FROM users WHERE role = 'super_admin' OR is_admin = 1 ORDER BY id LIMIT 1;" -N -s`;
+    // 使用 --ssl=0 禁用 SSL（兼容 MySQL 和 MariaDB）
+    queryCommand = `mysql ${getSslDisableParam()} -h${mysqlHost} -P${mysqlPort} -u${dbUser} -p${dbPassword} ${dbName} -e "SELECT username FROM users WHERE role = 'super_admin' OR is_admin = 1 ORDER BY id LIMIT 1;" -N -s`;
   } else {
     // 在容器外，使用 docker exec
-    queryCommand = `docker exec ${containerName} mysql --ssl-mode=DISABLED -u${dbUser} -p${dbPassword} ${dbName} -e "SELECT username FROM users WHERE role = 'super_admin' OR is_admin = 1 ORDER BY id LIMIT 1;" -N -s`;
+    queryCommand = `docker exec ${containerName} mysql ${getSslDisableParam()} -u${dbUser} -p${dbPassword} ${dbName} -e "SELECT username FROM users WHERE role = 'super_admin' OR is_admin = 1 ORDER BY id LIMIT 1;" -N -s`;
   }
-  
+
   try {
     const { stdout } = await execAsync(queryCommand);
     const username = stdout.trim();
@@ -153,7 +161,7 @@ async function queryAdminUsername() {
 
 /**
  * 执行数据库初始化
- * 
+ *
  * 步骤：
  * 1. 显示配置信息
  * 2. 创建数据库
@@ -164,17 +172,17 @@ async function queryAdminUsername() {
 async function initDatabase() {
   // 在函数开始处声明临时目录，整个函数内复用
   const tempDir = os.tmpdir();
-  
+
   try {
     // 显示实际使用的配置（用于调试和验证）
     console.log(`正在初始化数据库 ${dbName}...`);
     console.log(`配置信息:`);
     console.log(`  数据库名: ${dbName}`);
     console.log(`  用户名: ${dbUser}`);
-    console.log(`  密码: ${dbPassword ? '***' : '未设置'} (长度: ${dbPassword ? dbPassword.length : 0})`);
+    console.log(`  密码: ${dbPassword ? "***" : "未设置"} (长度: ${dbPassword ? dbPassword.length : 0})`);
     console.log(`  主机: ${mysqlHost} (DB_HOST=${dbHost})`);
     console.log(`  端口: ${mysqlPort} (DB_PORT=${dbPort})`);
-    console.log(`  运行环境: ${isInDocker ? 'Docker 容器内' : '本地环境'}`);
+    console.log(`  运行环境: ${isInDocker ? "Docker 容器内" : "本地环境"}`);
     console.log(`  容器名: ${containerName}`);
     console.log(`\n提示: 如果密码验证失败，请确保 MySQL 容器的 MYSQL_ROOT_PASSWORD 与 backend/.env 中的 DB_PASSWORD 一致`);
     if (isInDocker) {
@@ -187,39 +195,32 @@ async function initDatabase() {
     // 使用临时文件方式执行 SQL，避免引号转义问题（跨平台兼容）
     const tempCreateDbFile = path.join(tempDir, `create_db_${Date.now()}.sql`);
     fs.writeFileSync(tempCreateDbFile, createDbSql, "utf8");
-    
+
     let createDbCommand;
     if (isInDocker) {
       // 在容器内，使用文件方式执行
-      createDbCommand = `mysql --ssl-mode=DISABLED -h${mysqlHost} -P${mysqlPort} -u${dbUser} -p${dbPassword} < ${tempCreateDbFile}`;
+      createDbCommand = `mysql ${getSslDisableParam()} -h${mysqlHost} -P${mysqlPort} -u${dbUser} -p${dbPassword} < ${tempCreateDbFile}`;
     } else {
       // 在容器外，使用 docker exec 和文件方式执行
       // 将文件复制到容器内，或直接通过 stdin 传递
-      createDbCommand = `docker exec -i ${containerName} mysql --ssl-mode=DISABLED -u${dbUser} -p${dbPassword} < ${tempCreateDbFile}`;
+      createDbCommand = `docker exec -i ${containerName} mysql ${getSslDisableParam()} -u${dbUser} -p${dbPassword} < ${tempCreateDbFile}`;
     }
 
     try {
       // 使用文件输入方式，更可靠
       const readStream = fs.createReadStream(tempCreateDbFile);
-      
+
       if (isInDocker) {
         // 在容器内使用 spawn
-        const commandParts = [
-          "mysql",
-          "--ssl-mode=DISABLED",
-          `-h${mysqlHost}`,
-          `-P${mysqlPort}`,
-          `-u${dbUser}`,
-          `-p${dbPassword}`
-        ];
-        
+        const commandParts = ["mysql", getSslDisableParam(), `-h${mysqlHost}`, `-P${mysqlPort}`, `-u${dbUser}`, `-p${dbPassword}`];
+
         await new Promise((resolve, reject) => {
           const mysqlProcess = spawn(commandParts[0], commandParts.slice(1), {
-            stdio: ["pipe", "pipe", "pipe"]
+            stdio: ["pipe", "pipe", "pipe"],
           });
-          
+
           readStream.pipe(mysqlProcess.stdin);
-          
+
           let stderrOutput = "";
           mysqlProcess.stderr.on("data", (data) => {
             const output = data.toString();
@@ -228,20 +229,20 @@ async function initDatabase() {
               console.warn(`警告: ${output.trim()}`);
             }
           });
-          
+
           mysqlProcess.on("close", (code) => {
             // 清理临时文件
             try {
               fs.unlinkSync(tempCreateDbFile);
             } catch (e) {}
-            
+
             if (code !== 0) {
               reject(new Error(`创建数据库失败，退出码: ${code}${stderrOutput ? `\n${stderrOutput}` : ""}`));
             } else {
               resolve();
             }
           });
-          
+
           mysqlProcess.on("error", (error) => {
             try {
               fs.unlinkSync(tempCreateDbFile);
@@ -249,35 +250,39 @@ async function initDatabase() {
             reject(error);
           });
         });
-        
+
         console.log(`✅ 数据库 ${dbName} 创建成功`);
       } else {
         // 在容器外，使用 docker exec 并通过 stdin 传递
         await new Promise((resolve, reject) => {
-          const child = exec(`docker exec -i ${containerName} mysql --ssl-mode=DISABLED -u${dbUser} -p${dbPassword}`, {
-            shell: shellOption
-          }, (error, stdout, stderr) => {
-            // 清理临时文件
-            try {
-              fs.unlinkSync(tempCreateDbFile);
-            } catch (e) {}
-            
-            if (error) {
-              // 将错误信息附加到 error 对象
-              error.stdout = stdout;
-              error.stderr = stderr;
-              reject(error);
-              return;
+          const child = exec(
+            `docker exec -i ${containerName} mysql ${getSslDisableParam()} -u${dbUser} -p${dbPassword}`,
+            {
+              shell: shellOption,
+            },
+            (error, stdout, stderr) => {
+              // 清理临时文件
+              try {
+                fs.unlinkSync(tempCreateDbFile);
+              } catch (e) {}
+
+              if (error) {
+                // 将错误信息附加到 error 对象
+                error.stdout = stdout;
+                error.stderr = stderr;
+                reject(error);
+                return;
+              }
+              if (stderr && !stderr.includes("Warning") && !stderr.includes("Using a password")) {
+                console.warn(`警告: ${stderr}`);
+              }
+              resolve();
             }
-            if (stderr && !stderr.includes("Warning") && !stderr.includes("Using a password")) {
-              console.warn(`警告: ${stderr}`);
-            }
-            resolve();
-          });
-          
+          );
+
           readStream.pipe(child.stdin);
         });
-        
+
         console.log(`✅ 数据库 ${dbName} 创建成功`);
       }
     } catch (error) {
@@ -285,9 +290,9 @@ async function initDatabase() {
       try {
         fs.unlinkSync(tempCreateDbFile);
       } catch (e) {}
-      
+
       // 显示完整的错误信息用于调试
-      const errorOutput = (error.stderr || error.stdout || error.message || '').toString();
+      const errorOutput = (error.stderr || error.stdout || error.message || "").toString();
       console.error(`\n执行命令失败`);
       if (error.stdout) {
         console.error(`标准输出: ${error.stdout}`);
@@ -317,18 +322,18 @@ async function initDatabase() {
         console.error(`\n当前配置（从 backend/.env 读取）：`);
         console.error(`  数据库名: ${dbName}`);
         console.error(`  用户名: ${dbUser}`);
-        console.error(`  密码: ${dbPassword ? '***' : '未设置'} (长度: ${dbPassword ? dbPassword.length : 0})`);
+        console.error(`  密码: ${dbPassword ? "***" : "未设置"} (长度: ${dbPassword ? dbPassword.length : 0})`);
         console.error(`  主机: ${mysqlHost}`);
         console.error(`  端口: ${mysqlPort}`);
         console.error(`  容器名: ${containerName}`);
-        
+
         // 尝试使用默认密码 root 连接，以检测实际的密码
         if (!isInDocker) {
           // 在本地环境，尝试使用默认密码测试
           try {
-            const testCommand = `docker exec ${containerName} mysql --ssl-mode=DISABLED -uroot -proot -e "SELECT 1;" 2>&1`;
+            const testCommand = `docker exec ${containerName} mysql ${getSslDisableParam()} -uroot -proot -e "SELECT 1;" 2>&1`;
             const { stdout: testStdout, stderr: testStderr } = await execAsync(testCommand, { shell: shellOption });
-            if (testStdout && testStdout.includes('1')) {
+            if (testStdout && testStdout.includes("1")) {
               console.error(`\n🔍 检测结果：`);
               console.error(`  MySQL 容器的实际密码是: root`);
               console.error(`  但 backend/.env 中配置的密码是: ${dbPassword.length} 个字符的密码`);
@@ -356,7 +361,7 @@ async function initDatabase() {
             // 默认密码也失败，说明密码不是 root
             console.error(`\n💡 解决方案：`);
             console.error(`  1. 检查 backend/.env 文件中的配置：`);
-            console.error(`     DB_PASSWORD=${dbPassword ? '***' : '未设置'}`);
+            console.error(`     DB_PASSWORD=${dbPassword ? "***" : "未设置"}`);
             console.error(`     DB_PORT=${mysqlPort}`);
             console.error(`     DB_DATABASE=${dbName}`);
             console.error(`  2. 确保 MySQL 容器已启动：`);
@@ -371,9 +376,9 @@ async function initDatabase() {
         } else {
           // Docker 容器内的错误处理
           try {
-            const testCommand = `mysql --ssl-mode=DISABLED -h${mysqlHost} -P${mysqlPort} -uroot -proot -e "SELECT 1;" 2>&1`;
+            const testCommand = `mysql ${getSslDisableParam()} -h${mysqlHost} -P${mysqlPort} -uroot -proot -e "SELECT 1;" 2>&1`;
             const { stdout: testStdout } = await execAsync(testCommand, { shell: shellOption });
-            if (testStdout && testStdout.includes('1')) {
+            if (testStdout && testStdout.includes("1")) {
               console.error(`\n🔍 检测结果：`);
               console.error(`  MySQL 容器的实际密码是: root`);
               console.error(`  但配置的密码是: ${dbPassword.length} 个字符的密码`);
@@ -401,11 +406,11 @@ async function initDatabase() {
             console.error(`\n  3. 或者将 backend/.env 中的 DB_PASSWORD 改回 MySQL 容器首次启动时使用的密码`);
           }
         }
-        
+
         throw new Error(`数据库认证失败: MySQL 容器的 root 密码与配置的密码不匹配。请按照上述解决方案操作。`);
       }
       // 如果数据库已存在，忽略错误
-      const errorMsg = errorOutput || error.message || '';
+      const errorMsg = errorOutput || error.message || "";
       if (!errorMsg.includes("already exists") && !errorMsg.includes("database exists") && !errorMsg.includes("1007")) {
         console.error(`\n❌ 创建数据库失败！`);
         console.error(`\n完整错误信息:`);
@@ -418,10 +423,7 @@ async function initDatabase() {
 
     // 第二步：执行初始化 SQL
     // 移除 SQL 文件末尾的 SELECT 输出语句（如果存在）
-    const sqlToExecute = sqlContent.replace(
-      /-- ============================================\s*-- 9\. 初始化完成\s*-- ============================================\s*SELECT.*?;[\s\S]*$/,
-      ""
-    );
+    const sqlToExecute = sqlContent.replace(/-- ============================================\s*-- 9\. 初始化完成\s*-- ============================================\s*SELECT.*?;[\s\S]*$/, "");
 
     // 将 SQL 写入临时文件，然后通过文件执行
     // 使用系统临时目录，兼容 Windows 和 Linux/Mac
@@ -432,17 +434,10 @@ async function initDatabase() {
     if (isInDocker) {
       // 在容器内，使用 spawn 和管道传递文件内容
       const readStream = fs.createReadStream(tempSqlFile);
-      
+
       await new Promise((resolve, reject) => {
-        const mysqlProcess = spawn("mysql", [
-          `--ssl-mode=DISABLED`,
-          `-h${mysqlHost}`,
-          `-P${mysqlPort}`,
-          `-u${dbUser}`,
-          `-p${dbPassword}`,
-          dbName
-        ], {
-          stdio: ["pipe", "pipe", "pipe"]
+        const mysqlProcess = spawn("mysql", [getSslDisableParam(), `-h${mysqlHost}`, `-P${mysqlPort}`, `-u${dbUser}`, `-p${dbPassword}`, dbName], {
+          stdio: ["pipe", "pipe", "pipe"],
         });
 
         readStream.pipe(mysqlProcess.stdin);
@@ -480,7 +475,7 @@ async function initDatabase() {
     } else {
       // 在容器外，使用 exec 和 stdin 输入
       await new Promise((resolve, reject) => {
-        const child = exec(`docker exec -i ${containerName} mysql --ssl-mode=DISABLED -u${dbUser} -p${dbPassword} ${dbName}`, (error, stdout, stderr) => {
+        const child = exec(`docker exec -i ${containerName} mysql ${getSslDisableParam()} -u${dbUser} -p${dbPassword} ${dbName}`, (error, stdout, stderr) => {
           // 清理临时文件
           try {
             fs.unlinkSync(tempSqlFile);
@@ -511,7 +506,7 @@ CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY '$
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 `;
-        
+
         // 使用系统临时目录，兼容 Windows 和 Linux/Mac
         const tempFixFile = path.join(tempDir, `fix_access_${Date.now()}.sql`);
         fs.writeFileSync(tempFixFile, fixAccessSql, "utf8");
@@ -519,14 +514,8 @@ FLUSH PRIVILEGES;
         if (isInDocker) {
           await new Promise((resolve, reject) => {
             const readStream = fs.createReadStream(tempFixFile);
-            const mysqlProcess = spawn("mysql", [
-              `--ssl-mode=DISABLED`,
-              `-h${mysqlHost}`,
-              `-P${mysqlPort}`,
-              `-u${dbUser}`,
-              `-p${dbPassword}`
-            ], {
-              stdio: ["pipe", "pipe", "pipe"]
+            const mysqlProcess = spawn("mysql", [getSslDisableParam(), `-h${mysqlHost}`, `-P${mysqlPort}`, `-u${dbUser}`, `-p${dbPassword}`], {
+              stdio: ["pipe", "pipe", "pipe"],
             });
 
             readStream.pipe(mysqlProcess.stdin);
@@ -560,7 +549,7 @@ FLUSH PRIVILEGES;
           });
         } else {
           await new Promise((resolve, reject) => {
-            const child = exec(`docker exec -i ${containerName} mysql --ssl-mode=DISABLED -u${dbUser} -p${dbPassword}`, (error, stdout, stderr) => {
+            const child = exec(`docker exec -i ${containerName} mysql ${getSslDisableParam()} -u${dbUser} -p${dbPassword}`, (error, stdout, stderr) => {
               try {
                 fs.unlinkSync(tempFixFile);
               } catch (e) {}
@@ -596,7 +585,7 @@ FLUSH PRIVILEGES;
     console.log(`  默认管理员密码: ${defaultPassword}`);
     if (isInDocker || process.env.NODE_ENV === "development") {
       console.log(`\nMySQL 外部连接信息:`);
-      console.log(`  主机: ${isInDocker ? 'localhost' : mysqlHost}`);
+      console.log(`  主机: ${isInDocker ? "localhost" : mysqlHost}`);
       console.log(`  端口: ${mysqlPort}`);
       console.log(`  用户名: ${dbUser}`);
       console.log(`  密码: ${dbPassword}`);
