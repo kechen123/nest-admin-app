@@ -19,6 +19,9 @@ html {
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+  // 添加平滑过渡效果
+  filter: blur(0px);
+  transition: filter 0.3s ease;
 }
 
 /* 进入dark模式和退出dark模式时，两个图像的位置顺序正好相反 */

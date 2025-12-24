@@ -1,3 +1,22 @@
+:root {
+  // 亮色模式自定义变量
+  --hover-bg-color: var(--el-color-info-light-8);
+  --active-bg-color: var(--el-color-primary-light-7);
+  --hover-bg-color-light: var(--el-color-info-light-9);
+}
+
+.dark {
+  // 暗色模式自定义变量
+  --hover-bg-color: var(--el-fill-color-dark);
+  --active-bg-color: var(--el-color-primary-dark-2);
+  --hover-bg-color-light: var(--el-fill-color-darker);
+
+  // 增强边框可见性
+  --el-border-color: rgba(255, 255, 255, 0.12);
+  --el-border-color-lighter: rgba(255, 255, 255, 0.08);
+  --el-border-color-light: rgba(255, 255, 255, 0.15);
+}
+
 :root,
 .dark {
   transition:
@@ -5,7 +24,16 @@
     color 0.3s ease,
     border-color 0.3s ease,
     fill 0.3s ease,
-    stroke 0.3s ease;
+    stroke 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+// 为所有元素添加颜色过渡
+* {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .pagination {
@@ -24,8 +52,153 @@
 ::-webkit-scrollbar-thumb {
   background-color: var(--el-text-color-secondary); /* 滑块颜色 */
   border-radius: 4px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: var(--el-text-color-regular);
+  }
 }
 
 ::-webkit-scrollbar-track {
   background-color: transparent; /* 轨道颜色 */
+}
+
+// 暗色模式下增强滚动条可见性
+.dark {
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+// 列表操作按钮组样式优化
+.actions-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  .el-button {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    min-width: 40px;
+
+    // 增强按钮对比度
+    &.el-button--primary.is-plain {
+      color: var(--el-color-primary);
+      border-color: var(--el-color-primary-light-5);
+      background-color: var(--el-color-primary-light-9);
+
+      &:hover {
+        color: #fff;
+        background-color: var(--el-color-primary);
+        border-color: var(--el-color-primary);
+      }
+
+      .dark & {
+        border-color: rgba(64, 158, 255, 0.5);
+        background-color: rgba(64, 158, 255, 0.15);
+        color: #66b1ff;
+        font-weight: 600;
+
+        &:hover {
+          background-color: var(--el-color-primary);
+          border-color: var(--el-color-primary);
+          color: #fff;
+        }
+      }
+    }
+
+    &.el-button--success.is-plain {
+      color: var(--el-color-success);
+      border-color: var(--el-color-success-light-5);
+      background-color: var(--el-color-success-light-9);
+
+      &:hover {
+        color: #fff;
+        background-color: var(--el-color-success);
+        border-color: var(--el-color-success);
+      }
+
+      .dark & {
+        border-color: rgba(103, 194, 58, 0.5);
+        background-color: rgba(103, 194, 58, 0.15);
+        color: #85ce61;
+        font-weight: 600;
+
+        &:hover {
+          background-color: var(--el-color-success);
+          border-color: var(--el-color-success);
+          color: #fff;
+        }
+      }
+    }
+
+    &.el-button--danger.is-plain {
+      color: var(--el-color-danger);
+      border-color: var(--el-color-danger-light-5);
+      background-color: var(--el-color-danger-light-9);
+
+      &:hover {
+        color: #fff;
+        background-color: var(--el-color-danger);
+        border-color: var(--el-color-danger);
+      }
+
+      .dark & {
+        border-color: rgba(245, 108, 108, 0.5);
+        background-color: rgba(245, 108, 108, 0.15);
+        color: #f78989;
+        font-weight: 600;
+
+        &:hover {
+          background-color: var(--el-color-danger);
+          border-color: var(--el-color-danger);
+          color: #fff;
+        }
+      }
+    }
+  }
+}
+
+// 详情页面 Footer 样式优化
+.detail-container {
+  .footer {
+    background-color: var(--el-bg-color);
+    border-top-color: var(--el-border-color);
+
+    // 暗色模式下增强对比度
+    .dark & {
+      background-color: var(--el-bg-color-page);
+      border-top-color: var(--el-border-color);
+    }
+
+    .footer-actions {
+      .el-button {
+        // 确保按钮文字在暗色模式下清晰
+        font-weight: 500;
+
+        // 默认按钮在暗色模式下的优化
+        &:not(.el-button--primary):not(.el-button--success):not(.el-button--danger):not(
+            .el-button--warning
+          ):not(.el-button--info) {
+          .dark & {
+            color: var(--el-text-color-primary);
+            border-color: var(--el-border-color);
+            background-color: var(--el-bg-color);
+
+            &:hover {
+              color: var(--el-color-primary);
+              border-color: var(--el-color-primary-light-5);
+              background-color: var(--el-color-primary-light-9);
+            }
+          }
+        }
+      }
+    }
+  }
 }

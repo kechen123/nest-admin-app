@@ -65,6 +65,13 @@ const { isCollapse } = storeToRefs(layoutStore)
 }
 </style>
 
+<style lang="less">
+// 暗色模式下侧边栏背景区分
+.dark .layout-container .sidebar {
+  background-color: var(--el-bg-color-page);
+}
+</style>
+
 <style>
 .fade-enter-from,
 .fade-leave-to {

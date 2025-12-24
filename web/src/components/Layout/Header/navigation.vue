@@ -519,7 +519,7 @@ const handleCommand = async (command: string | number | object) => {
       }
 
       &:hover {
-        background-color: var(--el-color-info-light-8);
+        background-color: var(--hover-bg-color);
         color: var(--el-color-primary);
 
         i {
@@ -575,7 +575,7 @@ const handleCommand = async (command: string | number | object) => {
       margin-bottom: 8px;
 
       &:hover {
-        background-color: var(--el-color-info-light-9);
+        background-color: var(--hover-bg-color-light);
       }
 
       .result-icon {
@@ -639,6 +639,7 @@ const handleCommand = async (command: string | number | object) => {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   background-color: var(--el-bg-color);
 
+
   .notification-header {
     display: flex;
     justify-content: space-between;
@@ -671,12 +672,13 @@ const handleCommand = async (command: string | number | object) => {
     }
 
     &:hover {
-      background-color: var(--el-color-info-light-9);
+      background-color: var(--hover-bg-color-light);
     }
 
     &.is-unread {
       background-color: var(--el-bg-color);
       padding-left: 24px;
+
 
       &::before {
         content: '';
@@ -792,6 +794,24 @@ const handleCommand = async (command: string | number | object) => {
 
     .el-button {
       font-weight: 500;
+    }
+  }
+}
+</style>
+
+<style lang="less">
+// 暗色模式下的通知菜单样式优化
+.dark .notification-menu {
+  border-color: var(--el-border-color);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+
+  .notification-item {
+    &:hover {
+      background-color: var(--el-fill-color-dark);
+    }
+
+    &.is-unread {
+      background-color: var(--el-fill-color-darker);
     }
   }
 }

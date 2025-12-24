@@ -283,9 +283,9 @@ defineExpose({ init })
   }
 
   .footer {
-    border-top: 1px solid #e4e7ed;
+    border-top: 1px solid var(--el-border-color);
     padding: 16px 20px;
-    background: #fff;
+    background-color: var(--el-bg-color);
     flex-shrink: 0;
 
     .footer-actions {

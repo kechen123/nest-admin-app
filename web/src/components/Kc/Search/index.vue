@@ -6,16 +6,11 @@
           <FormFieldItem v-for="field in visibleFields" :key="field.key" :field="field"
             :field-width="config.fieldWidth" v-model="searchData" @change="handleFieldChange" />
           <!-- 展开按钮，紧跟搜索项末尾 -->
-          <el-button v-if="hasMoreFields && !panelState" @click="toggleExpand" class="expand-btn">
-            <el-icon class="expand-icon" :class="{ 'is-expanded': isExpanded }">
-              <ArrowDown />
-            </el-icon>
-            {{ isExpanded ? '收起' : '展开' }}
-          </el-button>
-          <el-button class="search-btn" v-if="config.showSearch !== false" type="primary" @click="handleSearch">
-            搜索
-          </el-button>
-          <el-button v-if="config.showReset !== false" @click="handleReset">重置</el-button>
+          <CommonButton v-if="hasMoreFields && !panelState" @click="toggleExpand" class="expand-btn"
+            :class="{ 'is-expanded': isExpanded }" :icon="ArrowDown" :label="isExpanded ? '收起' : '展开'" />
+          <CommonButton class="search-btn" v-if="config.showSearch !== false" type="primary"
+            :prevent-double-click="true" :debounce="300" @click="handleSearch" label="搜索" />
+          <CommonButton v-if="config.showReset !== false" @click="handleReset" label="重置" />
         </transition-group>
 
       </div>
@@ -27,6 +22,7 @@
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { ArrowDown } from '@element-plus/icons-vue'
 import FormFieldItem from '../components/FormFieldItem.vue'
+import CommonButton from '@/components/CommonButton/index.vue'
 import type { SearchConfig } from '../types'
 
 interface Props {
@@ -162,6 +158,17 @@ const handleReset = () => {
           transition: transform 0.3s;
 
           &.is-expanded {
+            transform: rotate(180deg);
+          }
+        }
+        
+        // 展开按钮图标旋转动画
+        .expand-btn {
+          :deep(.el-icon) {
+            transition: transform 0.3s;
+          }
+          
+          &.is-expanded :deep(.el-icon) {
             transform: rotate(180deg);
           }
         }

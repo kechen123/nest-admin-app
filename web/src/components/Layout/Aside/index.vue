@@ -237,7 +237,7 @@ watch(
   }
 
   &:hover {
-    background-color: var(--el-color-info-light-8);
+    background-color: var(--hover-bg-color);
     
     i {
       animation: scale-pop 0.3s ease;
@@ -261,7 +261,7 @@ watch(
 
 
 .el-menu-item.is-active {
-  background-color: var(--el-color-primary-light-7);
+  background-color: var(--active-bg-color);
   color: var(--el-color-primary);
   font-weight: 500;
   
@@ -290,6 +290,18 @@ watch(
     align-items: center;
     justify-content: center;
     width: 100%;
+  }
+}
+</style>
+
+<style lang="less">
+// 暗色模式下的菜单激活状态优化
+.dark .el-menu-item.is-active {
+  background-color: var(--el-color-primary-dark-2);
+  color: var(--el-color-primary-light-3);
+  
+  .el-menu--collapse & {
+    background: linear-gradient(135deg, var(--el-color-primary-dark-2), var(--el-color-primary-dark-1));
   }
 }
 </style>

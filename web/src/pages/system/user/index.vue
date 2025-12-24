@@ -15,18 +15,11 @@
       <span v-if="!row.roles || row.roles.length === 0" style="color: #999;">-</span>
     </template>
     <template #actions="{ row }">
-      <el-button v-if="hasPermission('system:user:edit')" type="primary" plain size="small"
-        @click="openUserDetail(row.id, 'edit')">
-        编辑
-      </el-button>
-      <el-button v-if="hasPermission('system:user:query')" type="success" plain size="small"
-        @click="openUserDetail(row.id, 'view')">
-        查看详情
-      </el-button>
-      <el-button v-if="hasPermission('system:user:remove')" type="danger" plain size="small"
-        @click="handleDelete(row.id)">
-        删除
-      </el-button>
+      <div class="actions-buttons">
+        <CommonButton v-if="hasPermission('system:user:edit')" type="primary" plain size="small" :label="'编辑'" :on-click="() => openUserDetail(row.id, 'edit')" />
+        <CommonButton v-if="hasPermission('system:user:query')" type="success" plain size="small" :label="'查看详情'" :on-click="() => openUserDetail(row.id, 'view')" />
+        <CommonButton v-if="hasPermission('system:user:remove')" type="danger" plain size="small" :label="'删除'" :prevent-double-click="true" :on-click="() => handleDelete(row.id)" />
+      </div>
     </template>
   </TableWithSlidePanel>
 </template>
@@ -36,6 +29,7 @@ import { User } from '@element-plus/icons-vue'
 import { userApi, type User as UserType } from '@/api/user'
 import Detail from './list/_detail.vue'
 import TableWithSlidePanel from '@/components/Kc/TableWithSlidePanel.vue'
+import CommonButton from '@/components/CommonButton/index.vue'
 import type { KcConfig, TableConfig, ColumnProps } from '@/components/Kc/types'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPreviewUrl } from '@/utils/common'
