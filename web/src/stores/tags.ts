@@ -4,6 +4,7 @@ interface Tag {
   name: string
   path: string
   key: string
+  icon?: string
 }
 
 type TagList = Tag[]
@@ -30,7 +31,8 @@ export const useTagsStore = defineStore(
     const getActive = () => {
       let name: any = '404',
         path = '/404',
-        key = '/404'
+        key = '/404',
+        icon: string | undefined = undefined
       if (matched.length > 1) {
         const node = findNode((node) => {
           return node.path === routerVal.path
@@ -39,12 +41,14 @@ export const useTagsStore = defineStore(
           name = node.title
           path = node.path
           key = node.path
+          icon = node.icon
         }
       }
       return {
         name,
         path,
         key,
+        icon,
       }
     }
     const active = ref<Tag>(getActive())
@@ -58,12 +62,14 @@ export const useTagsStore = defineStore(
         name: '404',
         path: '/404',
         key: '/404',
+        icon: undefined as string | undefined,
       }
       if (node) {
         tag = {
           name: node.title,
           path: node.path,
           key: node.path,
+          icon: node.icon,
         }
       }
       if (tags.value.findIndex((item) => item.path === tag.path) === -1) {
@@ -80,14 +86,16 @@ export const useTagsStore = defineStore(
     }
 
     const removeTag = (path: string) => {
-      let index = tags.value.findIndex((item) => item.name === path)
+      let index = tags.value.findIndex((item) => item.path === path)
       if (index < 0) return
       tags.value.splice(index, 1)
       if (index > tags.value.length - 1) {
         index = tags.value.length - 1
       }
-      active.value = tags.value[index]
-      router.push(tags.value[index].path)
+      if (tags.value.length > 0) {
+        active.value = tags.value[index]
+        router.push(tags.value[index].path)
+      }
     }
 
     return { tags, active, addTag, changeTag, removeTag }

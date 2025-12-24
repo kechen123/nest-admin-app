@@ -92,7 +92,35 @@ function findMenuItemByPath(menuList: MenuItem[], path: string): MenuItem | null
 function handleMenuSelect(path: string) {
   const menuItem = findMenuItemByPath(routerPath.value, path)
   if (menuItem) {
-    router.push(menuItem.path)
+    // 优先使用 path，因为这是实际的路由路径
+    // route_name 可能是路由名称，不一定是路径格式
+    let targetPath = menuItem.path
+    
+    // 如果 path 为空，尝试使用 route_name（但需要判断是否是路径格式）
+    if (!targetPath || targetPath.trim() === '') {
+      targetPath = menuItem.route_name || ''
+    }
+    
+    // 如果目标路径为空或无效，直接返回
+    if (!targetPath || targetPath.trim() === '') {
+      console.warn('菜单项路径无效:', menuItem)
+      return
+    }
+    
+    // 如果目标路径与当前路径相同，避免重复跳转
+    const currentPath = router.currentRoute.value.path
+    if (targetPath === currentPath) {
+      return
+    }
+    
+    // 使用 router.push 进行 SPA 路由跳转，添加错误处理避免整页刷新
+    router.push(targetPath).catch((err) => {
+      // 捕获路由错误，避免整页刷新
+      // NavigationDuplicated 错误可以忽略（重复导航）
+      if (err.name !== 'NavigationDuplicated') {
+        console.warn('路由跳转失败:', err, '目标路径:', targetPath, '菜单项:', menuItem)
+      }
+    })
   }
 }
 

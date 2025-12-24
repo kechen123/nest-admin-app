@@ -113,9 +113,24 @@ const handleCommand = async (command: string | number | object) => {
     routerStore.clearRoles()
     userStore.clearUserInfo()
     ElMessage.success('已退出登录')
-    router.push('/login')
+    // 添加错误处理，避免路由错误导致整页刷新
+    router.push('/login').catch((err) => {
+      if (err.name !== 'NavigationDuplicated') {
+        console.warn('退出登录路由跳转失败:', err)
+      }
+    })
   } else {
-    router.push(command as string)
+    const targetPath = command as string
+    // 如果目标路径与当前路径相同，避免重复跳转
+    if (targetPath === router.currentRoute.value.path) {
+      return
+    }
+    // 添加错误处理，避免路由错误导致整页刷新
+    router.push(targetPath).catch((err) => {
+      if (err.name !== 'NavigationDuplicated') {
+        console.warn('导航路由跳转失败:', err, '目标路径:', targetPath)
+      }
+    })
   }
 }
 

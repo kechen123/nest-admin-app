@@ -4,10 +4,13 @@
       <div class="container">
         <div class="item" v-for="item in tagsStore.tags" :key="item.name"
           :class="[item.name === tagsStore.active.name ? 'active' : '']" @click.stop="tagClick(item)">
+          <el-icon v-if="item.icon" size="14" class="icon">
+            <MIcon :iconName="item.icon" />
+          </el-icon>
           <span class="name">
             {{ item.name }}
           </span>
-          <el-icon size="16" class="close" @click.stop="delPage(item.name)">
+          <el-icon size="16" class="close" @click.stop="delPage(item.path)">
             <MIcon iconName="Close" />
           </el-icon>
         </div>
@@ -30,7 +33,17 @@ watch(route, () => {
 watch(
   () => tagsStore.active.path,
   (newVal) => {
-    router.push(newVal)
+    // 如果路径为空或与当前路径相同，避免重复跳转
+    if (!newVal || newVal === router.currentRoute.value.path) {
+      return
+    }
+    // 添加错误处理，避免路由错误导致整页刷新
+    router.push(newVal).catch((err) => {
+      // NavigationDuplicated 错误可以忽略（重复导航）
+      if (err.name !== 'NavigationDuplicated') {
+        console.warn('标签页路由跳转失败:', err, '目标路径:', newVal)
+      }
+    })
   }
 )
 
@@ -38,8 +51,8 @@ const tagClick = (item: any) => {
   tagsStore.changeTag(item.path)
 }
 
-const delPage = (name: string) => {
-  tagsStore.removeTag(name)
+const delPage = (path: string) => {
+  tagsStore.removeTag(path)
 }
 
 // 设置标签
@@ -91,6 +104,12 @@ const setTags = (route: any) => {
       white-space: nowrap; // 标签内容不换行
       max-width: 200px; // 设置标签最大宽度
 
+      .icon {
+        margin-right: 4px;
+        flex-shrink: 0; // 图标不收缩
+        color: var(--tag-text-color);
+      }
+
       .name {
         font-size: 14px;
         color: var(--tag-text-color);
@@ -105,6 +124,9 @@ const setTags = (route: any) => {
         background-color: var(--el-bg-color-page);
         color: var(--el-color-primary);
 
+        .icon {
+          color: var(--el-color-primary);
+        }
 
         .close {
           opacity: 1;
@@ -141,6 +163,10 @@ const setTags = (route: any) => {
         width: 100%;
         height: 1px;
         background-color: var(--el-color-primary);
+      }
+
+      .icon {
+        color: var(--el-color-primary);
       }
 
       .name {

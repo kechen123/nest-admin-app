@@ -38,6 +38,20 @@ router.beforeEach(async (to, from) => {
     }
   }
   if (b) return b
+  // 确保始终返回一个值，避免路由守卫未返回值导致的问题
+  return true
+})
+
+// 添加路由错误处理，避免路由错误导致整页刷新
+router.onError((error) => {
+  console.error('路由错误:', error)
+  // 如果是导航重复错误，可以忽略
+  if (error.name === 'NavigationDuplicated') {
+    return
+  }
+  // 其他路由错误，可以在这里统一处理
+  // 例如：跳转到 404 页面
+  // router.push('/[...notFond]').catch(() => {})
 })
 
 if (import.meta.hot) {
