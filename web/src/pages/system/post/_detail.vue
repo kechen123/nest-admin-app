@@ -21,6 +21,7 @@
 import { postApi, type Post, type CreatePostDto, type UpdatePostDto } from '@/api/post'
 import { ElMessage } from 'element-plus'
 import KcForm from '@/components/Kc/Form/index.vue'
+import CommonButton from '@/components/CommonButton/index.vue'
 import { getDictOptions } from '@/utils/dict'
 import type { DictOption } from '@/api/dict'
 

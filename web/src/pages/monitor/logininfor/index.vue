@@ -3,7 +3,7 @@
     <template #actions="{ row }">
       <div class="actions-buttons">
         <CommonButton type="success" plain size="small" :label="'查看详情'" :on-click="() => openDetail(row.id)" />
-        <CommonButton type="danger" plain size="small" :label="'删除'" :prevent-double-click="true" :on-click="() => handleDelete(row.id)" />
+        <CommonButton type="danger" plain size="small" :label="'删除'" :on-click="() => handleDelete(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>

@@ -2,9 +2,11 @@
   <TableWithSlidePanel :config="kcConfig" :column-display-config="columnDisplayConfig" ref="tableRef">
     <template #actions="{ row }">
       <div class="actions-buttons">
-        <CommonButton type="primary" plain size="small" :label="'编辑'" :on-click="() => openDictDataDetail(row.id, 'edit')" />
-        <CommonButton type="success" plain size="small" :label="'查看详情'" :on-click="() => openDictDataDetail(row.id, 'view')" />
-        <CommonButton type="danger" plain size="small" :label="'删除'" :prevent-double-click="true" :on-click="() => handleDelete(row.id)" />
+        <CommonButton type="primary" plain size="small" :label="'编辑'"
+          :on-click="() => openDictDataDetail(row.id, 'edit')" />
+        <CommonButton type="success" plain size="small" :label="'查看详情'"
+          :on-click="() => openDictDataDetail(row.id, 'view')" />
+        <CommonButton type="danger" plain size="small" :label="'删除'" :on-click="() => handleDelete(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>
@@ -165,7 +167,6 @@ const tableConfig: TableConfig = {
   defaultPagination: { page: 1, size: 10 },
   options: {
     attributes: {
-      border: true,
       stripe: true,
       highlightCurrentRow: true,
     },

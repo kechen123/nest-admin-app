@@ -3,16 +3,9 @@
     <div class="content">
       <KcForm ref="formRef" :config="formConfig" v-model="formData" @submit="onSubmit" @reset="onReset">
         <template #parentId>
-          <el-tree-select
-            v-model="formData.parentId"
-            :data="departmentTreeOptions"
-            :props="{ children: 'children', label: 'label', value: 'value' }"
-            placeholder="请选择父部门"
-            :disabled="type === 'view'"
-            style="width: 100%"
-            check-strictly
-            clearable
-          />
+          <el-tree-select v-model="formData.parentId" :data="departmentTreeOptions"
+            :props="{ children: 'children', label: 'label', value: 'value' }" placeholder="请选择父部门"
+            :disabled="type === 'view'" style="width: 100%" check-strictly clearable />
         </template>
       </KcForm>
     </div>
@@ -21,9 +14,8 @@
     <div class="footer">
       <div class="footer-actions">
         <el-button @click="close">关闭</el-button>
-        <el-button type="primary" @click="onSubmit(formData)" v-if="type !== 'view'">
-          {{ formData.id ? '保存' : '创建' }}
-        </el-button>
+        <CommonButton v-if="type !== 'view'" type="primary" :label="formData.id ? '保存' : '创建'"
+          :prevent-double-click="true" :on-click="() => onSubmit(formData)" />
       </div>
     </div>
   </div>
@@ -33,6 +25,7 @@
 import { departmentApi, type Department, type CreateDepartmentDto, type UpdateDepartmentDto } from '@/api/department'
 import { ElMessage } from 'element-plus'
 import KcForm from '@/components/Kc/Form/index.vue'
+import CommonButton from '@/components/CommonButton/index.vue'
 import { getDictOptions } from '@/utils/dict'
 import type { DictOption } from '@/api/dict'
 
@@ -78,7 +71,7 @@ const loadDepartmentTree = async () => {
   try {
     const res = await departmentApi.getDepartmentTree()
     const departments = (res as any) || []
-    
+
     // 转换为树形选择器需要的格式
     const convertToTreeOptions = (depts: Department[], excludeId?: number): any[] => {
       return depts
@@ -86,12 +79,12 @@ const loadDepartmentTree = async () => {
         .map(dept => ({
           label: dept.name,
           value: dept.id,
-          children: dept.children && dept.children.length > 0 
+          children: dept.children && dept.children.length > 0
             ? convertToTreeOptions(dept.children, excludeId)
             : undefined,
         }))
     }
-    
+
     departmentTreeOptions.value = convertToTreeOptions(departments, formData.value.id)
   } catch (error: any) {
     ElMessage.error(error.message || '加载部门树失败')
@@ -194,7 +187,8 @@ const onSubmit = async (data: any) => {
       return
     }
 
-    const { id: _, ...rest } = data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...restData } = data
 
     if (data.id) {
       // 更新部门
@@ -311,4 +305,3 @@ defineExpose({ init })
   gap: 12px;
 }
 </style>
-

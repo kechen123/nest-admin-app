@@ -18,7 +18,7 @@
       <div class="actions-buttons">
         <CommonButton v-if="hasPermission('system:user:edit')" type="primary" plain size="small" :label="'编辑'" :on-click="() => openUserDetail(row.id, 'edit')" />
         <CommonButton v-if="hasPermission('system:user:query')" type="success" plain size="small" :label="'查看详情'" :on-click="() => openUserDetail(row.id, 'view')" />
-        <CommonButton v-if="hasPermission('system:user:remove')" type="danger" plain size="small" :label="'删除'" :prevent-double-click="true" :on-click="() => handleDelete(row.id)" />
+        <CommonButton v-if="hasPermission('system:user:remove')" type="danger" plain size="small" :label="'删除'" :on-click="() => handleDelete(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>

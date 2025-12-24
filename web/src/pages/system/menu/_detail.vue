@@ -21,9 +21,8 @@
     <div class="footer">
       <div class="footer-actions">
         <el-button @click="close">关闭</el-button>
-        <el-button type="primary" @click="onSubmit(formData)" v-if="type !== 'view'">
-          {{ formData.id ? '保存' : '创建' }}
-        </el-button>
+        <CommonButton v-if="type !== 'view'" type="primary" :label="formData.id ? '保存' : '创建'" 
+          :prevent-double-click="true" :on-click="() => onSubmit(formData)" />
       </div>
     </div>
   </div>
@@ -33,6 +32,7 @@
 import { getMenu, addMenu, updateMenu, getMenuTree, type BackendMenu } from '@/api/sys_menu'
 import { ElMessage } from 'element-plus'
 import IconPicker from '@/components/IconPicker/index.vue'
+import CommonButton from '@/components/CommonButton/index.vue'
 
 // 防止 props 暴露到 DOM 元素上
 defineOptions({

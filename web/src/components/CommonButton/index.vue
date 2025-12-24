@@ -57,10 +57,10 @@ const handleClick = async (event: MouseEvent) => {
     return
   }
 
-  // 防止重复点击
+  // 防止重复点击（但不立即显示loading）
   if (props.preventDoubleClick) {
     isClicking.value = true
-    isLoading.value = true
+    // 不立即设置 loading，等待异步操作真正开始
   }
 
   try {
@@ -72,9 +72,20 @@ const handleClick = async (event: MouseEvent) => {
     // 执行点击回调
     if (props.onClick) {
       const result = props.onClick(event)
-      // 如果是 Promise，等待完成
+      // 如果是 Promise，在 Promise 真正开始执行时才显示 loading
       if (result instanceof Promise) {
-        await result
+        // 延迟显示 loading，给确认对话框等同步操作时间
+        const loadingTimer = setTimeout(() => {
+          if (props.preventDoubleClick && isClicking.value) {
+            isLoading.value = true
+          }
+        }, 100)
+        
+        try {
+          await result
+        } finally {
+          clearTimeout(loadingTimer)
+        }
       }
     }
 
