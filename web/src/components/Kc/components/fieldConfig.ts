@@ -169,7 +169,7 @@ export const FIELD_TYPE_CONFIGS: Record<string, FieldTypeConfig> = {
   },
 
   // InputNumber 类型
-  number: {
+  inputNumber: {
     component: 'ElInputNumber',
     defaultAttrs: {
       clearable: true,
