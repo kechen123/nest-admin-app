@@ -21,6 +21,7 @@
 <script setup lang="ts">
 import { computed, isRef } from 'vue'
 import { ElFormItem, ElInput, ElSelect, ElOption, ElInputNumber } from 'element-plus'
+import ImageUpload from '@/components/ImageUpload/index.vue'
 import type { FormField } from '../types'
 import { FIELD_TYPE_CONFIGS, getComponentAttrs as getAttrsFromConfig, type FieldTypeConfig } from './fieldConfig'
 
@@ -105,6 +106,7 @@ function getComponent(field: FormField) {
     ElInput,
     ElSelect,
     ElInputNumber,
+    ImageUpload,
     // 未来可以在这里添加更多组件
     // ElDatePicker,
     // ElSwitch,
