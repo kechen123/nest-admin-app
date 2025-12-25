@@ -1,6 +1,6 @@
 <template>
-  <el-form-item class="formItem" :label="field.label" :prop="field.key"
-    :style="{ width: getFieldWidth(field) }" :label-width="field.labelWidth || undefined">
+  <el-form-item class="formItem" :label="field.label" :prop="field.key" :style="{ width: getFieldWidth(field) }"
+    :label-width="field.labelWidth || undefined">
     <!-- slot 渲染优先 -->
     <slot v-if="field.slot" :name="typeof field.slot === 'string' ? field.slot : field.key" :field="field"
       :model="formData" />
@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { computed, isRef } from 'vue'
-import { ElFormItem, ElInput, ElSelect, ElOption } from 'element-plus'
+import { ElFormItem, ElInput, ElSelect, ElOption, ElInputNumber } from 'element-plus'
 import type { FormField } from '../types'
 import { FIELD_TYPE_CONFIGS, getComponentAttrs as getAttrsFromConfig, type FieldTypeConfig } from './fieldConfig'
 
@@ -103,6 +103,7 @@ function getComponent(field: FormField) {
   const componentMap: Record<string, any> = {
     ElInput,
     ElSelect,
+    ElInputNumber,
     // 未来可以在这里添加更多组件
     // ElDatePicker,
     // ElSwitch,
@@ -122,4 +123,3 @@ const handleFieldChange = (key: string, value: any) => {
   margin-bottom: 0;
 }
 </style>
-

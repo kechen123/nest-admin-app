@@ -168,6 +168,57 @@ export const FIELD_TYPE_CONFIGS: Record<string, FieldTypeConfig> = {
     },
   },
 
+  // InputNumber 类型
+  number: {
+    component: 'ElInputNumber',
+    defaultAttrs: {
+      clearable: true,
+    },
+    transform: (field, attrs) => {
+      // placeholder 处理
+      if (field.placeholder !== undefined) {
+        attrs.placeholder = unwrapValue(field.placeholder) || ''
+      }
+
+      // clearable 处理
+      if (field.clearable !== undefined) {
+        attrs.clearable = field.clearable !== false
+      }
+
+      // disabled 处理
+      if (field.disabled !== undefined) {
+        attrs.disabled = Boolean(unwrapValue(field.disabled))
+      }
+
+      // min 处理（支持 computed）
+      if (field.min !== undefined) {
+        attrs.min = unwrapValue(field.min)
+      }
+
+      // max 处理（支持 computed）
+      if (field.max !== undefined) {
+        attrs.max = unwrapValue(field.max)
+      }
+
+      // step 处理（支持 computed）
+      if (field.step !== undefined) {
+        attrs.step = unwrapValue(field.step)
+      }
+
+      // precision 处理（支持 computed）
+      if (field.precision !== undefined) {
+        attrs.precision = unwrapValue(field.precision)
+      }
+
+      // controls-position 处理
+      if (field.controlsPosition !== undefined) {
+        attrs.controlsPosition = field.controlsPosition
+      }
+
+      return attrs
+    },
+  },
+
   // DatePicker 类型（示例，展示如何添加新类型）
   // datepicker: {
   //   component: 'ElDatePicker',
