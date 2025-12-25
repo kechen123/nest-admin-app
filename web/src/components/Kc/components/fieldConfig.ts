@@ -219,6 +219,38 @@ export const FIELD_TYPE_CONFIGS: Record<string, FieldTypeConfig> = {
     },
   },
 
+  // ImageUpload 类型（单张或多张图片）
+  imageUpload: {
+    component: 'ImageUpload',
+    reservedKeys: [],
+    defaultAttrs: {
+      limit: 1,
+    },
+    transform: (field, attrs) => {
+      // limit 处理（支持单张和多张）
+      if (field.limit !== undefined) {
+        attrs.limit = unwrapValue(field.limit) ?? 1
+      }
+
+      // accept 处理
+      if (field.accept !== undefined) {
+        attrs.accept = unwrapValue(field.accept) || 'image/*'
+      }
+
+      // maxSize 处理（MB）
+      if (field.maxSize !== undefined) {
+        attrs.maxSize = unwrapValue(field.maxSize) ?? 5
+      }
+
+      // disabled 处理
+      if (field.disabled !== undefined) {
+        attrs.disabled = Boolean(unwrapValue(field.disabled))
+      }
+
+      return attrs
+    },
+  },
+
   // DatePicker 类型（示例，展示如何添加新类型）
   // datepicker: {
   //   component: 'ElDatePicker',
