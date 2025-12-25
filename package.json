@@ -32,7 +32,7 @@
     "mysql:logs": "docker-compose -f docker-compose.dev.yml logs -f mysql",
     "mysql:shell": "node scripts/mysql-shell.js",
     
-    "build": "docker-compose -f docker-compose.prod.yml build",
+    "build": "node scripts/debug-build.js",
     "prod": "docker-compose -f docker-compose.prod.yml up",
     "prod:up": "docker-compose -f docker-compose.prod.yml up -d",
     "prod:down": "docker-compose -f docker-compose.prod.yml down",

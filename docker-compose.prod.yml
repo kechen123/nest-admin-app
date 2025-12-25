@@ -58,8 +58,8 @@ services:
 
   web:
     build:
-      context: ./web
-      dockerfile: ../docker/web/Dockerfile.prod
+      context: .
+      dockerfile: ./docker/web/Dockerfile.prod
     container_name: yl-web-prod
     restart: always
     networks:

@@ -42,6 +42,7 @@
     "npm-run-all2": "^7.0.2",
     "oxlint": "^0.16.0",
     "prettier": "3.5.3",
+    "terser": "^5.36.0",
     "typescript": "~5.8.0",
     "unplugin-auto-import": "^19.3.0",
     "unplugin-vue-components": "^28.7.0",

@@ -3,17 +3,21 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# 复制 package 文件
-COPY package*.json ./
+# 安装 pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# 安装依赖（使用 --legacy-peer-deps 解决依赖冲突）
-RUN npm ci --legacy-peer-deps
+# 复制 package 文件和锁文件
+COPY web/package.json web/pnpm-lock.yaml ./
+
+# 安装依赖
+RUN pnpm install --frozen-lockfile
 
 # 复制源代码（包括环境变量文件）
-COPY . .
+COPY web/ .
 
 # 构建应用（Vite 会自动使用 .env.production）
-RUN npm run build
+# 使用 build-only 跳过类型检查，生产构建不需要类型检查
+RUN pnpm run build-only
 
 # Stage 2: Nginx 服务
 FROM nginx:alpine

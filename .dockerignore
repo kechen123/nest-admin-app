@@ -1,0 +1,54 @@
+# Node modules
+**/node_modules
+node_modules
+
+# Build outputs
+**/dist
+**/dist-ssr
+dist
+dist-ssr
+
+# Logs
+*.log
+**/*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build info
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Coverage
+coverage
+**/coverage
+
+# Git
+.git
+.gitignore
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Other
+.cursor
+*.md
+!README.md
+
