@@ -131,18 +131,7 @@ async function bootstrap() {
   // 构建完整路径：如果配置是 "api"，则使用 "/api"，否则使用 "/api/{配置路径}"
   const scalarRoute = swaggerPathConfig === "api" ? `/${globalPrefix}` : swaggerPathConfig.startsWith("/") ? `/${globalPrefix}${swaggerPathConfig}` : `/${globalPrefix}/${swaggerPathConfig}`;
 
-  // #region agent log
-  fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "main.ts:116", message: "Scalar路径配置", data: { swaggerPathConfig, scalarRoute, globalPrefix, expectedFullPath: scalarRoute }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "A" }) }).catch(() => {});
-  // #endregion
-
-  // #region agent log
-  fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "main.ts:120", message: "Scalar路由注册前", data: { scalarRoute, adapterType: app.getHttpAdapter().constructor.name }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "B" }) }).catch(() => {});
-  // #endregion
-
   app.getHttpAdapter().get(scalarRoute, (req: any, res: any) => {
-    // #region agent log
-    fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "main.ts:123", message: "Scalar路由被访问", data: { path: req.path, url: req.url, method: req.method }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "C" }) }).catch(() => {});
-    // #endregion
     res.send(`
       <!DOCTYPE html>
       <html>
@@ -200,13 +189,7 @@ async function bootstrap() {
 
   // 提供 OpenAPI JSON
   const jsonRoute = `${scalarRoute}-json`;
-  // #region agent log
-  fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "main.ts:175", message: "JSON路由注册", data: { jsonRoute, expectedFullPath: jsonRoute }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "D" }) }).catch(() => {});
-  // #endregion
   app.getHttpAdapter().get(jsonRoute, (req: any, res: any) => {
-    // #region agent log
-    fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "main.ts:178", message: "JSON路由被访问", data: { path: req.path, url: req.url }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "E" }) }).catch(() => {});
-    // #endregion
     res.json(document);
   });
 
@@ -214,9 +197,6 @@ async function bootstrap() {
   // SwaggerModule.setup 已被上面的 Scalar 替代
 
   await app.listen(port);
-  // #region agent log
-  fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "main.ts:185", message: "应用启动完成", data: { port, scalarRoute, jsonRoute, expectedScalarUrl: `http://localhost:${port}/api${scalarRoute}`, expectedJsonUrl: `http://localhost:${port}/api${jsonRoute}` }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "F" }) }).catch(() => {});
-  // #endregion
   console.log(`Application is running on: http://localhost:${port}`);
   console.log(`Swagger documentation: http://localhost:${port}${scalarRoute}`);
 }

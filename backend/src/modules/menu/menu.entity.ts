@@ -36,9 +36,6 @@ export class Menu extends BaseEntity {
   component?: string;
 
   @ApiProperty({ description: "排序", example: 0, default: 0 })
-  // #region agent log
-  // Log: sort field definition - checking if column name mapping exists
-  // #endregion
   @Column({ name: "order_num", default: 0 })
   sort: number;
 

@@ -28,17 +28,9 @@ import { MallModule } from "./modules/mall/mall.module";
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        // #region agent log
-        fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "app.module.ts:20", message: "TypeORM配置开始", data: { synchronize: configService.get<string>("NODE_ENV") !== "production", database: configService.get<string>("DB_DATABASE", "myapp_db") }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "A" }) }).catch(() => {});
-        // #endregion
-
         // 禁用 synchronize，使用 SQL 初始化脚本管理数据库结构
         // synchronize 会在启动时自动修改表结构，可能导致数据丢失
         const synchronize = false;
-
-        // #region agent log
-        fetch("http://127.0.0.1:7244/ingest/0ca50388-22e6-4cac-83d9-1563006094ea", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ location: "app.module.ts:35", message: "TypeORM配置完成", data: { synchronize }, timestamp: Date.now(), sessionId: "debug-session", runId: "run1", hypothesisId: "A" }) }).catch(() => {});
-        // #endregion
 
         return {
           type: "mysql" as const,
