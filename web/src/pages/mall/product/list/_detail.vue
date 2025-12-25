@@ -77,7 +77,6 @@ const formConfig = computed(() => ({
       label: '商品名称',
       type: 'input' as const,
       placeholder: '请输入商品名称',
-      width: 240,
       rules: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
     },
@@ -86,7 +85,6 @@ const formConfig = computed(() => ({
       label: '商品副标题',
       type: 'input' as const,
       placeholder: '请输入商品副标题',
-      width: 240,
       disabled: computed(() => type.value === 'view'),
     },
     {
@@ -94,7 +92,6 @@ const formConfig = computed(() => ({
       label: '分类',
       type: 'select' as const,
       placeholder: '请选择分类',
-      width: 240,
       options: categoryOptions.value,
       rules: [{ required: true, message: '请选择分类', trigger: 'change' }],
       disabled: computed(() => type.value === 'view'),
@@ -102,8 +99,8 @@ const formConfig = computed(() => ({
     {
       key: 'mainImage',
       label: '商品主图',
-      type: 'input' as const,
-      placeholder: '请输入商品主图URL',
+      type: 'imageUpload' as const,
+      limit: 5,
       width: '100%',
       disabled: computed(() => type.value === 'view'),
     },
@@ -112,7 +109,6 @@ const formConfig = computed(() => ({
       label: '排序值',
       type: 'inputNumber' as const,
       placeholder: '请输入排序值',
-      width: 240,
       disabled: computed(() => type.value === 'view'),
       props: {
         min: 0,
@@ -127,7 +123,6 @@ const formConfig = computed(() => ({
         { label: '是', value: 1 },
       ],
       placeholder: '请选择',
-      width: 240,
       disabled: computed(() => type.value === 'view'),
     },
     {
@@ -139,7 +134,6 @@ const formConfig = computed(() => ({
         { label: '是', value: 1 },
       ],
       placeholder: '请选择',
-      width: 240,
       disabled: computed(() => type.value === 'view'),
     },
     {
@@ -151,7 +145,6 @@ const formConfig = computed(() => ({
         { label: '上架', value: 1 },
       ],
       placeholder: '请选择状态',
-      width: 240,
       disabled: computed(() => type.value === 'view'),
     },
     {
@@ -169,7 +162,7 @@ const formConfig = computed(() => ({
     categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
   },
   labelWidth: '100px',
-  fieldWidth: 250,
+  fieldWidth: 350,
 }))
 
 const onSubmit = async (data: any) => {

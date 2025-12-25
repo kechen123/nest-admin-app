@@ -69,16 +69,13 @@ const formConfig = computed(() => ({
       label: '分类名称',
       type: 'input' as const,
       placeholder: '请输入分类名称',
-      width: 240,
       rules: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
     },
     {
       key: 'icon',
       label: '分类图标',
-      type: 'input' as const,
-      placeholder: '请输入分类图标URL',
-      width: 240,
+      type: 'imageUpload' as const,
       disabled: computed(() => type.value === 'view'),
     },
     {
@@ -86,7 +83,6 @@ const formConfig = computed(() => ({
       label: '父分类',
       type: 'select' as const,
       placeholder: '请选择父分类（不选则为顶级分类）',
-      width: 240,
       options: [
         { label: '顶级分类', value: 0 },
         ...categoryTreeOptions.value,
@@ -98,7 +94,6 @@ const formConfig = computed(() => ({
       label: '显示顺序',
       type: 'inputNumber' as const,
       placeholder: '请输入显示顺序',
-      width: 240,
       disabled: computed(() => type.value === 'view'),
       props: {
         min: 0,
@@ -113,7 +108,6 @@ const formConfig = computed(() => ({
         { label: '启用', value: 1 },
       ],
       placeholder: '请选择状态',
-      width: 240,
       disabled: computed(() => type.value === 'view'),
     },
   ],
@@ -121,7 +115,7 @@ const formConfig = computed(() => ({
     name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
   },
   labelWidth: '100px',
-  fieldWidth: 250,
+  fieldWidth: 300,
 }))
 
 const onSubmit = async (data: any) => {
