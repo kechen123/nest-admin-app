@@ -14,6 +14,8 @@ import { PostModule } from "./modules/post/post.module";
 import { OperationLogModule } from "./modules/operation-log/operation-log.module";
 import { LoginLogModule } from "./modules/login-log/login-log.module";
 import { MonitorModule } from "./modules/monitor/monitor.module";
+import { MiniappModule } from "./miniapp/miniapp.module";
+import { MallModule } from "./modules/mall/mall.module";
 
 @Module({
   imports: [
@@ -66,6 +68,10 @@ import { MonitorModule } from "./modules/monitor/monitor.module";
     OperationLogModule,
     LoginLogModule,
     MonitorModule,
+    // 小程序模块
+    MiniappModule,
+    // 商城管理模块
+    MallModule,
   ],
 })
 export class AppModule {}

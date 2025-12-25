@@ -609,7 +609,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 // 编程式导航
-router.push('/user/profile')
+router.push('/profile')
 router.push({ name: 'user-profile', params: { id: 1 } })
 
 // 获取路由信息

@@ -21,6 +21,10 @@ declare module 'vue-router/auto-routes' {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...notFond]': RouteRecordInfo<'/[...notFond]', '/:notFond(.*)', { notFond: ParamValue<true> }, { notFond: ParamValue<false> }>,
     '/login': RouteRecordInfo<'/login', '/login', Record<never, never>, Record<never, never>>,
+    '/mall/order/list/': RouteRecordInfo<'/mall/order/list/', '/mall/order/list', Record<never, never>, Record<never, never>>,
+    '/mall/product/category/': RouteRecordInfo<'/mall/product/category/', '/mall/product/category', Record<never, never>, Record<never, never>>,
+    '/mall/product/list/': RouteRecordInfo<'/mall/product/list/', '/mall/product/list', Record<never, never>, Record<never, never>>,
+    '/mall/user/miniapp/': RouteRecordInfo<'/mall/user/miniapp/', '/mall/user/miniapp', Record<never, never>, Record<never, never>>,
     '/monitor/logininfor/': RouteRecordInfo<'/monitor/logininfor/', '/monitor/logininfor', Record<never, never>, Record<never, never>>,
     '/monitor/operlog/': RouteRecordInfo<'/monitor/operlog/', '/monitor/operlog', Record<never, never>, Record<never, never>>,
     '/monitor/server/': RouteRecordInfo<'/monitor/server/', '/monitor/server', Record<never, never>, Record<never, never>>,
@@ -35,6 +39,5 @@ declare module 'vue-router/auto-routes' {
     '/system/user/': RouteRecordInfo<'/system/user/', '/system/user', Record<never, never>, Record<never, never>>,
     '/table_demo/aside/': RouteRecordInfo<'/table_demo/aside/', '/table_demo/aside', Record<never, never>, Record<never, never>>,
     '/table_demo/base/': RouteRecordInfo<'/table_demo/base/', '/table_demo/base', Record<never, never>, Record<never, never>>,
-    '/user/profile/': RouteRecordInfo<'/user/profile/', '/user/profile', Record<never, never>, Record<never, never>>,
   }
 }
