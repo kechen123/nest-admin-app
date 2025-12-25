@@ -38,6 +38,18 @@
     "prod:down": "docker-compose -f docker-compose.prod.yml down",
     "prod:restart": "docker-compose -f docker-compose.prod.yml restart",
     "prod:logs": "docker-compose -f docker-compose.prod.yml logs -f",
+    "prod:build": "docker-compose -f docker-compose.prod.yml build",
+    "prod:rebuild": "docker-compose -f docker-compose.prod.yml up -d --build",
+    
+    "export:images": "bash scripts/export-images.sh",
+    "export:images:win": "powershell -ExecutionPolicy Bypass -File scripts/export-images.ps1",
+    
+    "deploy": "node -e \"require('child_process').execSync(process.platform === 'win32' ? 'powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 all' : 'bash scripts/deploy.sh all', {stdio:'inherit'})\"",
+    "deploy:backend": "node -e \"require('child_process').execSync(process.platform === 'win32' ? 'powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 backend' : 'bash scripts/deploy.sh backend', {stdio:'inherit'})\"",
+    "deploy:web": "node -e \"require('child_process').execSync(process.platform === 'win32' ? 'powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 web' : 'bash scripts/deploy.sh web', {stdio:'inherit'})\"",
+    "deploy:win": "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 all",
+    "deploy:backend:win": "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 backend",
+    "deploy:web:win": "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 web",
     
     "ps": "docker-compose -f docker-compose.dev.yml ps",
     "health": "node scripts/check-health.js",

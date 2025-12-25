@@ -1,0 +1,66 @@
+# 环境变量文件（重要：不要提交）
+.env
+.env.local
+.env.*.local
+backend/.env
+backend/.env.local
+backend/.env.*.local
+web/.env.local
+web/.env.production.local
+web/.env.development.local
+
+# 导出的镜像文件
+*.tar
+*.tar.gz
+*.tar.zip
+yl-*.tar
+yl-*.tar.gz
+yl-*.tar.zip
+images.zip
+
+# Docker 相关
+.docker/
+
+# 日志文件
+*.log
+.cursor/
+.cursor/debug.log
+
+# 构建产物
+backend/dist/
+web/dist/
+web/dist-ssr/
+
+# 上传文件（保留目录结构）
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# Node modules (已在子目录的 .gitignore 中，这里作为备份)
+node_modules/
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# 其他
+*.bak
+*.backup
+

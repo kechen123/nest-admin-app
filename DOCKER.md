@@ -48,6 +48,10 @@ npm run build
 npm run prod:up
 ```
 
+> 💡 **部署方式**：项目支持两种部署方式，详见 [DEPLOYMENT.md](./DEPLOYMENT.md)
+> - 镜像打包部署：`npm run export:images:win`（Windows）或 `npm run export:images`（Linux/Mac）
+> - Git + 服务器构建：`npm run deploy`（在服务器上执行）
+
 ## 📝 常用命令
 
 ### 开发环境
@@ -84,6 +88,16 @@ npm run prod:up         # 启动（后台）
 npm run prod:down       # 停止
 npm run prod:restart    # 重启
 npm run prod:logs       # 查看日志
+npm run prod:rebuild    # 重新构建并启动
+
+# 镜像导出（镜像打包部署方式）
+npm run export:images:win  # Windows 导出镜像
+npm run export:images      # Linux/Mac 导出镜像
+
+# Git 部署（在服务器上执行）
+npm run deploy          # 一键部署（拉取代码 + 构建 + 启动）
+npm run deploy:backend  # 只更新后端
+npm run deploy:web      # 只更新前端
 ```
 
 ## 📚 详细文档
@@ -92,5 +106,7 @@ npm run prod:logs       # 查看日志
 
 - [开发环境](./docs/02-开发运行/开发环境.md) - Docker 开发环境详细说明
 - [构建指南](./docs/03-构建部署/构建指南.md) - 生产镜像构建
-- [部署指南](./docs/03-构建部署/部署指南.md) - 服务器部署
+- **[部署指南](./DEPLOYMENT.md)** - **两种部署方式完整说明（推荐）**
+- [部署指南（旧版）](./docs/03-构建部署/部署指南.md) - 服务器部署（旧版文档）
+- [镜像导出](./docs/03-构建部署/镜像导出.md) - 镜像导出和传输
 - [故障排查](./docs/03-构建部署/故障排查.md) - 常见问题解决
