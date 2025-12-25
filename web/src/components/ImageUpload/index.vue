@@ -1,6 +1,6 @@
 <template>
   <div class="image-upload-wrapper">
-    <el-upload v-model:file-list="fileList" :http-request="handleUpload" list-type="picture-card" :limit="limit"
+    <el-upload :file-list="fileList" :http-request="handleUpload" list-type="picture-card" :limit="limit"
       :on-remove="handleRemove" :before-upload="beforeUpload" :accept="accept" :disabled="disabled"
       :on-preview="handlePreview" :class="{ 'hide-upload': hideUploadArea }">
       <!-- 当 limit=1 且已有图片时，隐藏上传按钮 -->
@@ -156,6 +156,23 @@ const beforeUpload = (file: File): boolean => {
 const handleUpload = async (options: UploadRequestOptions) => {
   const { file } = options
 
+  // 先添加文件到 fileList（状态为 uploading）
+  const uid = file.uid || Date.now() + Math.random()
+  const uploadingFile: UploadFile = {
+    uid,
+    name: file.name,
+    status: 'uploading',
+    percentage: 0,
+  } as UploadFile
+
+  if (props.limit === 1) {
+    // 单张图片，替换
+    fileList.value = [uploadingFile]
+  } else {
+    // 多张图片，追加
+    fileList.value.push(uploadingFile)
+  }
+
   try {
     const response = await uploadApi.uploadImage(file as File)
     // 将返回的 URL 转换为相对路径用于提交
@@ -163,29 +180,24 @@ const handleUpload = async (options: UploadRequestOptions) => {
 
     // 更新 fileList 用于预览（使用完整 URL）
     const previewUrl = getPreviewUrl(relativePath)
-    const uid = file.uid || Date.now() + Math.random()
 
-    if (props.limit === 1) {
-      // 单张图片，替换
-      pathMap.value.clear()
+    // 查找并更新文件项
+    const fileIndex = fileList.value.findIndex(f => f.uid === uid)
+    if (fileIndex > -1) {
       pathMap.value.set(uid, relativePath)
-      fileList.value = [
-        {
-          uid,
-          name: file.name,
-          url: previewUrl,
-          status: 'success',
-        } as UploadFile,
-      ]
-    } else {
-      // 多张图片，追加
-      pathMap.value.set(uid, relativePath)
-      fileList.value.push({
+      fileList.value[fileIndex] = {
+        ...fileList.value[fileIndex],
         uid,
         name: file.name,
         url: previewUrl,
         status: 'success',
-      } as UploadFile)
+      } as UploadFile
+    }
+
+    if (props.limit === 1) {
+      // 单张图片，清空 pathMap 并重新设置
+      pathMap.value.clear()
+      pathMap.value.set(uid, relativePath)
     }
 
     // 获取所有图片的相对路径（按 fileList 顺序）
@@ -201,13 +213,14 @@ const handleUpload = async (options: UploadRequestOptions) => {
   } catch (error: any) {
     ElMessage.error(error?.message || '图片上传失败')
     // 上传失败，移除刚添加的文件
-    if (props.limit > 1) {
-      const failedFile = fileList.value.find(f => f.uid === file.uid)
-      if (failedFile) {
-        pathMap.value.delete(failedFile.uid || 0)
-        fileList.value = fileList.value.filter(f => f.uid !== file.uid)
-      }
-    } else {
+    const failedFileIndex = fileList.value.findIndex(f => f.uid === uid)
+    if (failedFileIndex > -1) {
+      pathMap.value.delete(uid)
+      fileList.value.splice(failedFileIndex, 1)
+    }
+
+    // 如果单张图片上传失败，清空
+    if (props.limit === 1) {
       fileList.value = []
       pathMap.value.clear()
       emit('update:modelValue', '')
