@@ -110,7 +110,7 @@ const formConfig = computed(() => ({
     {
       key: 'sortOrder',
       label: '排序值',
-      type: 'input-number' as const,
+      type: 'inputNumber' as const,
       placeholder: '请输入排序值',
       width: 240,
       disabled: computed(() => type.value === 'view'),
@@ -300,4 +300,3 @@ defineExpose({ init })
   gap: 12px;
 }
 </style>
-

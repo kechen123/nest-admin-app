@@ -96,7 +96,7 @@ const formConfig = computed(() => ({
     {
       key: 'orderNum',
       label: '显示顺序',
-      type: 'input-number' as const,
+      type: 'inputNumber' as const,
       placeholder: '请输入显示顺序',
       width: 240,
       disabled: computed(() => type.value === 'view'),

@@ -8,51 +8,20 @@
 
       <el-form :model="adjustForm" label-width="120px" style="margin-top: 20px;">
         <el-form-item label="调整余额">
-          <el-input-number 
-            v-model="adjustForm.balanceAmount" 
-            :precision="2" 
-            :step="10" 
-            :min="-999999.99"
-            :max="999999.99"
-            style="width: 200px;"
-            :disabled="type === 'view'"
-          />
-          <el-input 
-            v-model="adjustForm.balanceRemark" 
-            placeholder="备注（可选）" 
-            style="width: 200px; margin-left: 10px;"
-            :disabled="type === 'view'"
-          />
-          <el-button 
-            type="primary" 
-            @click="handleAdjustBalance"
-            :disabled="type === 'view'"
-            style="margin-left: 10px;"
-          >
+          <el-inputNumber v-model="adjustForm.balanceAmount" :precision="2" :step="10" :min="-999999.99"
+            :max="999999.99" style="width: 200px;" :disabled="type === 'view'" />
+          <el-input v-model="adjustForm.balanceRemark" placeholder="备注（可选）" style="width: 200px; margin-left: 10px;"
+            :disabled="type === 'view'" />
+          <el-button type="primary" @click="handleAdjustBalance" :disabled="type === 'view'" style="margin-left: 10px;">
             调整余额
           </el-button>
         </el-form-item>
         <el-form-item label="调整积分">
-          <el-input-number 
-            v-model="adjustForm.pointsAmount" 
-            :step="10" 
-            :min="-999999"
-            :max="999999"
-            style="width: 200px;"
-            :disabled="type === 'view'"
-          />
-          <el-input 
-            v-model="adjustForm.pointsRemark" 
-            placeholder="备注（可选）" 
-            style="width: 200px; margin-left: 10px;"
-            :disabled="type === 'view'"
-          />
-          <el-button 
-            type="primary" 
-            @click="handleAdjustPoints"
-            :disabled="type === 'view'"
-            style="margin-left: 10px;"
-          >
+          <el-inputNumber v-model="adjustForm.pointsAmount" :step="10" :min="-999999" :max="999999"
+            style="width: 200px;" :disabled="type === 'view'" />
+          <el-input v-model="adjustForm.pointsRemark" placeholder="备注（可选）" style="width: 200px; margin-left: 10px;"
+            :disabled="type === 'view'" />
+          <el-button type="primary" @click="handleAdjustPoints" :disabled="type === 'view'" style="margin-left: 10px;">
             调整积分
           </el-button>
         </el-form-item>
@@ -230,10 +199,10 @@ const handleAdjustBalance = async () => {
       adjustForm.value.balanceRemark
     )
     ElMessage.success('调整成功')
-    
+
     // 重新加载用户数据
     await loadUserData()
-    
+
     // 清空调整表单
     adjustForm.value.balanceAmount = 0
     adjustForm.value.balanceRemark = ''
@@ -267,10 +236,10 @@ const handleAdjustPoints = async () => {
       adjustForm.value.pointsRemark
     )
     ElMessage.success('调整成功')
-    
+
     // 重新加载用户数据
     await loadUserData()
-    
+
     // 清空调整表单
     adjustForm.value.pointsAmount = 0
     adjustForm.value.pointsRemark = ''
@@ -345,4 +314,3 @@ defineExpose({ init })
   gap: 12px;
 }
 </style>
-
