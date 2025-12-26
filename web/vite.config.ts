@@ -28,6 +28,7 @@ export default defineConfig({
       layoutsDirs: 'src/layouts',
       defaultLayout: 'default',
     }),
+
     AutoImport({
       //引入element plus自动api支持
       resolvers: [ElementPlusResolver()],

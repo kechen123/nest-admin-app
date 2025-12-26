@@ -23,6 +23,17 @@ export interface Product {
   updatedAt?: string
 }
 
+export interface CreateProductSkuDto {
+  skuCode: string
+  specName: string
+  specValues: string
+  price: number
+  originalPrice?: number
+  stock?: number
+  image?: string
+  status?: number
+}
+
 export interface CreateProductDto {
   name: string
   subtitle?: string
@@ -33,6 +44,7 @@ export interface CreateProductDto {
   isRecommend?: number
   isNew?: number
   status?: number
+  skus?: CreateProductSkuDto[]
 }
 
 export interface UpdateProductDto {

@@ -1,15 +1,69 @@
 <template>
   <div class="detail-container">
     <div class="content">
-      <KcForm ref="formRef" :config="formConfig" v-model="formData" @submit="onSubmit" @reset="onReset">
-      </KcForm>
+      <el-tabs v-model="activeTab" type="border-card">
+        <el-tab-pane label="基本信息" name="basic">
+          <KcForm ref="formRef" :config="formConfig" v-model="formData" @submit="onSubmit" @reset="onReset">
+          </KcForm>
+        </el-tab-pane>
+        <el-tab-pane label="商品规格" name="skus" v-if="formData.id || type === 'create'">
+          <div class="sku-container">
+            <div class="sku-header">
+              <el-button type="primary" @click="handleAddSku">
+                <el-icon>
+                  <Plus />
+                </el-icon>
+                新增规格
+              </el-button>
+              <el-button @click="loadSkus" :loading="loadingSkus">
+                <el-icon>
+                  <Refresh />
+                </el-icon>
+                刷新
+              </el-button>
+            </div>
+            <el-table :data="skuList" border stripe v-loading="loadingSkus" style="margin-top: 16px;">
+              <el-table-column prop="skuCode" label="SKU编码" width="200" />
+              <el-table-column prop="specName" label="规格名称" width="200" />
+              <el-table-column prop="price" label="价格" width="120">
+                <template #default="{ row }">
+                  ¥{{ row.price }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="originalPrice" label="原价" width="120">
+                <template #default="{ row }">
+                  {{ row.originalPrice ? `¥${row.originalPrice}` : '-' }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="stock" label="库存" width="100" align="center" />
+              <el-table-column prop="sales" label="销量" width="100" align="center" />
+              <el-table-column prop="status" label="状态" width="100" align="center">
+                <template #default="{ row }">
+                  <el-tag :type="row.status === 1 ? 'success' : 'danger'">
+                    {{ row.status === 1 ? '启用' : '禁用' }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="200" align="center" fixed="right">
+                <template #default="{ row }">
+                  <el-button type="primary" link size="small" @click="handleEditSku(row)">编辑</el-button>
+                  <el-button type="warning" link size="small" @click="handleToggleSkuStatus(row)">
+                    {{ row.status === 1 ? '禁用' : '启用' }}
+                  </el-button>
+                  <el-button type="danger" link size="small" @click="handleDeleteSku(row)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </div>
 
     <!-- 固定的 Footer -->
     <div class="footer">
       <div class="footer-actions">
         <el-button @click="close">关闭</el-button>
-        <el-button type="primary" @click="onSubmit(formData)" v-if="type !== 'view'">
+        <el-button type="primary" @click="onSubmit(formData)" v-if="type !== 'view' && activeTab === 'basic'">
           {{ formData.id ? '保存' : '创建' }}
         </el-button>
       </div>
@@ -19,8 +73,11 @@
 
 <script setup lang="ts">
 import { productApi, type Product, type CreateProductDto, type UpdateProductDto } from '@/api/mall/product'
+import { productSkuApi, type ProductSku } from '@/api/mall/product-sku'
 import { categoryApi } from '@/api/mall/category'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Refresh } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import KcForm from '@/components/Kc/Form/index.vue'
 
 // 防止 props 暴露到 DOM 元素上
@@ -29,6 +86,7 @@ defineOptions({
 })
 
 const close = inject<(val?: any) => void>('slideClose')
+const router = useRouter()
 
 const formData = ref<Partial<Product & CreateProductDto>>({
   name: '',
@@ -44,6 +102,9 @@ const formData = ref<Partial<Product & CreateProductDto>>({
 
 const type = ref<'edit' | 'view' | 'create'>('edit')
 const formRef = ref()
+const activeTab = ref('basic')
+const skuList = ref<ProductSku[]>([])
+const loadingSkus = ref(false)
 
 // 分类选项
 const categoryOptions = ref<any[]>([])
@@ -165,6 +226,91 @@ const formConfig = computed(() => ({
   fieldWidth: 350,
 }))
 
+// 加载规格列表
+const loadSkus = async () => {
+  if (!formData.value.id) {
+    skuList.value = []
+    return
+  }
+
+  try {
+    loadingSkus.value = true
+    const res = await productSkuApi.getSkusByProductId(formData.value.id)
+    skuList.value = res as any as ProductSku[]
+  } catch (error: any) {
+    ElMessage.error(error.message || '加载规格列表失败')
+    skuList.value = []
+  } finally {
+    loadingSkus.value = false
+  }
+}
+
+// 新增规格
+const handleAddSku = () => {
+  if (!formData.value.id) {
+    ElMessage.warning('请先保存商品信息')
+    return
+  }
+
+  // 关闭当前面板并跳转到规格管理页面
+  close?.()
+  // 使用 nextTick 确保面板关闭后再跳转
+  nextTick(() => {
+    console.log(11111)
+    router.push({
+      path: '/mall/product/sku/',
+      query: { productId: formData.value.id }
+    })
+  })
+}
+
+// 编辑规格
+const handleEditSku = (row: ProductSku) => {
+  // 关闭当前面板并跳转到规格管理页面
+  close?.()
+  // 使用 nextTick 确保面板关闭后再跳转
+  nextTick(() => {
+    router.push({
+      path: '/mall/product/sku/',
+      query: { productId: formData.value.id, skuId: row.id }
+    })
+  })
+}
+
+// 切换规格状态
+const handleToggleSkuStatus = async (row: ProductSku) => {
+  try {
+    const newStatus = row.status === 1 ? 0 : 1
+    const statusText = newStatus === 1 ? '启用' : '禁用'
+    await ElMessageBox.confirm(`确定要${statusText}该规格吗？`, '提示', {
+      type: 'warning',
+    })
+    await productSkuApi.updateSkuStatus(row.id, newStatus)
+    ElMessage.success(`${statusText}成功`)
+    await loadSkus()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '操作失败')
+    }
+  }
+}
+
+// 删除规格
+const handleDeleteSku = async (row: ProductSku) => {
+  try {
+    await ElMessageBox.confirm('确定要删除该规格吗？', '提示', {
+      type: 'warning',
+    })
+    await productSkuApi.deleteSku(row.id)
+    ElMessage.success('删除成功')
+    await loadSkus()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '删除失败')
+    }
+  }
+}
+
 const onSubmit = async (data: any) => {
   try {
     if (type.value === 'view') {
@@ -202,9 +348,19 @@ const onSubmit = async (data: any) => {
         isRecommend: data.isRecommend ?? 0,
         isNew: data.isNew ?? 0,
         status: data.status !== undefined ? data.status : 1,
+        skus: data.skus || [],
       }
-      await productApi.createProduct(createData)
+      const res = await productApi.createProduct(createData)
       ElMessage.success('创建成功')
+      // 创建成功后，更新formData的id，以便可以管理规格
+      if (res && (res as any).id) {
+        formData.value.id = (res as any).id
+      }
+    }
+
+    // 如果创建成功，加载规格列表
+    if (formData.value.id) {
+      await loadSkus()
     }
 
     await close?.(true)
@@ -230,6 +386,7 @@ const onReset = () => {
 const init = async (data: any) => {
   const { id, mode } = data || {}
   type.value = mode || (id ? 'edit' : 'create')
+  activeTab.value = 'basic'
 
   await loadCategories()
 
@@ -246,6 +403,9 @@ const init = async (data: any) => {
         isNew: product.isNew ?? 0,
         status: product.status !== undefined ? product.status : 1,
       }
+
+      // 加载规格列表
+      await loadSkus()
     } catch (error: any) {
       ElMessage.error(error.message || '加载商品信息失败')
     }
@@ -262,6 +422,7 @@ const init = async (data: any) => {
       isNew: 0,
       status: 1,
     }
+    skuList.value = []
   }
 }
 
@@ -278,6 +439,28 @@ defineExpose({ init })
 .content {
   flex: 1;
   overflow: auto;
+
+  :deep(.el-tabs) {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .el-tabs__content {
+      flex: 1;
+      overflow: auto;
+    }
+  }
+}
+
+.sku-container {
+  padding: 16px;
+
+  .sku-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
 }
 
 .footer {

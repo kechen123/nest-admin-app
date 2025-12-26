@@ -2,13 +2,9 @@
   <TableWithSlidePanel :config="kcConfig" :column-display-config="columnDisplayConfig" ref="tableRef">
     <template #actions="{ row }">
       <div class="actions-buttons">
-        <CommonButton type="primary" plain size="small" :label="'编辑'"
-          :on-click="() => openProductDetail(row.id, 'edit')" />
-        <CommonButton type="success" plain size="small" :label="'查看详情'"
-          :on-click="() => openProductDetail(row.id, 'view')" />
-        <CommonButton type="info" plain size="small" :label="'管理规格'" :on-click="() => handleManageSkus(row.id)" />
+        <CommonButton type="primary" plain size="small" :label="'编辑'" :on-click="() => openSkuDetail(row.id, 'edit')" />
         <CommonButton :type="row.status === 1 ? 'warning' : 'success'" plain size="small"
-          :label="row.status === 1 ? '下架' : '上架'" :on-click="() => handleStatusChange(row)" />
+          :label="row.status === 1 ? '禁用' : '启用'" :on-click="() => handleStatusChange(row)" />
         <CommonButton type="danger" plain size="small" :label="'删除'" :on-click="() => handleDelete(row.id)" />
       </div>
     </template>
@@ -16,40 +12,23 @@
 </template>
 
 <script setup lang="ts">
-import { productApi } from '@/api/mall/product'
-import { categoryApi } from '@/api/mall/category'
+import { productSkuApi } from '@/api/mall/product-sku'
 import Detail from './_detail.vue'
 import TableWithSlidePanel from '@/components/Kc/TableWithSlidePanel.vue'
 import CommonButton from '@/components/CommonButton/index.vue'
 import type { KcConfig, TableConfig, ColumnProps } from '@/components/Kc/types'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-const router = useRouter()
-
-// 分类选项
-const categoryOptions = ref<any[]>([])
-
-// 加载分类数据
-const loadCategories = async () => {
-  try {
-    const res = await categoryApi.getCategoryTree()
-    const buildOptions = (categories: any[]): any[] => {
-      const options: any[] = []
-      categories.forEach(cat => {
-        options.push({ label: cat.name, value: cat.id })
-        if (cat.children && cat.children.length > 0) {
-          buildOptions(cat.children).forEach(child => {
-            options.push({ label: `  └─ ${child.label}`, value: child.value })
-          })
-        }
-      })
-      return options
-    }
-    categoryOptions.value = buildOptions(res as any)
-  } catch (error) {
-    console.error('加载分类数据失败:', error)
-  }
-}
+// 从路由参数获取商品ID和规格ID
+const route = useRoute()
+const productId = computed(() => {
+  const id = route.query.productId
+  return id ? Number(id) : undefined
+})
+const skuIdFromQuery = computed(() => {
+  const id = route.query.skuId
+  return id ? Number(id) : undefined
+})
 
 // 列显示配置
 const columnDisplayConfig = {
@@ -65,43 +44,52 @@ const columnDisplayConfig = {
 const baseColumns: ColumnProps[] = [
   {
     type: 'text',
-    prop: 'name',
+    prop: 'skuCode',
     align: 'left',
     show: true,
-    label: '商品名称',
+    label: 'SKU编码',
     width: 200,
   },
   {
     type: 'text',
-    prop: 'category',
+    prop: 'product',
     align: 'left',
     show: true,
-    label: '分类',
-    width: 150,
+    label: '商品',
+    width: 200,
     formatter: (row: any) => {
-      return row.category?.name || '-'
+      return row.product?.name || '-'
     }
   },
   {
     type: 'text',
-    prop: 'minPrice',
+    prop: 'specName',
     align: 'left',
     show: true,
-    label: '价格区间',
+    label: '规格名称',
+    width: 200,
+  },
+  {
+    type: 'text',
+    prop: 'price',
+    align: 'right',
+    show: true,
+    label: '价格',
+    width: 120,
     formatter: (row: any) => {
-      if (row.minPrice === row.maxPrice) {
-        return `¥${row.minPrice}`
-      }
-      return `¥${row.minPrice} - ¥${row.maxPrice}`
+      return `¥${row.price}`
     }
   },
   {
     type: 'text',
-    prop: 'sales',
-    align: 'center',
+    prop: 'originalPrice',
+    align: 'right',
     show: true,
-    label: '销量',
-    width: 100,
+    label: '原价',
+    width: 120,
+    formatter: (row: any) => {
+      return row.originalPrice ? `¥${row.originalPrice}` : '-'
+    }
   },
   {
     type: 'text',
@@ -112,6 +100,14 @@ const baseColumns: ColumnProps[] = [
     width: 100,
   },
   {
+    type: 'text',
+    prop: 'sales',
+    align: 'center',
+    show: true,
+    label: '销量',
+    width: 100,
+  },
+  {
     prop: 'status',
     label: '状态',
     type: 'tag',
@@ -119,8 +115,8 @@ const baseColumns: ColumnProps[] = [
     align: 'center',
     width: 100,
     options: [
-      { value: 0, label: '下架', tagType: 'danger' },
-      { value: 1, label: '上架', tagType: 'success' },
+      { value: 0, label: '禁用', tagType: 'danger' },
+      { value: 1, label: '启用', tagType: 'success' },
     ]
   },
   {
@@ -129,22 +125,20 @@ const baseColumns: ColumnProps[] = [
     label: '操作',
     align: 'center',
     show: true,
-    width: 420,
+    width: 250,
     fixed: 'right',
   },
 ]
 
-// 请求函数：获取商品列表
-const requestProductList = async (params: any) => {
+// 请求函数：获取规格列表
+const requestSkuList = async (params: any) => {
   try {
-    const res = await productApi.getProductList({
+    const res = await productSkuApi.getSkuList({
       page: params.page || 1,
       pageSize: params.size || 10,
-      name: params.name,
-      categoryId: params.categoryId,
+      productId: productId.value || params.productId,
+      productName: params.productName, // 支持商品名称搜索
       status: params.status,
-      isRecommend: params.isRecommend,
-      isNew: params.isNew,
     }) as any
     return {
       list: res.list || [],
@@ -153,7 +147,7 @@ const requestProductList = async (params: any) => {
       size: res.pageSize || params.size || 10,
     }
   } catch (error: any) {
-    ElMessage.error(error.message || '获取商品列表失败')
+    ElMessage.error(error.message || '获取规格列表失败')
     return {
       list: [],
       total: 0,
@@ -166,7 +160,7 @@ const requestProductList = async (params: any) => {
 // 表格配置
 const tableConfig: TableConfig = {
   columns: baseColumns,
-  request: requestProductList,
+  request: requestSkuList,
   showPagination: true,
   showLoading: true,
   defaultPagination: { page: 1, size: 10 },
@@ -188,7 +182,7 @@ const kcConfig: KcConfig = {
         type: 'primary',
         icon: 'Plus',
         onClick: () => {
-          openProductDetail(undefined, 'add')
+          openSkuDetail(undefined, 'add')
         },
       },
     ],
@@ -196,17 +190,11 @@ const kcConfig: KcConfig = {
   search: {
     fields: [
       {
-        key: 'name',
+        key: 'productName',
         label: '商品名称',
         type: 'input',
-        placeholder: '请输入商品名称',
-      },
-      {
-        key: 'categoryId',
-        label: '分类',
-        type: 'select',
-        placeholder: '请选择分类',
-        options: categoryOptions,
+        placeholder: '请输入商品名称搜索',
+        hidden: computed(() => !!productId.value), // 如果从商品详情页进入，隐藏商品筛选
       },
       {
         key: 'status',
@@ -214,8 +202,8 @@ const kcConfig: KcConfig = {
         type: 'select',
         placeholder: '请选择状态',
         options: [
-          { label: '下架', value: 0 },
-          { label: '上架', value: 1 },
+          { label: '禁用', value: 0 },
+          { label: '启用', value: 1 },
         ],
       },
     ],
@@ -230,15 +218,15 @@ const kcConfig: KcConfig = {
 // 表格引用
 const tableRef = ref<InstanceType<typeof TableWithSlidePanel> & { refresh?: () => Promise<void> }>()
 
-// 打开商品详情
-const openProductDetail = (id?: number, mode: 'add' | 'edit' | 'view' = 'add') => {
-  let title = '新增商品'
+// 打开规格详情
+const openSkuDetail = (id?: number, mode: 'add' | 'edit' | 'view' = 'add') => {
+  let title = '新增规格'
   if (mode === 'view') {
-    title = '查看商品'
+    title = '查看规格'
   } else if (mode === 'edit' || (id && mode === 'add')) {
-    title = '编辑商品'
+    title = '编辑规格'
   } else if (!id) {
-    title = '新增商品'
+    title = '新增规格'
   }
 
   tableRef.value?.openPanel({
@@ -246,8 +234,9 @@ const openProductDetail = (id?: number, mode: 'add' | 'edit' | 'view' = 'add') =
     data: {
       id,
       mode,
+      productId: productId.value,
     },
-    width: 900,
+    width: 800,
     title,
     onClose: async (refresh?: boolean) => {
       if (refresh && tableRef.value?.refresh) {
@@ -257,15 +246,15 @@ const openProductDetail = (id?: number, mode: 'add' | 'edit' | 'view' = 'add') =
   })
 }
 
-// 更新商品状态
+// 更新规格状态
 const handleStatusChange = async (row: any) => {
   try {
     const newStatus = row.status === 1 ? 0 : 1
-    const statusText = newStatus === 1 ? '上架' : '下架'
-    await ElMessageBox.confirm(`确定要${statusText}该商品吗？`, '提示', {
+    const statusText = newStatus === 1 ? '启用' : '禁用'
+    await ElMessageBox.confirm(`确定要${statusText}该规格吗？`, '提示', {
       type: 'warning',
     })
-    await productApi.updateProductStatus(row.id, newStatus)
+    await productSkuApi.updateSkuStatus(row.id, newStatus)
     ElMessage.success(`${statusText}成功`)
     if (tableRef.value?.refresh) {
       await tableRef.value.refresh()
@@ -277,13 +266,13 @@ const handleStatusChange = async (row: any) => {
   }
 }
 
-// 删除商品
+// 删除规格
 const handleDelete = async (id: number) => {
   try {
-    await ElMessageBox.confirm('确定要删除该商品吗？', '提示', {
+    await ElMessageBox.confirm('确定要删除该规格吗？', '提示', {
       type: 'warning',
     })
-    await productApi.deleteProduct(id)
+    await productSkuApi.deleteSku(id)
     ElMessage.success('删除成功')
     if (tableRef.value?.refresh) {
       await tableRef.value.refresh()
@@ -295,16 +284,15 @@ const handleDelete = async (id: number) => {
   }
 }
 
-// 管理规格
-const handleManageSkus = (productId: number) => {
-  router.push({
-    path: '/mall/product/sku/',
-    query: { productId }
-  })
-}
-
 // 初始化
 onMounted(() => {
-  loadCategories()
+  const router = useRouter()
+  console.log('所有路由：', router.getRoutes().map(r => ({ path: r.path, name: r.name })))
+  // 如果从商品详情页跳转过来并带有skuId，自动打开编辑面板
+  if (skuIdFromQuery.value) {
+    nextTick(() => {
+      openSkuDetail(skuIdFromQuery.value, 'edit')
+    })
+  }
 })
 </script>

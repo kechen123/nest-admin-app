@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Product } from '../../../common/entities/mall/product.entity';
 import { Category } from '../../../common/entities/mall/category.entity';
+import { ProductSku } from '../../../common/entities/mall/product-sku.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
@@ -17,6 +18,8 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(ProductSku)
+    private readonly skuRepository: Repository<ProductSku>,
     private readonly operationLogService: OperationLogService,
   ) {}
 
@@ -32,12 +35,14 @@ export class ProductService {
       throw new BadRequestException(`分类 ID ${createProductDto.categoryId} 不存在`);
     }
 
+    const { skus, ...productData } = createProductDto;
+
     const product = this.productRepository.create({
-      ...createProductDto,
-      sortOrder: createProductDto.sortOrder || 0,
-      isRecommend: createProductDto.isRecommend || 0,
-      isNew: createProductDto.isNew || 0,
-      status: createProductDto.status !== undefined ? createProductDto.status : 1,
+      ...productData,
+      sortOrder: productData.sortOrder || 0,
+      isRecommend: productData.isRecommend || 0,
+      isNew: productData.isNew || 0,
+      status: productData.status !== undefined ? productData.status : 1,
       minPrice: 0,
       maxPrice: 0,
       sales: 0,
@@ -45,6 +50,31 @@ export class ProductService {
     });
 
     const saved = await this.productRepository.save(product);
+
+    // 如果提供了规格数据，创建规格
+    if (skus && skus.length > 0) {
+      for (const skuDto of skus) {
+        // 检查SKU编码是否已存在
+        const existingSku = await this.skuRepository.findOne({
+          where: { skuCode: skuDto.skuCode, deletedAt: IsNull() },
+        });
+        if (existingSku) {
+          throw new BadRequestException(`SKU编码 ${skuDto.skuCode} 已存在`);
+        }
+
+        const sku = this.skuRepository.create({
+          ...skuDto,
+          productId: saved.id,
+          stock: skuDto.stock || 0,
+          sales: 0,
+          status: skuDto.status !== undefined ? skuDto.status : 1,
+        });
+        await this.skuRepository.save(sku);
+      }
+
+      // 更新商品的价格和库存
+      await this.updateProductPriceAndStock(saved.id);
+    }
 
     // 记录操作日志
     if (req) {
@@ -63,7 +93,7 @@ export class ProductService {
       });
     }
 
-    return saved;
+    return this.findOne(saved.id);
   }
 
   /**
@@ -192,6 +222,7 @@ export class ProductService {
 
   /**
    * 删除商品（软删除）
+   * 注意：由于外键约束设置为 CASCADE，删除商品时会自动删除关联的规格
    */
   async remove(id: number, req?: Request): Promise<void> {
     const product = await this.findOne(id);
@@ -199,6 +230,7 @@ export class ProductService {
     // 检查是否有订单使用此商品
     // 这里需要检查 order_items 表，但为了避免循环依赖，先简单处理
     // 实际项目中可以通过查询 order_items 表来检查
+    // 由于外键约束设置为 RESTRICT，如果有订单使用此商品，删除会失败
 
     await this.productRepository.softRemove(product);
 
@@ -218,6 +250,36 @@ export class ProductService {
         status: 1,
       });
     }
+  }
+
+  /**
+   * 更新商品的价格和库存（根据所有SKU计算）
+   */
+  private async updateProductPriceAndStock(productId: number): Promise<void> {
+    const skus = await this.skuRepository.find({
+      where: { productId, deletedAt: IsNull(), status: 1 },
+    });
+
+    if (skus.length === 0) {
+      // 如果没有启用的SKU，将商品价格和库存设为0
+      await this.productRepository.update(productId, {
+        minPrice: 0,
+        maxPrice: 0,
+        stock: 0,
+      });
+      return;
+    }
+
+    const prices = skus.map((sku) => Number(sku.price));
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const totalStock = skus.reduce((sum, sku) => sum + sku.stock, 0);
+
+    await this.productRepository.update(productId, {
+      minPrice,
+      maxPrice,
+      stock: totalStock,
+    });
   }
 }
 

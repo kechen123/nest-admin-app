@@ -4,11 +4,12 @@ import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
 import { Product } from '../../../common/entities/mall/product.entity';
 import { Category } from '../../../common/entities/mall/category.entity';
+import { ProductSku } from '../../../common/entities/mall/product-sku.entity';
 import { OperationLogModule } from '../../operation-log/operation-log.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product, Category]),
+    TypeOrmModule.forFeature([Product, Category, ProductSku]),
     OperationLogModule,
   ],
   controllers: [ProductController],

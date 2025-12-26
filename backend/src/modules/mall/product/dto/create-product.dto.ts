@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CreateProductSkuDto } from '../../product-sku/dto/create-product-sku.dto';
 
 export class CreateProductDto {
   @ApiProperty({ description: '商品名称', example: 'iPhone 15 Pro Max' })
@@ -53,5 +55,12 @@ export class CreateProductDto {
   @Max(1)
   @IsOptional()
   status?: number;
+
+  @ApiProperty({ description: '商品规格列表', type: [CreateProductSkuDto], required: false })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateProductSkuDto)
+  skus?: Omit<CreateProductSkuDto, 'productId'>[];
 }
 
