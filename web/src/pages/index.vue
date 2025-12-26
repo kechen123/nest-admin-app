@@ -7,19 +7,14 @@
         <p class="welcome-desc">{{ currentTime }}</p>
       </div>
       <div class="welcome-actions">
-        <el-button type="primary" :icon="Plus">新建任务</el-button>
+        <el-button type="primary" :icon="Plus" @click="goToTestA">新建任务</el-button>
         <el-button :icon="Document">查看文档</el-button>
       </div>
     </div>
 
     <!-- 统计卡片 -->
     <div class="stats-grid">
-      <el-card 
-        class="stat-card" 
-        v-for="(stat, index) in stats" 
-        :key="index"
-        shadow="hover"
-      >
+      <el-card class="stat-card" v-for="(stat, index) in stats" :key="index" shadow="hover">
         <div class="stat-content">
           <div class="stat-icon" :style="{ backgroundColor: stat.color }">
             <el-icon :size="24">
@@ -53,12 +48,8 @@
             </div>
           </template>
           <div class="quick-actions">
-            <div 
-              class="action-item" 
-              v-for="(action, index) in quickActions" 
-              :key="index"
-              @click="handleAction(action.path)"
-            >
+            <div class="action-item" v-for="(action, index) in quickActions" :key="index"
+              @click="handleAction(action.path)">
               <div class="action-icon" :style="{ backgroundColor: action.color }">
                 <el-icon :size="20">
                   <component :is="action.icon" />
@@ -78,11 +69,7 @@
             </div>
           </template>
           <div class="activities-list">
-            <div 
-              class="activity-item" 
-              v-for="(activity, index) in recentActivities" 
-              :key="index"
-            >
+            <div class="activity-item" v-for="(activity, index) in recentActivities" :key="index">
               <div class="activity-icon" :style="{ backgroundColor: activity.color }">
                 <el-icon :size="16">
                   <component :is="activity.icon" />
@@ -123,11 +110,7 @@
             </div>
           </template>
           <div class="todos-list">
-            <div 
-              class="todo-item" 
-              v-for="(todo, index) in todos" 
-              :key="index"
-            >
+            <div class="todo-item" v-for="(todo, index) in todos" :key="index">
               <el-checkbox v-model="todo.completed" />
               <span class="todo-text" :class="{ completed: todo.completed }">
                 {{ todo.text }}
@@ -141,12 +124,12 @@
 </template>
 
 <script setup lang="ts">
-import { 
-  Plus, 
-  Document, 
-  User, 
-  ShoppingCart, 
-  Money, 
+import {
+  Plus,
+  Document,
+  User,
+  ShoppingCart,
+  Money,
   DataLine,
   ArrowUp,
   ArrowDown,
@@ -180,9 +163,9 @@ const welcomeText = computed(() => {
 
 const currentTime = computed(() => {
   const now = new Date()
-  return now.toLocaleString('zh-CN', { 
-    year: 'numeric', 
-    month: 'long', 
+  return now.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
     day: 'numeric',
     weekday: 'long'
   })
@@ -278,6 +261,15 @@ const todos = ref([
 // 处理快捷操作点击
 const handleAction = (path: string) => {
   router.push(path)
+}
+
+const goToTestA = () => {
+  router.push({
+    path: '/test/testaa/',
+    query: {
+      id: 1
+    }
+  })
 }
 </script>
 
@@ -767,11 +759,3 @@ const handleAction = (path: string) => {
   }
 }
 </style>
-
-<route lang="json">
-{
-  "meta": {
-    "requiresAuth": false
-  }
-}
-</route>

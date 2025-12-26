@@ -347,12 +347,3 @@ const handleDelete = async (id: number) => {
 }
 </script>
 
-<route>
-{
-  meta: {
-    title: '操作日志',
-    requiresAuth: true,
-    permissions: ['monitor:operlog:list']
-  }
-}
-</route>

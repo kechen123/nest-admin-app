@@ -248,10 +248,3 @@ const submitForm = async (formEl: FormInstance | undefined) => {
   }
 }
 </style>
-
-<route lang="json">{
-  "meta": {
-    "requiresAuth": false,
-    "layout": "custom"
-  }
-}</route>

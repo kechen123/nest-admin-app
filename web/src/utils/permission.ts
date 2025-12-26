@@ -27,7 +27,7 @@ export const getCurrentUser = <T = any>(): T | null => {
  */
 export const hasRoutePermission = (routePath: string): boolean => {
   const routerStore = useRouterStore()
-  const roles = routerStore.roles
+  const roles = routerStore.menus
 
   if (!roles || roles.length === 0) {
     return false
@@ -50,7 +50,7 @@ export const hasPermission = (permissionCode: string): boolean => {
   }
 
   // 1. 从菜单树中查找（包括按钮类型的菜单）
-  const roles = routerStore.roles
+  const roles = routerStore.menus
   if (roles && roles.length > 0) {
     const foundInMenu = isValueExistsInTree(roles, 'permissionCode', permissionCode)
     if (foundInMenu) {

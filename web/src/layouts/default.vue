@@ -9,7 +9,8 @@
       </el-header>
       <LayoutTags />
       <el-main class="main">
-        <RouterView v-slot="{ Component, route }">
+        <router-view />
+        <!-- <RouterView v-slot="{ Component, route }">
           <template v-if="Component">
             <KeepAlive>
               <Transition name="fade" mode="out-in">
@@ -17,7 +18,7 @@
               </Transition>
             </KeepAlive>
           </template>
-        </RouterView>
+</RouterView> -->
       </el-main>
     </el-container>
   </el-container>
@@ -26,9 +27,14 @@
 <script setup lang="ts">
 import { useLayoutStore } from '@/stores/layout'
 import { storeToRefs } from 'pinia'
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { Loading, Warning } from '@element-plus/icons-vue'
 
 const layoutStore = useLayoutStore()
 const { isCollapse } = storeToRefs(layoutStore)
+const route = useRoute()
+
 </script>
 
 <style scoped lang="less">
@@ -48,7 +54,7 @@ const { isCollapse } = storeToRefs(layoutStore)
     border-right-color: var(--el-border-color);
     overflow: hidden;
     background-color: var(--el-bg-color);
-    
+
     &.is-collapse {
       width: 64px;
     }

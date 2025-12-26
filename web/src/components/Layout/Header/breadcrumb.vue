@@ -45,7 +45,7 @@ function findFirstChildMenuItem(menuItem: MenuItem): MenuItem | null {
   if (!menuItem.children || menuItem.children.length === 0) {
     return null
   }
-  
+
   // 遍历子菜单，找到第一个可用的菜单项
   for (const child of menuItem.children) {
     // 如果子菜单项本身没有子菜单，直接返回
@@ -62,7 +62,7 @@ function findFirstChildMenuItem(menuItem: MenuItem): MenuItem | null {
       }
     }
   }
-  
+
   return null
 }
 
@@ -71,14 +71,14 @@ const handleBreadcrumbClick = (item: BreadcrumbItem) => {
   // 如果路径与当前路径相同，不跳转
   const normalizedCurrentPath = normalizePath(route.path)
   const normalizedItemPath = normalizePath(item.path)
-  
+
   if (normalizedItemPath === normalizedCurrentPath) {
     return
   }
-  
+
   // 查找对应的菜单项
   const menuItem = findNodeInTree(routerStore.roles, item.path)
-  
+
   // 如果菜单项存在且有子菜单，跳转到第一个子菜单
   if (menuItem) {
     const firstChild = findFirstChildMenuItem(menuItem)
@@ -99,7 +99,7 @@ const handleBreadcrumbClick = (item: BreadcrumbItem) => {
       return
     }
   }
-  
+
   // 如果没有子菜单或找不到子菜单，正常跳转到当前路径
   router.push(item.path).catch((err) => {
     if (err.name !== 'NavigationDuplicated') {
@@ -123,7 +123,7 @@ function normalizePath(path: string): string {
 // 在菜单树中查找节点（支持路径和 route_name 匹配）
 function findNodeInTree(menuList: MenuItem[], path: string): MenuItem | null {
   const normalizedPath = normalizePath(path)
-  
+
   for (const item of menuList) {
     // 精确匹配路径（规范化后）
     if (normalizePath(item.path) === normalizedPath) {
@@ -144,15 +144,15 @@ function findNodeInTree(menuList: MenuItem[], path: string): MenuItem | null {
 // 查找节点的所有父节点路径
 function findParentPath(menuList: MenuItem[], targetPath: string, parents: MenuItem[] = []): MenuItem[] | null {
   const normalizedTargetPath = normalizePath(targetPath)
-  
+
   for (const item of menuList) {
     const currentPath = [...parents, item]
-    
+
     // 精确匹配路径（规范化后）
     if (normalizePath(item.path) === normalizedTargetPath) {
       return currentPath
     }
-    
+
     // 如果当前项有子菜单，递归查找
     if (item.children && item.children.length > 0) {
       const found = findParentPath(item.children, targetPath, currentPath)
@@ -166,12 +166,12 @@ function findParentPath(menuList: MenuItem[], targetPath: string, parents: MenuI
 const breadcrumbList = computed<BreadcrumbItem[]>(() => {
   const menuList = routerStore.roles
   const currentPath = route.path
-  
+
   // 如果路径是首页，直接返回首页
   if (currentPath === '/' || currentPath === '/index') {
     return [{ title: '首页', path: '/', icon: 'HomeFilled' }]
   }
-  
+
   // 查找当前节点
   const currentNode = findNodeInTree(menuList, currentPath)
   if (!currentNode) {
@@ -182,7 +182,7 @@ const breadcrumbList = computed<BreadcrumbItem[]>(() => {
     }
     return [{ title: '未知页面', path: currentPath }]
   }
-  
+
   // 查找父节点路径
   const parentPath = findParentPath(menuList, currentPath)
   if (parentPath && parentPath.length > 0) {
@@ -192,7 +192,7 @@ const breadcrumbList = computed<BreadcrumbItem[]>(() => {
       icon: item.icon
     }))
   }
-  
+
   // 如果没有父节点，只返回当前节点
   return [{
     title: currentNode.title,
@@ -206,7 +206,7 @@ const breadcrumbList = computed<BreadcrumbItem[]>(() => {
 .breadcrumb-container {
   display: flex;
   align-items: center;
-  
+
   :deep(.el-breadcrumb__item) {
     .el-breadcrumb__inner {
       display: flex;
@@ -214,7 +214,7 @@ const breadcrumbList = computed<BreadcrumbItem[]>(() => {
       font-size: 14px;
     }
   }
-  
+
   .breadcrumb-link {
     display: flex;
     align-items: center;
@@ -223,23 +223,23 @@ const breadcrumbList = computed<BreadcrumbItem[]>(() => {
     transition: color 0.3s;
     cursor: pointer;
     user-select: none;
-    
+
     &:hover {
       color: var(--el-color-primary);
     }
-    
+
     .breadcrumb-icon {
       margin-right: 4px;
       font-size: 14px;
     }
   }
-  
+
   .breadcrumb-current {
     display: flex;
     align-items: center;
     color: var(--el-text-color-primary);
     font-weight: 500;
-    
+
     .breadcrumb-icon {
       margin-right: 4px;
       font-size: 14px;
@@ -247,4 +247,3 @@ const breadcrumbList = computed<BreadcrumbItem[]>(() => {
   }
 }
 </style>
-
