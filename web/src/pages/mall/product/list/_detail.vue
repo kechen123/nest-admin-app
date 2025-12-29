@@ -271,7 +271,7 @@ const handleEditSku = (row: ProductSku) => {
   // 使用 nextTick 确保面板关闭后再跳转
   nextTick(() => {
     router.push({
-      path: '/mall/product/sku/',
+      path: '/mall/product/sku',
       query: { productId: formData.value.id, skuId: row.id }
     })
   })

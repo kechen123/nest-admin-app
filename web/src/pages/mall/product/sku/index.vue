@@ -48,7 +48,6 @@ const baseColumns: ColumnProps[] = [
     align: 'left',
     show: true,
     label: 'SKU编码',
-    width: 200,
   },
   {
     type: 'text',
@@ -56,7 +55,6 @@ const baseColumns: ColumnProps[] = [
     align: 'left',
     show: true,
     label: '商品',
-    width: 200,
     formatter: (row: any) => {
       return row.product?.name || '-'
     }
@@ -67,7 +65,6 @@ const baseColumns: ColumnProps[] = [
     align: 'left',
     show: true,
     label: '规格名称',
-    width: 200,
   },
   {
     type: 'text',
@@ -136,8 +133,8 @@ const requestSkuList = async (params: any) => {
     const res = await productSkuApi.getSkuList({
       page: params.page || 1,
       pageSize: params.size || 10,
-      productId: productId.value || params.productId,
-      productName: params.productName, // 支持商品名称搜索
+      productId: params.productId || productId.value,
+      productName: params.productName || route.query.productName as string, // 支持商品名称搜索
       status: params.status,
     }) as any
     return {
@@ -194,7 +191,6 @@ const kcConfig: KcConfig = {
         label: '商品名称',
         type: 'input',
         placeholder: '请输入商品名称搜索',
-        hidden: computed(() => !!productId.value), // 如果从商品详情页进入，隐藏商品筛选
         value: route.query.productName,
       },
       {
