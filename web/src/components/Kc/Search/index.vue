@@ -3,11 +3,15 @@
     <el-form :model="searchData" class="search-form">
       <div class="search-default" :style="{ maxHeight: containerMaxHeight, overflow: containerOverflow }">
         <transition-group name="fade" tag="div" class="search-fields">
-          <FormFieldItem v-for="field in visibleFields" :key="field.key" :field="field"
-            :field-width="config.fieldWidth" v-model="searchData" @change="handleFieldChange" />
+          <FormFieldItem v-for="field in visibleFields" :key="field.key" :field="field" :field-width="config.fieldWidth"
+            v-model="searchData" @change="handleFieldChange" />
           <!-- 展开按钮，紧跟搜索项末尾 -->
-          <CommonButton v-if="hasMoreFields && !panelState" @click="toggleExpand" class="expand-btn"
-            :class="{ 'is-expanded': isExpanded }" :icon="ArrowDown" :label="isExpanded ? '收起' : '展开'" />
+          <el-button v-if="hasMoreFields && !panelState" @click="toggleExpand" class="expand-btn">
+            <el-icon class="expand-icon" :class="{ 'is-expanded': isExpanded }">
+              <ArrowDown />
+            </el-icon>
+            {{ isExpanded ? '收起' : '展开' }}
+          </el-button>
           <CommonButton class="search-btn" v-if="config.showSearch !== false" type="primary"
             :prevent-double-click="true" :debounce="300" @click="handleSearch" label="搜索" />
           <CommonButton v-if="config.showReset !== false" @click="handleReset" label="重置" />
@@ -59,6 +63,7 @@ const hasMoreFields = computed(() => props.config.fields.length > defaultCount.v
 const visibleFields = computed(() =>
   isExpanded.value ? props.config.fields : props.config.fields.slice(0, defaultCount.value)
 )
+console.log('visibleFields', visibleFields.value, props.config.fields)
 
 // max-height 和 overflow 控制动画
 const containerMaxHeight = ref('0px')
@@ -91,6 +96,7 @@ const updateContainerHeight = () => {
 
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value
+  console.log('isExpanded', isExpanded.value)
   updateContainerHeight()
 }
 
@@ -161,13 +167,13 @@ const handleReset = () => {
             transform: rotate(180deg);
           }
         }
-        
+
         // 展开按钮图标旋转动画
         .expand-btn {
           :deep(.el-icon) {
             transition: transform 0.3s;
           }
-          
+
           &.is-expanded :deep(.el-icon) {
             transform: rotate(180deg);
           }
