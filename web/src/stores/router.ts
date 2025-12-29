@@ -4,17 +4,20 @@ import type { RouteRecordRaw } from 'vue-router'
 const modules = import.meta.glob('@/pages/**/*.vue')
 
 const generaRoutes = (menus: FrontendMenu[]) => {
-  console.log('modules', modules)
   const routes: RouteRecordRaw[] = []
   menus.forEach((menu) => {
     if (menu.children && menu.children.length > 0) {
       routes.push(...generaRoutes(menu.children))
     } else {
+      let path = menu.component || menu.path
+      if (path.startsWith('/')) {
+        path = path.substring(1)
+      }
       routes.push({
         path: menu.path,
         name: menu.name || menu.path || (menu.id as string),
-        redirect: menu.path,
-        component: modules[`@/pages/${menu.path}.vue`],
+        // redirect: menu.path,
+        component: modules[`/src/pages/${path}.vue`],
         children: [],
         meta: {
           title: menu.title,
@@ -49,7 +52,6 @@ export const useRouterStore = defineStore(
 
     const initRoutes = async () => {
       const routes = await generaRoutes(roles.value)
-      console.log('routes', routes)
       return routes
     }
 

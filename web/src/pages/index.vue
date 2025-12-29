@@ -177,40 +177,40 @@ const stats = ref([
     label: '总用户数',
     value: '12,345',
     trend: 12.5,
-    icon: User,
+    icon: markRaw(User),
     color: 'rgba(64, 158, 255, 0.1)'
   },
   {
     label: '今日订单',
     value: '1,234',
     trend: -5.2,
-    icon: ShoppingCart,
+    icon: markRaw(ShoppingCart),
     color: 'rgba(103, 194, 58, 0.1)'
   },
   {
     label: '总收入',
     value: '¥123,456',
     trend: 8.3,
-    icon: Money,
+    icon: markRaw(Money),
     color: 'rgba(230, 162, 60, 0.1)'
   },
   {
     label: '访问量',
     value: '56,789',
     trend: 15.6,
-    icon: DataLine,
+    icon: markRaw(DataLine),
     color: 'rgba(144, 147, 153, 0.1)'
   }
 ])
 
 // 快捷操作
 const quickActions = ref([
-  { label: '用户管理', icon: UserFilled, path: '/system/user', color: '#409EFF' },
-  { label: '系统设置', icon: Setting, path: '/settings', color: '#67C23A' },
-  { label: '菜单管理', icon: Menu, path: '/system/menu', color: '#E6A23C' },
-  { label: '通知中心', icon: Bell, path: '/notifications', color: '#F56C6C' },
-  { label: '新建文档', icon: DocumentAdd, path: '/documents/new', color: '#909399' },
-  { label: '数据统计', icon: DataLine, path: '/statistics', color: '#409EFF' }
+  { label: '用户管理', icon: markRaw(UserFilled), path: '/system/user', color: '#409EFF' },
+  { label: '系统设置', icon: markRaw(Setting), path: '/settings', color: '#67C23A' },
+  { label: '菜单管理', icon: markRaw(Menu), path: '/system/menu', color: '#E6A23C' },
+  { label: '通知中心', icon: markRaw(Bell), path: '/notifications', color: '#F56C6C' },
+  { label: '新建文档', icon: markRaw(DocumentAdd), path: '/documents/new', color: '#909399' },
+  { label: '数据统计', icon: markRaw(DataLine), path: '/statistics', color: '#409EFF' }
 ])
 
 // 最近活动
@@ -218,25 +218,25 @@ const recentActivities = ref([
   {
     text: '用户 张三 创建了新订单',
     time: '5分钟前',
-    icon: ShoppingCart,
+    icon: markRaw(ShoppingCart),
     color: '#409EFF'
   },
   {
     text: '系统更新了菜单配置',
     time: '1小时前',
-    icon: Setting,
+    icon: markRaw(Setting),
     color: '#67C23A'
   },
   {
     text: '用户 李四 修改了个人信息',
     time: '2小时前',
-    icon: User,
+    icon: markRaw(User),
     color: '#E6A23C'
   },
   {
     text: '新增了 3 条待办事项',
     time: '3小时前',
-    icon: DocumentAdd,
+    icon: markRaw(DocumentAdd),
     color: '#F56C6C'
   }
 ])
@@ -265,7 +265,7 @@ const handleAction = (path: string) => {
 
 const goToTestA = () => {
   router.push({
-    path: '/test/testaa/',
+    path: '/test/testaa',
     query: {
       id: 1
     }

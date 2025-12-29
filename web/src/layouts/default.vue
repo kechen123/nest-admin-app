@@ -9,8 +9,7 @@
       </el-header>
       <LayoutTags />
       <el-main class="main">
-        <router-view />
-        <!-- <RouterView v-slot="{ Component, route }">
+        <RouterView v-slot="{ Component, route }">
           <template v-if="Component">
             <KeepAlive>
               <Transition name="fade" mode="out-in">
@@ -18,7 +17,7 @@
               </Transition>
             </KeepAlive>
           </template>
-</RouterView> -->
+        </RouterView>
       </el-main>
     </el-container>
   </el-container>
@@ -67,6 +66,7 @@ const route = useRoute()
 
   .main {
     background-color: var(--el-bg-color-page);
+    overflow: hidden;
   }
 }
 </style>

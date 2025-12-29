@@ -21,31 +21,47 @@
 
 <script setup lang="ts">
 import { useTagsStore } from '@/stores/tags'
+import { useRouterStore } from '@/stores/router'
 
 const route = useRoute()
 const router = useRouter()
 const tagsStore = useTagsStore()
+const routerStore = useRouterStore()
+
+const setTags = (route: any) => {
+  const isExist = tagsStore.tags.some((item) => {
+    return item.path === route.path
+  })
+  if (isExist) {
+    tagsStore.changeTag(route.path)
+  } else {
+    tagsStore.addTag(route.path)
+  }
+}
 
 watch(route, () => {
   setTags(route)
 })
 
+// 监听菜单数据变化，重新计算标签页信息
+watch(() => routerStore.roles, () => {
+  if (routerStore.roles && routerStore.roles.length > 0) {
+    // 菜单数据加载完成后，重新设置当前标签页
+    setTags(route)
+  }
+}, { immediate: true })
+
 watch(
-  () => tagsStore.active.path,
+  () => tagsStore.active?.path,
   (newVal) => {
     // 如果路径为空或与当前路径相同，避免重复跳转
     if (!newVal || newVal === router.currentRoute.value.path) {
       return
     }
-    // 添加错误处理，避免路由错误导致整页刷新
-    router.push(newVal).catch((err) => {
-      // NavigationDuplicated 错误可以忽略（重复导航）
-      if (err.name !== 'NavigationDuplicated') {
-        console.warn('标签页路由跳转失败:', err, '目标路径:', newVal)
-      }
-    })
+    router.push(newVal)
   }
 )
+
 
 const tagClick = (item: any) => {
   tagsStore.changeTag(item.path)
@@ -53,18 +69,6 @@ const tagClick = (item: any) => {
 
 const delPage = (path: string) => {
   tagsStore.removeTag(path)
-}
-
-// 设置标签
-const setTags = (route: any) => {
-  const isExist = tagsStore.tags.some((item) => {
-    return item.path === route.fullPath
-  })
-  if (isExist) {
-    tagsStore.changeTag(route.fullPath)
-  } else {
-    tagsStore.addTag(route.fullPath)
-  }
 }
 </script>
 

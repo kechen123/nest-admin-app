@@ -29,6 +29,7 @@ export interface FrontendMenu {
   id: number | string
   title: string
   path: string
+  component: string
   name?: string
   icon?: string
   children?: FrontendMenu[]
@@ -106,23 +107,31 @@ export const getMenuTree = () => {
  * 获取菜单树并转换为前端格式
  */
 export const getMenuTreeTransformed = async (): Promise<FrontendMenu[]> => {
-  const menus = (await getMenuTree()) as any // axios拦截器已经返回了data字段，所以res就是BackendMenu[]
-  return menus
+  const menus = (await getMenuTree()) as BackendMenu[] // axios拦截器已经返回了data字段，所以res就是BackendMenu[]
+  return menus.map(transformBackendMenuToFrontend).filter(menu => menu !== null)
 }
 
 /**
  * 将后端菜单格式转换为前端菜单格式
  */
 const transformBackendMenuToFrontend = (menu: BackendMenu): FrontendMenu => {
+  // 过滤掉按钮类型的菜单项（只保留目录和菜单类型）
+  if (menu.menuType === 'F') {
+    return null as any // 过滤掉按钮类型
+  }
+
   return {
     id: menu.id,
     title: menu.title,
     path: menu.path || '',
-    routeName: menu.name,
+    name: menu.name,
+    component: menu.component || '',
     icon: menu.icon,
     hidden: menu.visible === 0,
     permissionCode: menu.permissionCode,
-    children: menu.children?.map(transformBackendMenuToFrontend),
+    children: menu.children
+      ?.map(transformBackendMenuToFrontend)
+      .filter(child => child !== null), // 过滤掉null值
   }
 }
 
