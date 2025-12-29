@@ -195,6 +195,7 @@ const kcConfig: KcConfig = {
         type: 'input',
         placeholder: '请输入商品名称搜索',
         hidden: computed(() => !!productId.value), // 如果从商品详情页进入，隐藏商品筛选
+        value: route.query.productName,
       },
       {
         key: 'status',
@@ -205,6 +206,12 @@ const kcConfig: KcConfig = {
           { label: '禁用', value: 0 },
           { label: '启用', value: 1 },
         ],
+      },
+      {
+        key: 'skuCode',
+        label: 'SKU编码',
+        type: 'input',
+        placeholder: '请输入SKU编码搜索',
       },
     ],
     defaultCount: 2,
@@ -286,8 +293,7 @@ const handleDelete = async (id: number) => {
 
 // 初始化
 onMounted(() => {
-  const router = useRouter()
-  console.log('所有路由：', router.getRoutes().map(r => ({ path: r.path, name: r.name })))
+  console.log('所有路由：', skuIdFromQuery.value, productId.value)
   // 如果从商品详情页跳转过来并带有skuId，自动打开编辑面板
   if (skuIdFromQuery.value) {
     nextTick(() => {
