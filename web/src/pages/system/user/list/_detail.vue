@@ -13,8 +13,8 @@
     <div class="footer">
       <div class="footer-actions">
         <el-button @click="close">关闭</el-button>
-        <CommonButton v-if="type !== 'view'" type="primary" :label="formData.id ? '保存' : '创建'" 
-          :prevent-double-click="true" :on-click="() => onSubmit(formData)" />
+        <CommonButton v-if="type !== 'view'" type="primary" :label="formData.id ? '保存' : '创建'"
+          :prevent-double-click="true" @click="() => onSubmit(formData)" />
       </div>
     </div>
   </div>
@@ -322,12 +322,12 @@ const onSubmit = async (data: any) => {
         remark: data.remark,
         status: data.status,
       }
-      
+
       // 添加角色ID数组
       if (roleIds && roleIds.length > 0) {
         updateData.roleIds = roleIds
       }
-      
+
       // 如果密码不为空且不是空字符串，则包含密码字段
       if (data.password && typeof data.password === 'string' && data.password.trim().length > 0) {
         updateData.password = data.password.trim()
@@ -349,12 +349,12 @@ const onSubmit = async (data: any) => {
         remark: data.remark,
         status: data.status,
       }
-      
+
       // 添加角色ID数组
       if (roleIds && roleIds.length > 0) {
         createData.roleIds = roleIds
       }
-      
+
       await userApi.createUser(createData)
       ElMessage.success('创建成功')
     }

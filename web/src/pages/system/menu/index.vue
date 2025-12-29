@@ -8,9 +8,9 @@
     </template>
     <template #actions="{ row }">
       <div class="actions-buttons">
-        <CommonButton type="primary" plain size="small" :label="'编辑'" :on-click="() => openMenuDetail(row.id, 'edit')" />
-        <CommonButton type="success" plain size="small" :label="'查看详情'" :on-click="() => openMenuDetail(row.id, 'view')" />
-        <CommonButton type="danger" plain size="small" :label="'删除'" :on-click="() => handleDelete(row.id)" />
+        <CommonButton type="primary" plain size="small" :label="'编辑'" @click="() => openMenuDetail(row.id, 'edit')" />
+        <CommonButton type="success" plain size="small" :label="'查看详情'" @click="() => openMenuDetail(row.id, 'view')" />
+        <CommonButton type="danger" plain size="small" :label="'删除'" @click="() => handleDelete(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>
