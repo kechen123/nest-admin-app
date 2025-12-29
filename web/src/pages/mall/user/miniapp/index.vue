@@ -2,12 +2,10 @@
   <TableWithSlidePanel :config="kcConfig" :column-display-config="columnDisplayConfig" ref="tableRef">
     <template #actions="{ row }">
       <div class="actions-buttons">
-        <CommonButton type="primary" plain size="small" :label="'编辑'"
-          :on-click="() => openUserDetail(row.id, 'edit')" />
-        <CommonButton type="success" plain size="small" :label="'查看详情'"
-          :on-click="() => openUserDetail(row.id, 'view')" />
+        <CommonButton type="primary" plain size="small" :label="'编辑'" @click="() => openUserDetail(row.id, 'edit')" />
+        <CommonButton type="success" plain size="small" :label="'查看详情'" @click="() => openUserDetail(row.id, 'view')" />
         <CommonButton :type="row.status === 1 ? 'warning' : 'success'" plain size="small"
-          :label="row.status === 1 ? '禁用' : '启用'" :on-click="() => handleStatusChange(row)" />
+          :label="row.status === 1 ? '禁用' : '启用'" @click="() => handleStatusChange(row)" />
       </div>
     </template>
   </TableWithSlidePanel>

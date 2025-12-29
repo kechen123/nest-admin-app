@@ -1,18 +1,9 @@
 <template>
   <div class="button-generator">
-    <CommonButton
-      v-for="btn in buttons"
-      :key="btn.key"
-      :type="btn.type || 'default'"
-      :size="btn.size || 'default'"
-      :disabled="btn.disabled"
-      :loading="btn.loading"
-      :icon="getIconComponent(btn.icon)"
-      :label="btn.label"
-      :prevent-double-click="btn.preventDoubleClick || false"
-      :debounce="btn.debounce || 0"
-      :on-click="() => handleClick(btn)"
-    />
+    <CommonButton v-for="btn in buttons" :key="btn.key" :type="btn.type || 'default'" :size="btn.size || 'default'"
+      :disabled="btn.disabled" :loading="btn.loading" :icon="getIconComponent(btn.icon)" :label="btn.label"
+      :prevent-double-click="btn.preventDoubleClick || false" :debounce="btn.debounce || 0"
+      @click="() => handleClick(btn)" />
   </div>
 </template>
 

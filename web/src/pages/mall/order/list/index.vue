@@ -3,11 +3,11 @@
     <template #actions="{ row }">
       <div class="actions-buttons">
         <CommonButton type="success" plain size="small" :label="'查看详情'"
-          :on-click="() => openOrderDetail(row.id, 'view')" />
+          @click="() => openOrderDetail(row.id, 'view')" />
         <CommonButton v-if="row.status === 1" type="primary" plain size="small" :label="'发货'"
-          :on-click="() => handleShip(row.id)" />
+          @click="() => handleShip(row.id)" />
         <CommonButton v-if="row.status === 0 || row.status === 1" type="warning" plain size="small" :label="'取消订单'"
-          :on-click="() => handleCancel(row.id)" />
+          @click="() => handleCancel(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>

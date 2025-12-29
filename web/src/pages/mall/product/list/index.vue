@@ -3,14 +3,14 @@
     <template #actions="{ row }">
       <div class="actions-buttons">
         <CommonButton type="primary" plain size="small" :label="'编辑'"
-          :on-click="() => openProductDetail(row.id, 'edit')" />
+          @click="() => openProductDetail(row.id, 'edit')" />
         <CommonButton type="success" plain size="small" :label="'查看详情'"
-          :on-click="() => openProductDetail(row.id, 'view')" />
+          @click="() => openProductDetail(row.id, 'view')" />
         <CommonButton type="info" plain size="small" :label="'管理规格'"
-          :on-click="() => handleManageSkus(row.id, row.name)" />
+          @click="() => handleManageSkus(row.id, row.name)" />
         <CommonButton :type="row.status === 1 ? 'warning' : 'success'" plain size="small"
-          :label="row.status === 1 ? '下架' : '上架'" :on-click="() => handleStatusChange(row)" />
-        <CommonButton type="danger" plain size="small" :label="'删除'" :on-click="() => handleDelete(row.id)" />
+          :label="row.status === 1 ? '下架' : '上架'" @click="() => handleStatusChange(row)" />
+        <CommonButton type="danger" plain size="small" :label="'删除'" @click="() => handleDelete(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>

@@ -2,10 +2,10 @@
   <TableWithSlidePanel :config="kcConfig" :column-display-config="columnDisplayConfig" ref="tableRef">
     <template #actions="{ row }">
       <div class="actions-buttons">
-        <CommonButton type="primary" plain size="small" :label="'编辑'" :on-click="() => openSkuDetail(row.id, 'edit')" />
+        <CommonButton type="primary" plain size="small" :label="'编辑'" @click="() => openSkuDetail(row.id, 'edit')" />
         <CommonButton :type="row.status === 1 ? 'warning' : 'success'" plain size="small"
-          :label="row.status === 1 ? '禁用' : '启用'" :on-click="() => handleStatusChange(row)" />
-        <CommonButton type="danger" plain size="small" :label="'删除'" :on-click="() => handleDelete(row.id)" />
+          :label="row.status === 1 ? '禁用' : '启用'" @click="() => handleStatusChange(row)" />
+        <CommonButton type="danger" plain size="small" :label="'删除'" @click="() => handleDelete(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>
