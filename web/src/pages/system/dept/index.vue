@@ -3,10 +3,10 @@
     <template #actions="{ row }">
       <div class="actions-buttons">
         <CommonButton type="primary" plain size="small" :label="'编辑'"
-          :on-click="() => openDepartmentDetail(row.id, 'edit')" />
+          @click="() => openDepartmentDetail(row.id, 'edit')" />
         <CommonButton type="success" plain size="small" :label="'查看详情'"
-          :on-click="() => openDepartmentDetail(row.id, 'view')" />
-        <CommonButton type="danger" plain size="small" :label="'删除'" :on-click="() => handleDelete(row.id)" />
+          @click="() => openDepartmentDetail(row.id, 'view')" />
+        <CommonButton type="danger" plain size="small" :label="'删除'" @click="() => handleDelete(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>

@@ -21,8 +21,8 @@
     <div class="footer">
       <div class="footer-actions">
         <el-button @click="close">关闭</el-button>
-        <CommonButton v-if="type !== 'view'" type="primary" :label="formData.id ? '保存' : '创建'" 
-          :prevent-double-click="true" :on-click="() => onSubmit(formData)" />
+        <CommonButton v-if="type !== 'view'" type="primary" :label="formData.id ? '保存' : '创建'"
+          :prevent-double-click="true" @click="() => onSubmit(formData)" />
       </div>
     </div>
   </div>
