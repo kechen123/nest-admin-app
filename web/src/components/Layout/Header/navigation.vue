@@ -256,7 +256,7 @@ const handleSearchInput = () => {
     return
   }
 
-  const menuList = routerStore.roles as MenuItem[]
+  const menuList = routerStore.menus as MenuItem[]
   const results = searchMenu(menuList, searchKeyword.value.trim())
   searchResults.value = results.slice(0, 10) // 限制显示10条结果
 }
@@ -273,7 +273,7 @@ const handleSearchItemClick = (item: MenuItem) => {
   }
 
   // 查找对应的完整菜单项（包含 children 信息）
-  const menuList = routerStore.roles as MenuItem[]
+  const menuList = routerStore.menus as MenuItem[]
   const menuItem = findNodeInTree(menuList, item.path)
 
   // 如果菜单项存在且有子菜单，跳转到第一个子菜单

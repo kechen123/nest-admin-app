@@ -1,36 +1,63 @@
 import axios from '@/utils/http/axios'
 
-// 后端菜单数据接口
+// 后端菜单数据接口（与数据库字段完全匹配）
 export interface BackendMenu {
   id: number
   name: string
   title: string
-  path?: string
-  icon?: string
-  parentId?: number
-  component?: string
-  sort: number
-  status: number
   permissionCode?: string
-  menuType?: string
-  isExternal: number
-  visible?: number
-  isCache?: number
+  menuType: 'M' | 'C' | 'F' // M-目录, C-菜单, F-按钮
+  path?: string
+  component?: string
   query?: string
+  isFrame: number // 是否外链: 0-是, 1-否
+  isCache: number // 是否缓存: 0-缓存, 1-不缓存
+  visible: number // 显示状态: 0-隐藏, 1-显示
+  status: number // 状态: 0-禁用, 1-正常
+  icon?: string
+  parentId: number // 父菜单ID
+  orderNum: number // 显示顺序
   remark?: string
   children?: BackendMenu[]
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string
 }
 
-// 前端菜单数据接口
+// 前端菜单数据接口（用于侧边栏展示）
 export interface FrontendMenu {
   id: number | string
   title: string
   path: string
-  route_name?: string
+  component: string
+  name?: string
   icon?: string
   children?: FrontendMenu[]
+  hidden?: boolean
+  permissionCode?: string
+}
+
+// 路由元信息接口
+export interface RouteMeta {
+  title: string
+  icon?: string
+  hidden?: boolean
+  keepAlive?: boolean
+  permissionCode?: string
+  orderNum?: number
+}
+
+// 菜单类型枚举
+export enum MenuType {
+  DIRECTORY = 'M',
+  MENU = 'C',
+  BUTTON = 'F',
+}
+
+// 菜单状态枚举
+export enum MenuStatus {
+  DISABLED = 0,
+  ENABLED = 1,
 }
 
 // 分页响应接口
@@ -80,31 +107,41 @@ export const getMenuTree = () => {
  * 获取菜单树并转换为前端格式
  */
 export const getMenuTreeTransformed = async (): Promise<FrontendMenu[]> => {
-  const menus = (await getMenuTree()) as any // axios拦截器已经返回了data字段，所以res就是BackendMenu[]
-  return menus
+  const menus = (await getMenuTree()) as BackendMenu[] // axios拦截器已经返回了data字段，所以res就是BackendMenu[]
+  return menus.map(transformBackendMenuToFrontend).filter(menu => menu !== null)
 }
 
 /**
  * 将后端菜单格式转换为前端菜单格式
  */
 const transformBackendMenuToFrontend = (menu: BackendMenu): FrontendMenu => {
+  // 过滤掉按钮类型的菜单项（只保留目录和菜单类型）
+  if (menu.menuType === 'F') {
+    return null as any // 过滤掉按钮类型
+  }
+
   return {
     id: menu.id,
     title: menu.title,
     path: menu.path || '',
-    route_name: menu.name || menu.component,
+    name: menu.name,
+    component: menu.component || '',
     icon: menu.icon,
-    children: menu.children?.map(transformBackendMenuToFrontend),
+    hidden: menu.visible === 0,
+    permissionCode: menu.permissionCode,
+    children: menu.children
+      ?.map(transformBackendMenuToFrontend)
+      .filter(child => child !== null), // 过滤掉null值
   }
 }
 
 /**
  * 获取页面菜单树（登录后使用，已过滤按钮类型）
+ * 返回原始后端格式，用于路由转换
  */
-export const getMenuPageTree = async (): Promise<FrontendMenu[]> => {
-  // axios拦截器已经返回了data字段，所以res就是BackendMenu[]
-  const menus = (await axios.get<BackendMenu[]>('/menus/page-tree')) as any as BackendMenu[]
-  return menus.map(transformBackendMenuToFrontend)
+export const getMenuPageTree = async (): Promise<BackendMenu[]> => {
+  const menus = await axios.get<BackendMenu[]>('/menus/page-tree')
+  return menus as unknown as BackendMenu[]
 }
 
 /**

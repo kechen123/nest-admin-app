@@ -5,8 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import AutoImport from 'unplugin-auto-import/vite'
-import VueRouter from 'unplugin-vue-router/vite'
-import { VueRouterAutoImports } from 'unplugin-vue-router'
+// 移除 unplugin-vue-router 相关导入
 import Components from 'unplugin-vue-components/vite'
 import svgLoader from 'vite-svg-loader'
 import { ElementPlusResolver, VueUseComponentsResolver } from 'unplugin-vue-components/resolvers'
@@ -14,10 +13,7 @@ import { ElementPlusResolver, VueUseComponentsResolver } from 'unplugin-vue-comp
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    VueRouter({
-      exclude: ['**/_*.vue'],
-    }),
-    // ⚠️ Vue must be placed after VueRouter()
+    // 移除 VueRouter 插件
     vue(),
     // vue 可以使用 jsx/tsx 语法
     vueJsx(),
@@ -31,11 +27,7 @@ export default defineConfig({
         'vue-router',
         '@vueuse/core',
         'pinia',
-        VueRouterAutoImports,
-        {
-          // add any other imports you were relying on
-          // 'vue-router/auto': ['useLink'],
-        },
+        // 移除 VueRouterAutoImports
       ],
       //为true时在项目根目录自动创建
       dts: 'types/auto-imports.d.ts',

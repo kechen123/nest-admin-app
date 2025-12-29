@@ -7,19 +7,14 @@
         <p class="welcome-desc">{{ currentTime }}</p>
       </div>
       <div class="welcome-actions">
-        <el-button type="primary" :icon="Plus">新建任务</el-button>
+        <el-button type="primary" :icon="Plus" @click="goToTestA">新建任务</el-button>
         <el-button :icon="Document">查看文档</el-button>
       </div>
     </div>
 
     <!-- 统计卡片 -->
     <div class="stats-grid">
-      <el-card 
-        class="stat-card" 
-        v-for="(stat, index) in stats" 
-        :key="index"
-        shadow="hover"
-      >
+      <el-card class="stat-card" v-for="(stat, index) in stats" :key="index" shadow="hover">
         <div class="stat-content">
           <div class="stat-icon" :style="{ backgroundColor: stat.color }">
             <el-icon :size="24">
@@ -53,12 +48,8 @@
             </div>
           </template>
           <div class="quick-actions">
-            <div 
-              class="action-item" 
-              v-for="(action, index) in quickActions" 
-              :key="index"
-              @click="handleAction(action.path)"
-            >
+            <div class="action-item" v-for="(action, index) in quickActions" :key="index"
+              @click="handleAction(action.path)">
               <div class="action-icon" :style="{ backgroundColor: action.color }">
                 <el-icon :size="20">
                   <component :is="action.icon" />
@@ -78,11 +69,7 @@
             </div>
           </template>
           <div class="activities-list">
-            <div 
-              class="activity-item" 
-              v-for="(activity, index) in recentActivities" 
-              :key="index"
-            >
+            <div class="activity-item" v-for="(activity, index) in recentActivities" :key="index">
               <div class="activity-icon" :style="{ backgroundColor: activity.color }">
                 <el-icon :size="16">
                   <component :is="activity.icon" />
@@ -123,11 +110,7 @@
             </div>
           </template>
           <div class="todos-list">
-            <div 
-              class="todo-item" 
-              v-for="(todo, index) in todos" 
-              :key="index"
-            >
+            <div class="todo-item" v-for="(todo, index) in todos" :key="index">
               <el-checkbox v-model="todo.completed" />
               <span class="todo-text" :class="{ completed: todo.completed }">
                 {{ todo.text }}
@@ -141,12 +124,12 @@
 </template>
 
 <script setup lang="ts">
-import { 
-  Plus, 
-  Document, 
-  User, 
-  ShoppingCart, 
-  Money, 
+import {
+  Plus,
+  Document,
+  User,
+  ShoppingCart,
+  Money,
   DataLine,
   ArrowUp,
   ArrowDown,
@@ -180,9 +163,9 @@ const welcomeText = computed(() => {
 
 const currentTime = computed(() => {
   const now = new Date()
-  return now.toLocaleString('zh-CN', { 
-    year: 'numeric', 
-    month: 'long', 
+  return now.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
     day: 'numeric',
     weekday: 'long'
   })
@@ -194,40 +177,40 @@ const stats = ref([
     label: '总用户数',
     value: '12,345',
     trend: 12.5,
-    icon: User,
+    icon: markRaw(User),
     color: 'rgba(64, 158, 255, 0.1)'
   },
   {
     label: '今日订单',
     value: '1,234',
     trend: -5.2,
-    icon: ShoppingCart,
+    icon: markRaw(ShoppingCart),
     color: 'rgba(103, 194, 58, 0.1)'
   },
   {
     label: '总收入',
     value: '¥123,456',
     trend: 8.3,
-    icon: Money,
+    icon: markRaw(Money),
     color: 'rgba(230, 162, 60, 0.1)'
   },
   {
     label: '访问量',
     value: '56,789',
     trend: 15.6,
-    icon: DataLine,
+    icon: markRaw(DataLine),
     color: 'rgba(144, 147, 153, 0.1)'
   }
 ])
 
 // 快捷操作
 const quickActions = ref([
-  { label: '用户管理', icon: UserFilled, path: '/system/user', color: '#409EFF' },
-  { label: '系统设置', icon: Setting, path: '/settings', color: '#67C23A' },
-  { label: '菜单管理', icon: Menu, path: '/system/menu', color: '#E6A23C' },
-  { label: '通知中心', icon: Bell, path: '/notifications', color: '#F56C6C' },
-  { label: '新建文档', icon: DocumentAdd, path: '/documents/new', color: '#909399' },
-  { label: '数据统计', icon: DataLine, path: '/statistics', color: '#409EFF' }
+  { label: '用户管理', icon: markRaw(UserFilled), path: '/system/user', color: '#409EFF' },
+  { label: '系统设置', icon: markRaw(Setting), path: '/settings', color: '#67C23A' },
+  { label: '菜单管理', icon: markRaw(Menu), path: '/system/menu', color: '#E6A23C' },
+  { label: '通知中心', icon: markRaw(Bell), path: '/notifications', color: '#F56C6C' },
+  { label: '新建文档', icon: markRaw(DocumentAdd), path: '/documents/new', color: '#909399' },
+  { label: '数据统计', icon: markRaw(DataLine), path: '/statistics', color: '#409EFF' }
 ])
 
 // 最近活动
@@ -235,25 +218,25 @@ const recentActivities = ref([
   {
     text: '用户 张三 创建了新订单',
     time: '5分钟前',
-    icon: ShoppingCart,
+    icon: markRaw(ShoppingCart),
     color: '#409EFF'
   },
   {
     text: '系统更新了菜单配置',
     time: '1小时前',
-    icon: Setting,
+    icon: markRaw(Setting),
     color: '#67C23A'
   },
   {
     text: '用户 李四 修改了个人信息',
     time: '2小时前',
-    icon: User,
+    icon: markRaw(User),
     color: '#E6A23C'
   },
   {
     text: '新增了 3 条待办事项',
     time: '3小时前',
-    icon: DocumentAdd,
+    icon: markRaw(DocumentAdd),
     color: '#F56C6C'
   }
 ])
@@ -278,6 +261,15 @@ const todos = ref([
 // 处理快捷操作点击
 const handleAction = (path: string) => {
   router.push(path)
+}
+
+const goToTestA = () => {
+  router.push({
+    path: '/test/testaa',
+    query: {
+      id: 1
+    }
+  })
 }
 </script>
 
@@ -767,11 +759,3 @@ const handleAction = (path: string) => {
   }
 }
 </style>
-
-<route lang="json">
-{
-  "meta": {
-    "requiresAuth": false
-  }
-}
-</route>

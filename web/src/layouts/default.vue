@@ -26,9 +26,14 @@
 <script setup lang="ts">
 import { useLayoutStore } from '@/stores/layout'
 import { storeToRefs } from 'pinia'
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { Loading, Warning } from '@element-plus/icons-vue'
 
 const layoutStore = useLayoutStore()
 const { isCollapse } = storeToRefs(layoutStore)
+const route = useRoute()
+
 </script>
 
 <style scoped lang="less">
@@ -48,7 +53,7 @@ const { isCollapse } = storeToRefs(layoutStore)
     border-right-color: var(--el-border-color);
     overflow: hidden;
     background-color: var(--el-bg-color);
-    
+
     &.is-collapse {
       width: 64px;
     }
@@ -61,6 +66,7 @@ const { isCollapse } = storeToRefs(layoutStore)
 
   .main {
     background-color: var(--el-bg-color-page);
+    overflow: hidden;
   }
 }
 </style>

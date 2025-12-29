@@ -29,9 +29,9 @@ export const useTagsStore = defineStore(
     const routerVal = router.currentRoute.value
     const menu = routerSotre.roles
     const getActive = () => {
-      let name: any = '404',
-        path = '/404',
-        key = '/404',
+      let name: any = '首页',
+        path = '/',
+        key = '/',
         icon: string | undefined = undefined
       if (matched.length > 1) {
         const node = findNode((node) => {
@@ -51,8 +51,8 @@ export const useTagsStore = defineStore(
         icon,
       }
     }
-    const active = ref<Tag>(getActive())
-    const tags = ref<TagList>([getActive()])
+    const active = ref<Tag>()
+    const tags = ref<TagList>([])
 
     const addTag = (path: string) => {
       const node = findNode((node) => {

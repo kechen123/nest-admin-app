@@ -12,6 +12,8 @@ interface Check {
 
 type CheckFun = (check: Check) => boolean | Object
 
+let initDynamicRoutes = false
+
 const checkHasRoute: CheckFun = ({ to, from, router }) => {
   if (router && router.hasRoute(to.name as string)) {
     return false
@@ -27,29 +29,28 @@ const checkLogin: CheckFun = ({ to, from }) => {
   const isLoginPage =
     to.path === '/login' ||
     to.path.startsWith('/login/') ||
-    (to.name && (to.name as string) === 'login')
+    (to.name && (to.name as string) === 'Login')
 
   // 如果已登录但访问登录页，重定向到首页
   if (hasToken && isLoginPage) {
-    return { path: '/' }
+    return true
   }
 
   // 如果未登录且不是登录页，重定向到登录页
   if (!hasToken && !isLoginPage) {
-    console.log('checkLogin 检查未通过：未登录')
-    return { path: '/login' }
+    return { path: '/login', replace: true }
   }
 
-  return false
+  return true
 }
 
 const checkToken: CheckFun = ({ to, from }) => {
   // 检查 token 是否存在且有效
-  if (!tokenStorage.has()) {
+  if (!tokenStorage.has() && to.path !== '/login' && to.name !== 'Login') {
     console.log('checkToken 检查未通过：token 无效')
-    return { path: '/login' }
+    return { path: '/login', replace: true }
   }
-  return false
+  return true
 }
 
 const setMenu: CheckFun = async ({ to, from }) => {
@@ -69,13 +70,13 @@ const setMenu: CheckFun = async ({ to, from }) => {
       return { path: '/login' }
     }
   }
-  return false
+  return true
 }
 
 const checkToPath: CheckFun = async ({ to, from }) => {
   const routerStore = useRouterStore()
   const roles = routerStore.roles
-  console.log('checkToPath 检查路由:', to)
+
   // 如果菜单为空，说明可能未初始化，先尝试初始化
   if (!roles || roles.length === 0) {
     // 已经在 setMenu 中处理了初始化，这里直接返回 false 继续后续检查
@@ -107,36 +108,28 @@ const checkToPath: CheckFun = async ({ to, from }) => {
     isValueExistsInTree(roles, 'route_name', normalizedPath)
 
   if (hasPermission) {
-    return false
+    return true
   }
 
-  // 调试信息：输出详细的路径匹配信息
-  console.warn('checkToPath 检查未通过：没有访问权限', {
-    to,
-    routePath,
-    routeName,
-    normalizedPath,
-    // 输出菜单中的所有路径，方便调试
-    menuPaths: (() => {
-      const paths: string[] = []
-      const extractPaths = (items: any[]) => {
-        items.forEach((item) => {
-          if (item.path) paths.push(item.path)
-          if (item.route_name) paths.push(`route_name:${item.route_name}`)
-          if (item.children) extractPaths(item.children)
-        })
-      }
-      extractPaths(roles)
-      return paths
-    })(),
-  })
   // 使用路径重定向到 404，避免整页刷新
-  return { path: '/[...notFond]' }
+  return { path: '/404' }
 }
 
-const Auth = [checkLogin, checkToken, setMenu, checkToPath]
+const InItDynamicRoutes: CheckFun = async ({ to, from, router }) => {
+  if (initDynamicRoutes) {
+    return true
+  }
+  const routers = await useRouterStore().initRoutes()
+  routers.forEach((route) => {
+    router?.addRoute(route)
+  })
+  initDynamicRoutes = true
+  return { ...to, replace: true }
+}
+// setMenu, InItDynamicRoutes, checkToPath
+const Auth = [checkLogin, checkToken, setMenu, InItDynamicRoutes, checkToPath]
 
 // 不需要权限检查的路由（支持名称和路径匹配）
 const NotCheckRouter = ['/login', '/404', '/[...notFond]', '/about']
 
-export { Auth, NotCheckRouter }
+export { Auth, InItDynamicRoutes, NotCheckRouter }

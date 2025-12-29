@@ -84,10 +84,12 @@ import { computed } from 'vue'
 interface MenuItem {
   id: string | number
   title: string
-  route_name: string
+  routeName?: string
   path: string
   icon?: string
   children?: MenuItem[]
+  hidden?: boolean
+  permissionCode?: string
 }
 
 const router = useRouter()
@@ -114,24 +116,24 @@ function handleMenuSelect(path: string) {
     // 优先使用 path，因为这是实际的路由路径
     // route_name 可能是路由名称，不一定是路径格式
     let targetPath = menuItem.path
-    
+
     // 如果 path 为空，尝试使用 route_name（但需要判断是否是路径格式）
     if (!targetPath || targetPath.trim() === '') {
-      targetPath = menuItem.route_name || ''
+      targetPath = menuItem.routeName || ''
     }
-    
+
     // 如果目标路径为空或无效，直接返回
     if (!targetPath || targetPath.trim() === '') {
       console.warn('菜单项路径无效:', menuItem)
       return
     }
-    
+
     // 如果目标路径与当前路径相同，避免重复跳转
     const currentPath = router.currentRoute.value.path
     if (targetPath === currentPath) {
       return
     }
-    
+
     // 使用 router.push 进行 SPA 路由跳转，添加错误处理避免整页刷新
     router.push(targetPath).catch((err) => {
       // 捕获路由错误，避免整页刷新
@@ -168,7 +170,7 @@ watch(
   &.el-menu--collapse {
     padding: 8px 0;
     width: 100%;
-    
+
     .el-menu-item,
     .el-sub-menu__title {
       justify-content: center;
@@ -176,17 +178,17 @@ watch(
       margin: 4px 8px;
       height: 40px;
       line-height: 40px;
-      
+
       .el-icon {
         margin: 0 !important;
         font-size: 20px;
       }
     }
-    
+
     .el-sub-menu__icon-arrow {
       display: none;
     }
-    
+
     // 确保 tooltip 容器正确显示
     .el-tooltip {
       width: 100%;
@@ -238,19 +240,19 @@ watch(
 
   &:hover {
     background-color: var(--hover-bg-color);
-    
+
     i {
       animation: scale-pop 0.3s ease;
     }
   }
-  
+
   // 折叠状态下的样式
   .el-menu--collapse & {
     justify-content: center;
     margin: 4px 8px;
     border-radius: 8px;
     width: calc(100% - 16px);
-    
+
     .el-icon {
       margin: 0 !important;
       font-size: 20px;
@@ -264,7 +266,7 @@ watch(
   background-color: var(--active-bg-color);
   color: var(--el-color-primary);
   font-weight: 500;
-  
+
   // 折叠状态下的激活样式
   .el-menu--collapse & {
     background: linear-gradient(135deg, var(--el-color-primary-light-8), var(--el-color-primary-light-9));
@@ -279,11 +281,11 @@ watch(
       padding: 0 !important;
       justify-content: center;
     }
-    
+
     // 子菜单弹出层应该正常显示文字（Element Plus 会自动处理）
     // 弹出层中的菜单项不受折叠状态影响，会正常显示
   }
-  
+
   // 子菜单标题包装器样式
   .sub-menu-title-wrapper {
     display: flex;
@@ -299,7 +301,7 @@ watch(
 .dark .el-menu-item.is-active {
   background-color: var(--el-color-primary-dark-2);
   color: var(--el-color-primary-light-3);
-  
+
   .el-menu--collapse & {
     background: linear-gradient(135deg, var(--el-color-primary-dark-2), var(--el-color-primary-dark-1));
   }

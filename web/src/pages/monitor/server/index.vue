@@ -223,13 +223,4 @@ onMounted(() => {
 }
 </style>
 
-<route>
-{
-  meta: {
-    title: '服务监控',
-    requiresAuth: true,
-    permissions: ['monitor:server:list']
-  }
-}
-</route>
 

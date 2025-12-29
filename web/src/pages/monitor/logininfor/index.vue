@@ -335,12 +335,3 @@ const handleDelete = async (id: number) => {
 }
 </script>
 
-<route>
-{
-  meta: {
-    title: '登录日志',
-    requiresAuth: true,
-    permissions: ['monitor:logininfor:list']
-  }
-}
-</route>
