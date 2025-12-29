@@ -1,10 +1,5 @@
 <template>
-  <el-button
-    v-bind="buttonProps"
-    :loading="isLoading"
-    :disabled="disabled || isLoading"
-    @click="handleClick"
-  >
+  <el-button v-bind="buttonProps" :loading="isLoading" :disabled="disabled || isLoading" @click="handleClick">
     <el-icon v-if="icon && !isLoading" style="margin-right: 4px;">
       <component :is="icon" />
     </el-icon>
@@ -26,8 +21,6 @@ interface Props extends Partial<ButtonProps> {
   icon?: Component | string
   // 按钮文字
   label?: string
-  // 点击事件
-  onClick?: (event: MouseEvent) => void | Promise<void>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -46,7 +39,8 @@ const isClicking = ref(false)
 
 // 计算按钮属性，排除自定义属性
 const buttonProps = computed(() => {
-  const { debounce, preventDoubleClick, icon, label, onClick, ...rest } = props
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { debounce, preventDoubleClick, icon, label, ...rest } = props
   return rest
 })
 
@@ -69,27 +63,7 @@ const handleClick = async (event: MouseEvent) => {
       await new Promise(resolve => setTimeout(resolve, props.debounce))
     }
 
-    // 执行点击回调
-    if (props.onClick) {
-      const result = props.onClick(event)
-      // 如果是 Promise，在 Promise 真正开始执行时才显示 loading
-      if (result instanceof Promise) {
-        // 延迟显示 loading，给确认对话框等同步操作时间
-        const loadingTimer = setTimeout(() => {
-          if (props.preventDoubleClick && isClicking.value) {
-            isLoading.value = true
-          }
-        }, 100)
-        
-        try {
-          await result
-        } finally {
-          clearTimeout(loadingTimer)
-        }
-      }
-    }
-
-    // 触发事件
+    // 触发点击事件（经过防抖和防重复点击处理）
     emit('click', event)
   } catch (error) {
     console.error('Button click error:', error)
@@ -111,21 +85,21 @@ const handleClick = async (event: MouseEvent) => {
 .el-button {
   font-weight: 500;
   transition: all 0.3s ease;
-  
+
   .el-icon {
     font-size: 14px;
   }
-  
+
   // 悬停效果增强
   &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
-  
+
   &:active:not(:disabled) {
     transform: translateY(0);
   }
-  
+
   // 暗色模式下的优化
   :global(.dark) & {
     &:hover:not(:disabled) {
@@ -134,4 +108,3 @@ const handleClick = async (event: MouseEvent) => {
   }
 }
 </style>
-
