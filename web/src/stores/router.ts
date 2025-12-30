@@ -52,6 +52,7 @@ export const useRouterStore = defineStore(
 
     const initRoutes = async () => {
       const routes = await generaRoutes(roles.value)
+      console.log(routes)
       return routes
     }
 

@@ -47,7 +47,7 @@ const baseColumns: ColumnProps[] = [
     align: 'left',
     show: true,
     label: '用户',
-    width: 150,
+    width: 100,
     formatter: (row: any) => {
       return row.user?.nickname || row.user?.phone || '-'
     }
@@ -58,7 +58,7 @@ const baseColumns: ColumnProps[] = [
     align: 'right',
     show: true,
     label: '实付金额',
-    width: 120,
+    width: 100,
     formatter: (row: any) => {
       return `¥${row.payAmount}`
     }
@@ -207,6 +207,12 @@ const kcConfig: KcConfig = {
           { label: '微信支付', value: 1 },
           { label: '余额支付', value: 2 },
         ],
+      },
+      {
+        key: 'userId',
+        label: '用户ID',
+        type: 'input',
+        placeholder: '请输入用户ID',
       },
     ],
     defaultCount: 2,

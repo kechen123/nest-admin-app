@@ -48,7 +48,6 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `pat
 (202, 'CategoryManage', '商品分类管理', 'mall:category:list', 'C', '/mall/product/category', 'mall/product/category/index', NULL, 1, 0, 1, 1, 'Folder', 201, 1, '商品分类管理'),
 (203, 'ProductList', '商品管理', 'mall:product:list', 'C', '/mall/product/list', 'mall/product/list/index', NULL, 1, 0, 1, 1, 'Goods', 201, 2, '商品列表管理'),
 (204, 'ProductSkuManage', '商品规格管理', 'mall:product:sku:list', 'C', '/mall/product/sku', 'mall/product/sku/index', NULL, 1, 0, 1, 1, 'Box', 201, 3, '商品规格管理'),
-(205, 'ProductImageManage', '商品图片管理', 'mall:product:image:list', 'C', '/mall/product/image', 'mall/product/image/index', NULL, 1, 0, 1, 1, 'Picture', 201, 4, '商品图片管理');
 
 -- 订单管理下的菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `query`, `is_frame`, `is_cache`, `visible`, `status`, `icon`, `parent_id`, `order_num`, `remark`) VALUES
@@ -98,12 +97,6 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `pat
 (233, 'ProductSkuDelete', '规格删除', 'mall:product:sku:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 204, 4, NULL),
 (234, 'ProductSkuBatchStock', '批量更新库存', 'mall:product:sku:batch:stock', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 204, 5, NULL);
 
--- 商品图片管理按钮
-INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `query`, `is_frame`, `is_cache`, `visible`, `status`, `icon`, `parent_id`, `order_num`, `remark`) VALUES
-(235, 'ProductImageQuery', '图片查询', 'mall:product:image:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 205, 1, NULL),
-(236, 'ProductImageUpload', '图片上传', 'mall:product:image:upload', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 205, 2, NULL),
-(237, 'ProductImageDelete', '图片删除', 'mall:product:image:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 205, 3, NULL),
-(238, 'ProductImageSort', '图片排序', 'mall:product:image:sort', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 205, 4, NULL);
 
 -- 订单管理按钮
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `query`, `is_frame`, `is_cache`, `visible`, `status`, `icon`, `parent_id`, `order_num`, `remark`) VALUES

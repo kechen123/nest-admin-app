@@ -31,6 +31,19 @@
       <div style="margin-top: 20px;">
         <h3>订单商品</h3>
         <el-table :data="orderData.items || []" border>
+          <el-table-column label="商品图片" width="100" align="center">
+            <template #default="{ row }">
+              <el-image
+                v-if="row.image"
+                :src="row.image"
+                :preview-src-list="[row.image]"
+                fit="cover"
+                style="width: 60px; height: 60px; border-radius: 4px;"
+                :preview-teleported="true"
+              />
+              <span v-else style="color: #999;">暂无图片</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="productName" label="商品名称" width="200" />
           <el-table-column prop="specName" label="规格" width="150" />
           <el-table-column prop="price" label="单价" width="100" align="right">

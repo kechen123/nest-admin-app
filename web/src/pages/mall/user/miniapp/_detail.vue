@@ -1,6 +1,16 @@
 <template>
   <div class="detail-container">
     <div class="content">
+      <!-- 用户头像显示 -->
+      <div v-if="formData.id" style="margin-bottom: 20px; text-align: center;">
+        <el-avatar :size="80" :src="formData.avatar" style="margin-bottom: 10px;">
+          <el-icon><User /></el-icon>
+        </el-avatar>
+        <div style="margin-top: 10px; color: #666; font-size: 14px;">
+          {{ formData.nickname || '未设置昵称' }}
+        </div>
+      </div>
+
       <KcForm ref="formRef" :config="formConfig" v-model="formData" @submit="onSubmit" @reset="onReset">
       </KcForm>
 
@@ -44,6 +54,7 @@
 import { miniappUserApi, type MiniappUser, type UpdateMiniappUserDto } from '@/api/mall/miniapp-user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import KcForm from '@/components/Kc/Form/index.vue'
+import { User } from '@element-plus/icons-vue'
 
 // 防止 props 暴露到 DOM 元素上
 defineOptions({
