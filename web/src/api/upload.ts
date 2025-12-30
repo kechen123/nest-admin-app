@@ -18,7 +18,7 @@ export const uploadApi = {
   uploadImage(file: File): Promise<UploadImageResponse> {
     const formData = new FormData()
     formData.append('file', file)
-    
+
     return axios.post<UploadImageResponse>('/upload/image', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -26,4 +26,3 @@ export const uploadApi = {
     })
   },
 }
-
