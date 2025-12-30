@@ -60,6 +60,8 @@ export class UploadController {
           cb(new BadRequestException("只允许上传图片文件（jpg、png、gif、webp）"), false);
         }
       },
+      // 修复文件名编码问题：正确处理 UTF-8 编码的文件名
+      preservePath: false,
     })
   )
   async uploadImage(@UploadedFile() file: any, @Req() req: any) {

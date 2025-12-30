@@ -75,6 +75,8 @@ declare module 'vue' {
     LayoutTags: typeof import('./../src/components/Layout/Tags/index.vue')['default']
     MIcon: typeof import('./../src/components/mIcon.vue')['default']
     PermissionButton: typeof import('./../src/components/PermissionButton/index.vue')['default']
+    QuillEditor: typeof import('./../src/components/QuillEditor/index.vue')['default']
+    QuillEditorTest: typeof import('./../src/components/QuillEditor/test.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

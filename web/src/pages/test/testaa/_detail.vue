@@ -13,7 +13,12 @@
             :disabled="type === 'view'" :maxlength="500" show-word-limit resize="none" />
         </template>
       </KcForm>
+      <div class="editor">
+        <QuillEditor v-model="content" :readOnly="type === 'view'" />
+      </div>
     </div>
+
+
 
     <!-- 固定的 Footer -->
     <div class="footer">
@@ -53,6 +58,7 @@ const formData = ref<Partial<User & CreateUserDto & { loginDate?: string; isAdmi
   remark: '',
   status: 1,
 })
+const content = ref('')
 
 const type = ref<'edit' | 'view' | 'create'>('edit')
 const formRef = ref()
@@ -163,7 +169,7 @@ const formConfig = computed(() => ({
       label: '备注',
       type: 'custom' as const,
       slot: 'remark',
-      width: 240,
+      width: '100%',
       disabled: computed(() => type.value === 'view'),
     },
   ] as any[]).filter(field => field.show !== false),
@@ -174,6 +180,8 @@ const formConfig = computed(() => ({
 
 // 提交表单
 const onSubmit = async (data: any) => {
+  console.log(content.value)
+  return
   try {
     await formRef.value?.validate()
 
@@ -281,6 +289,14 @@ defineExpose({ init })
   flex: 1;
   padding: 20px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor {
+  padding: 20px 0;
+  margin-bottom: 20px;
+  flex: 1;
 }
 
 .footer {
@@ -291,7 +307,7 @@ defineExpose({ init })
 
 .footer-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 10px;
 }
 </style>
