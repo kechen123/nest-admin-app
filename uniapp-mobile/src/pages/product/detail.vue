@@ -233,6 +233,20 @@ function goToOrder() {
   if (!product.value)
     return
 
+  // 如果没有SKU，使用第一个SKU或创建一个默认的
+  let skuId = 0
+  if (currentSku.value) {
+    skuId = currentSku.value.id
+  } else if (product.value.skus && product.value.skus.length > 0) {
+    skuId = product.value.skus[0].id
+  } else {
+    uni.showToast({
+      title: '商品规格不存在',
+      icon: 'error',
+    })
+    return
+  }
+
   // 构建规格显示字符串
   const specValueStr = Object.keys(selectedSpecs.value).length > 0
     ? Object.entries(selectedSpecs.value)
@@ -242,6 +256,7 @@ function goToOrder() {
 
   const orderItem: IOrderItem = {
     productId: product.value.id,
+    skuId, // 添加 skuId
     productName: product.value.name,
     productImage: currentSku.value?.image || product.value.mainImage,
     specValues: specValueStr,

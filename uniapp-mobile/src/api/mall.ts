@@ -91,6 +91,7 @@ export interface IProductDetail extends IProduct {
  */
 export interface IOrderItem {
   productId: number
+  skuId: number // SKU ID，后端需要
   productName: string
   productImage?: string
   specValues?: string // 选中的规格
@@ -105,6 +106,8 @@ export interface IOrderItem {
 export interface ICreateOrderParams {
   items: IOrderItem[]
   remark?: string
+  addressId?: number // 可选：收货地址ID
+  payType?: number // 可选：支付方式 1-微信支付, 2-余额支付
 }
 
 /**

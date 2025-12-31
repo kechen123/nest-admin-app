@@ -24,7 +24,7 @@ export class MiniappOrderService {
     private readonly productSkuRepository: Repository<ProductSku>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
-  ) {}
+  ) { }
 
   /**
    * 生成订单号
@@ -42,22 +42,63 @@ export class MiniappOrderService {
    * 创建订单
    */
   async create(userId: number, createOrderDto: CreateOrderDto) {
-    const { addressId, cartItemIds, productId, skuId, quantity, remark, payType } = createOrderDto;
+    const { addressId, items, cartItemIds, productId, skuId, quantity, remark, payType } = createOrderDto;
 
-    // 验证地址
-    const address = await this.addressRepository.findOne({
-      where: { id: addressId, userId },
-    });
+    // 验证地址（如果提供了地址ID）
+    let address = null;
+    if (addressId) {
+      address = await this.addressRepository.findOne({
+        where: { id: addressId, userId },
+      });
 
-    if (!address) {
-      throw new NotFoundException('收货地址不存在');
+      if (!address) {
+        throw new NotFoundException('收货地址不存在');
+      }
     }
 
     let orderItems: any[] = [];
     let totalAmount = 0;
 
+    // 从 items 数组下单（前端直接传递商品列表）
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const product = await this.productRepository.findOne({
+          where: { id: item.productId, status: 1 },
+        });
+
+        if (!product) {
+          throw new NotFoundException(`商品 ${item.productName} 不存在或已下架`);
+        }
+
+        const sku = await this.productSkuRepository.findOne({
+          where: { id: item.skuId, productId: item.productId, status: 1 },
+        });
+
+        if (!sku) {
+          throw new NotFoundException(`商品规格不存在`);
+        }
+
+        if (sku.stock < item.quantity) {
+          throw new BadRequestException(`商品 ${item.productName} 库存不足`);
+        }
+
+        const subtotal = Number(item.price) * item.quantity;
+        totalAmount += subtotal;
+
+        orderItems.push({
+          productId: item.productId,
+          productName: item.productName,
+          skuId: item.skuId,
+          specName: item.specValues || sku.specName,
+          image: sku.image || product.mainImage,
+          price: item.price,
+          quantity: item.quantity,
+          subtotal,
+        });
+      }
+    }
     // 从购物车下单
-    if (cartItemIds && cartItemIds.length > 0) {
+    else if (cartItemIds && cartItemIds.length > 0) {
       const cartItems = await this.cartItemRepository.find({
         where: { id: In(cartItemIds), userId, isSelected: 1 },
         relations: ['sku', 'sku.product'],
@@ -87,7 +128,7 @@ export class MiniappOrderService {
         });
       }
     }
-    // 直接购买
+    // 直接购买（单个商品）
     else if (productId && skuId && quantity) {
       const product = await this.productRepository.findOne({
         where: { id: productId, status: 1 },
@@ -131,23 +172,29 @@ export class MiniappOrderService {
     const discountAmount = 0;
     const payAmount = totalAmount + shippingFee - discountAmount;
 
-    // 创建订单
-    const order = this.orderRepository.create({
+    // 创建订单（处理可选地址和支付）
+    const orderData: Partial<Order> = {
       orderNo: this.generateOrderNo(),
       userId,
-      status: 0, // 待付款
+      status: payType ? 0 : 1, // 如果未支付，直接设为待发货；如果支付了，设为待付款
       totalAmount,
       shippingFee,
       discountAmount,
       payAmount,
-      addressId,
-      receiverName: address.receiverName,
-      receiverPhone: address.receiverPhone,
-      receiverAddress: `${address.province}${address.city}${address.district}${address.detailAddress}`,
-      remark,
-      payType,
-    });
+      remark: remark || null,
+      payType: payType || 0,
+    };
 
+    // 如果有地址，设置地址信息
+    if (address) {
+      orderData.addressId = address.id;
+      orderData.receiverName = address.receiverName;
+      orderData.receiverPhone = address.receiverPhone;
+      orderData.receiverAddress = `${address.province}${address.city}${address.district}${address.detailAddress}`;
+    }
+    // 如果没有地址，不设置地址相关字段（使用 null，需要先执行数据库迁移脚本）
+
+    const order = this.orderRepository.create(orderData);
     const savedOrder = await this.orderRepository.save(order);
 
     // 创建订单详情

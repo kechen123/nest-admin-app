@@ -39,11 +39,29 @@ async function submitOrder() {
     return
   }
 
+  // 验证所有商品项都有 skuId
+  const hasInvalidItem = orderItems.value.some(item => !item.skuId)
+  if (hasInvalidItem) {
+    uni.showToast({
+      title: '订单数据不完整，请重新选择商品',
+      icon: 'error',
+    })
+    return
+  }
+
   submitting.value = true
   try {
     const params: ICreateOrderParams = {
-      items: orderItems.value,
+      items: orderItems.value.map(item => ({
+        productId: item.productId,
+        skuId: item.skuId,
+        productName: item.productName,
+        specValues: item.specValues,
+        price: item.price,
+        quantity: item.quantity,
+      })),
       remark: remark.value || undefined,
+      // addressId 和 payType 为可选，暂时不传递
     }
     const result = await createOrder(params)
     uni.showToast({
@@ -52,7 +70,15 @@ async function submitOrder() {
     })
     // 跳转到订单详情或订单列表
     setTimeout(() => {
-      uni.navigateBack()
+      // 如果有订单ID，跳转到订单详情；否则返回上一页
+      if (result?.orderId) {
+        uni.redirectTo({
+          url: `/pages-fg/order/detail?id=${result.orderId}`,
+        })
+      }
+      else {
+        uni.navigateBack()
+      }
     }, 1500)
   }
   catch (error) {

@@ -38,21 +38,21 @@ export class Order extends BaseEntity {
   @Column({ name: "pay_amount", type: "decimal", precision: 10, scale: 2 })
   payAmount: number;
 
-  @ApiProperty({ description: "收货地址ID" })
-  @Column({ name: "address_id" })
-  addressId: number;
+  @ApiProperty({ description: "收货地址ID", required: false })
+  @Column({ name: "address_id", nullable: true })
+  addressId?: number;
 
-  @ApiProperty({ description: "收货人姓名", example: "张三" })
-  @Column({ name: "receiver_name", length: 50 })
-  receiverName: string;
+  @ApiProperty({ description: "收货人姓名", example: "张三", required: false })
+  @Column({ name: "receiver_name", length: 50, nullable: true })
+  receiverName?: string;
 
-  @ApiProperty({ description: "收货人电话", example: "13800138000" })
-  @Column({ name: "receiver_phone", length: 20 })
-  receiverPhone: string;
+  @ApiProperty({ description: "收货人电话", example: "13800138000", required: false })
+  @Column({ name: "receiver_phone", length: 20, nullable: true })
+  receiverPhone?: string;
 
-  @ApiProperty({ description: "收货地址", example: "广东省深圳市南山区科技园南区" })
-  @Column({ name: "receiver_address", length: 500 })
-  receiverAddress: string;
+  @ApiProperty({ description: "收货地址", example: "广东省深圳市南山区科技园南区", required: false })
+  @Column({ name: "receiver_address", length: 500, nullable: true })
+  receiverAddress?: string;
 
   @ApiProperty({ description: "订单备注", required: false })
   @Column({ length: 500, nullable: true })
