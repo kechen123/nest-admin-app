@@ -19,6 +19,7 @@ CREATE TABLE `miniapp_users` (
   `nickname` VARCHAR(100) COMMENT '微信昵称',
   `avatar` VARCHAR(500) COMMENT '微信头像',
   `phone` VARCHAR(20) COMMENT '手机号',
+  `password` VARCHAR(255) COMMENT '加密后的密码',
   `gender` TINYINT DEFAULT 0 COMMENT '性别: 0-未知, 1-男, 2-女',
   `balance` DECIMAL(10,2) DEFAULT 0 COMMENT '账户余额',
   `points` INT DEFAULT 0 COMMENT '积分',
@@ -254,11 +255,12 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ============================================
 -- 1. 插入小程序用户测试数据
 -- ============================================
-INSERT INTO `miniapp_users` (`id`, `openid`, `unionid`, `nickname`, `avatar`, `phone`, `gender`, `balance`, `points`, `member_level`, `total_consumption`, `status`) VALUES
-(1, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6o', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6o_union', '张三', 'https://example.com/avatar1.jpg', '13800138001', 1, 1000.00, 500, 1, 2500.00, 1),
-(2, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6p', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6p_union', '李四', 'https://example.com/avatar2.jpg', '13800138002', 2, 500.00, 200, 0, 800.00, 1),
-(3, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6q', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6q_union', '王五', 'https://example.com/avatar3.jpg', '13800138003', 1, 2000.00, 1000, 2, 5000.00, 1),
-(4, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6r', NULL, '赵六', 'https://example.com/avatar4.jpg', NULL, 0, 0.00, 0, 0, 0.00, 1);
+-- 注意：密码都是 qwe123 (bcrypt加密)
+INSERT INTO `miniapp_users` (`id`, `openid`, `unionid`, `nickname`, `avatar`, `phone`, `password`, `gender`, `balance`, `points`, `member_level`, `total_consumption`, `status`) VALUES
+(1, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6o', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6o_union', '张三', 'https://example.com/avatar1.jpg', '13800138001', '$2b$10$G./q24s9U1PSu/JhFEHVT.gqBy9ynK/E8uaGAv.w4pYbGP6ess9HS', 1, 1000.00, 500, 1, 2500.00, 1),
+(2, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6p', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6p_union', '李四', 'https://example.com/avatar2.jpg', '13800138002', '$2b$10$G./q24s9U1PSu/JhFEHVT.gqBy9ynK/E8uaGAv.w4pYbGP6ess9HS', 2, 500.00, 200, 0, 800.00, 1),
+(3, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6q', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6q_union', '王五', 'https://example.com/avatar3.jpg', '13800138003', '$2b$10$G./q24s9U1PSu/JhFEHVT.gqBy9ynK/E8uaGAv.w4pYbGP6ess9HS', 1, 2000.00, 1000, 2, 5000.00, 1),
+(4, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6r', NULL, '赵六', 'https://example.com/avatar4.jpg', NULL, NULL, 0, 0.00, 0, 0, 0.00, 1);
 
 -- ============================================
 -- 2. 插入商品分类测试数据

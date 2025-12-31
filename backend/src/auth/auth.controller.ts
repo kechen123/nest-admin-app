@@ -12,7 +12,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @ApiOperation({ summary: '用户登录' })
+  @ApiOperation({ summary: '管理端用户登录（用户名+密码）' })
   @ApiResponse({
     status: 200,
     description: '登录成功',

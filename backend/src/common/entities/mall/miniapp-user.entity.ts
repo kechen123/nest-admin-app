@@ -27,6 +27,9 @@ export class MiniappUser extends BaseEntity {
   @Column({ length: 20, nullable: true })
   phone?: string;
 
+  @Column({ length: 255, nullable: true, select: false })
+  password?: string;
+
   @ApiProperty({ description: "性别: 0-未知, 1-男, 2-女", example: 0, default: 0 })
   @Column({ type: "tinyint", default: 0 })
   gender: number;

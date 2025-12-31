@@ -4,7 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MiniappUser } from '../../common/entities/mall/miniapp-user.entity';
 import { WechatLoginDto } from './dto/wechat-login.dto';
+import { PhoneLoginDto } from './dto/phone-login.dto';
 import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class MiniappAuthService {
@@ -57,6 +59,61 @@ export class MiniappAuthService {
         nickname: user.nickname,
         avatar: user.avatar,
         phone: user.phone,
+      },
+    };
+  }
+
+  /**
+   * 手机号+密码登录
+   */
+  async phoneLogin(phoneLoginDto: PhoneLoginDto) {
+    const { phone, password } = phoneLoginDto;
+
+    // 查找用户（需要查询密码字段）
+    const user = await this.miniappUserRepository.findOne({
+      where: { phone },
+      select: ['id', 'openid', 'nickname', 'avatar', 'phone', 'password', 'status', 'gender', 'balance', 'points', 'memberLevel', 'totalConsumption'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('手机号或密码错误');
+    }
+
+    // 检查用户状态
+    if (user.status !== 1) {
+      throw new UnauthorizedException('用户已被禁用');
+    }
+
+    // 检查密码
+    if (!user.password) {
+      throw new UnauthorizedException('该账号未设置密码，请使用微信登录');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('手机号或密码错误');
+    }
+
+    // 生成JWT Token
+    const payload = { sub: user.id, openid: user.openid, type: 'miniapp' };
+    const access_token = this.jwtService.sign(payload);
+
+    // 移除密码字段
+    const { password: _, ...userInfo } = user;
+
+    return {
+      access_token,
+      user: {
+        id: userInfo.id,
+        openid: userInfo.openid,
+        nickname: userInfo.nickname,
+        avatar: userInfo.avatar,
+        phone: userInfo.phone,
+        gender: userInfo.gender,
+        balance: userInfo.balance,
+        points: userInfo.points,
+        memberLevel: userInfo.memberLevel,
+        totalConsumption: userInfo.totalConsumption,
       },
     };
   }
