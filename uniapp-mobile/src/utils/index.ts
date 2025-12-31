@@ -1,8 +1,13 @@
-import type { PageMetaDatum, SubPackages } from '@uni-helper/vite-plugin-uni-pages'
+import type {
+  PageMetaDatum,
+  SubPackages,
+} from '@uni-helper/vite-plugin-uni-pages'
 import { isMpWeixin } from '@uni-helper/uni-env'
 import { pages, subPackages } from '@/pages.json'
 
-export type PageInstance = Page.PageInstance<AnyObject, object> & { $page: Page.PageInstance<AnyObject, object> & { fullPath: string } }
+export type PageInstance = Page.PageInstance<AnyObject, object> & {
+  $page: Page.PageInstance<AnyObject, object> & { fullPath: string }
+}
 
 export function getLastPage() {
   // getCurrentPages() 至少有1个元素，所以不再额外判断
@@ -82,8 +87,8 @@ export function getAllPages(key?: string) {
     }))
 
   // 这里处理分包
-  const subPages: PageMetaDatum[] = []
-  ;(subPackages as SubPackages).forEach((subPageObj) => {
+  const subPages: PageMetaDatum[] = [];
+  (subPackages as SubPackages).forEach((subPageObj) => {
     // console.log(subPageObj)
     const { root } = subPageObj
 
@@ -103,7 +108,9 @@ export function getAllPages(key?: string) {
 
 export function getCurrentPageI18nKey() {
   const routeObj = currRoute()
-  const currPage = (pages as PageMetaDatum[]).find(page => `/${page.path}` === routeObj.path)
+  const currPage = (pages as PageMetaDatum[]).find(
+    page => `/${page.path}` === routeObj.path,
+  )
   if (!currPage) {
     console.warn('路由不正确')
     return ''
@@ -121,9 +128,9 @@ export function getEnvBaseUrl() {
   let baseUrl = import.meta.env.VITE_SERVER_BASEURL
 
   // # 有些同学可能需要在微信小程序里面根据 develop、trial、release 分别设置上传地址，参考代码如下。
-  const VITE_SERVER_BASEURL__WEIXIN_DEVELOP = 'https://ukw0y1.laf.run'
-  const VITE_SERVER_BASEURL__WEIXIN_TRIAL = 'https://ukw0y1.laf.run'
-  const VITE_SERVER_BASEURL__WEIXIN_RELEASE = 'https://ukw0y1.laf.run'
+  const VITE_SERVER_BASEURL__WEIXIN_DEVELOP = baseUrl
+  const VITE_SERVER_BASEURL__WEIXIN_TRIAL = baseUrl
+  const VITE_SERVER_BASEURL__WEIXIN_RELEASE = baseUrl
 
   // 微信小程序端环境区分
   if (isMpWeixin) {

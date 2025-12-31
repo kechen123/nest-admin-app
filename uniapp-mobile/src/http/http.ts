@@ -174,6 +174,20 @@ export function httpPut<T>(url: string, data?: Record<string, any>, query?: Reco
 }
 
 /**
+ * PATCH 请求
+ */
+export function httpPatch<T>(url: string, data?: Record<string, any>, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+  return http<T>({
+    url,
+    data,
+    query,
+    method: 'PATCH',
+    header,
+    ...options,
+  })
+}
+
+/**
  * DELETE 请求（无请求体，仅 query）
  */
 export function httpDelete<T>(url: string, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
@@ -190,10 +204,12 @@ export function httpDelete<T>(url: string, query?: Record<string, any>, header?:
 http.get = httpGet
 http.post = httpPost
 http.put = httpPut
+http.patch = httpPatch
 http.delete = httpDelete
 
 // 支持与 alovaJS 类似的API调用
 http.Get = httpGet
 http.Post = httpPost
 http.Put = httpPut
+http.Patch = httpPatch
 http.Delete = httpDelete

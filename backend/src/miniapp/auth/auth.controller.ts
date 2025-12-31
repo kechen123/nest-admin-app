@@ -4,6 +4,7 @@ import { MiniappAuthService } from './auth.service';
 import { WechatLoginDto } from './dto/wechat-login.dto';
 import { PhoneLoginDto } from './dto/phone-login.dto';
 import { MiniappAuthGuard } from './guards/miniapp-auth.guard';
+import { ChangePasswordDto } from '../../auth/dto/change-password.dto';
 
 @ApiTags('小程序认证')
 @Controller('miniapp/auth')
@@ -105,6 +106,15 @@ export class MiniappAuthController {
   @ApiResponse({ status: 200, description: '绑定成功' })
   async bindPhone(@Req() req, @Body() body: { phone: string }) {
     return this.authService.bindPhone(req.user.userId, body.phone);
+  }
+
+  @Post('change-password')
+  @UseGuards(MiniappAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: '修改密码' })
+  @ApiResponse({ status: 200, description: '修改成功' })
+  async changePassword(@Req() req, @Body() changePasswordDto: ChangePasswordDto) {
+    return this.authService.changePassword(req.user.userId, changePasswordDto);
   }
 }
 

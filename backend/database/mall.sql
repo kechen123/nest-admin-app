@@ -257,104 +257,101 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ============================================
 -- 注意：密码都是 qwe123 (bcrypt加密)
 INSERT INTO `miniapp_users` (`id`, `openid`, `unionid`, `nickname`, `avatar`, `phone`, `password`, `gender`, `balance`, `points`, `member_level`, `total_consumption`, `status`) VALUES
-(1, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6o', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6o_union', '张三', 'https://example.com/avatar1.jpg', '13800138001', '$2b$10$G./q24s9U1PSu/JhFEHVT.gqBy9ynK/E8uaGAv.w4pYbGP6ess9HS', 1, 1000.00, 500, 1, 2500.00, 1),
-(2, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6p', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6p_union', '李四', 'https://example.com/avatar2.jpg', '13800138002', '$2b$10$G./q24s9U1PSu/JhFEHVT.gqBy9ynK/E8uaGAv.w4pYbGP6ess9HS', 2, 500.00, 200, 0, 800.00, 1),
-(3, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6q', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6q_union', '王五', 'https://example.com/avatar3.jpg', '13800138003', '$2b$10$G./q24s9U1PSu/JhFEHVT.gqBy9ynK/E8uaGAv.w4pYbGP6ess9HS', 1, 2000.00, 1000, 2, 5000.00, 1),
-(4, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6r', NULL, '赵六', 'https://example.com/avatar4.jpg', NULL, NULL, 0, 0.00, 0, 0, 0.00, 1);
+(1, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6o', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6o_union', '张三', 'https://picsum.photos/200/200', '13800138001', '$2b$10$G./q24s9U1PSu/JhFEHVT.gqBy9ynK/E8uaGAv.w4pYbGP6ess9HS', 1, 1000.00, 500, 1, 2500.00, 1),
+(2, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6p', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6p_union', '李四', 'https://picsum.photos/200/200', '13800138002', '$2b$10$G./q24s9U1PSu/JhFEHVT.gqBy9ynK/E8uaGAv.w4pYbGP6ess9HS', 2, 500.00, 200, 0, 800.00, 1),
+(3, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6q', 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6q_union', '王五', 'https://picsum.photos/200/200', '13800138003', '$2b$10$G./q24s9U1PSu/JhFEHVT.gqBy9ynK/E8uaGAv.w4pYbGP6ess9HS', 1, 2000.00, 1000, 2, 5000.00, 1),
+(4, 'oUpF8uMuAJO_M2pxb1Q9zNjWeS6r', NULL, '赵六', 'https://picsum.photos/200/200', NULL, NULL, 0, 0.00, 0, 0, 0.00, 1);
 
 -- ============================================
 -- 2. 插入商品分类测试数据
 -- ============================================
 INSERT INTO `categories` (`id`, `name`, `icon`, `parent_id`, `order_num`, `status`) VALUES
-(1, '手机数码', 'https://example.com/icons/phone.png', 0, 1, 1),
-(2, '电脑办公', 'https://example.com/icons/computer.png', 0, 2, 1),
-(3, '服装鞋帽', 'https://example.com/icons/clothes.png', 0, 3, 1),
-(4, '食品生鲜', 'https://example.com/icons/food.png', 0, 4, 1),
-(5, '智能手机', 'https://example.com/icons/smartphone.png', 1, 1, 1),
-(6, '平板电脑', 'https://example.com/icons/tablet.png', 1, 2, 1),
-(7, '笔记本电脑', 'https://example.com/icons/laptop.png', 2, 1, 1),
-(8, '台式电脑', 'https://example.com/icons/desktop.png', 2, 2, 1);
+(1, '手机数码', 'https://picsum.photos/200/200', 0, 1, 1),
+(2, '电脑办公', 'https://picsum.photos/200/200', 0, 2, 1),
+(3, '服装鞋帽', 'https://picsum.photos/200/200', 0, 3, 1),
+(4, '食品生鲜', 'https://picsum.photos/200/200', 0, 4, 1),
+(5, '智能手机', 'https://picsum.photos/200/200', 1, 1, 1),
+(6, '平板电脑', 'https://picsum.photos/200/200', 1, 2, 1),
+(7, '笔记本电脑', 'https://picsum.photos/200/200', 2, 1, 1),
+(8, '台式电脑', 'https://picsum.photos/200/200', 2, 2, 1);
 
 -- ============================================
 -- 3. 插入商品测试数据
 -- ============================================
 INSERT INTO `products` (`id`, `name`, `subtitle`, `category_id`, `main_image`, `detail`, `min_price`, `max_price`, `sales`, `stock`, `sort_order`, `is_recommend`, `is_new`, `status`) VALUES
-(1, 'iPhone 15 Pro Max', '钛金属设计，A17 Pro芯片，专业级摄影', 5, 'https://example.com/products/iphone15pm.jpg', '<p>iPhone 15 Pro Max 是苹果最新旗舰手机，采用钛金属材质，配备A17 Pro芯片，支持专业级摄影功能。</p>', 8999.00, 12999.00, 1250, 500, 1, 1, 1, 1),
-(2, '华为 Mate 60 Pro', '麒麟9000S芯片，卫星通信，超强续航', 5, 'https://example.com/products/mate60pro.jpg', '<p>华为 Mate 60 Pro 搭载麒麟9000S芯片，支持卫星通信，拥有超强续航能力。</p>', 6999.00, 8999.00, 890, 300, 2, 1, 0, 1),
-(3, '小米 14 Ultra', '徕卡影像，骁龙8 Gen3，2K屏幕', 5, 'https://example.com/products/mi14ultra.jpg', '<p>小米 14 Ultra 配备徕卡影像系统，搭载骁龙8 Gen3处理器，2K高清屏幕。</p>', 5999.00, 6999.00, 650, 200, 3, 0, 1, 1),
-(4, 'MacBook Pro 16英寸', 'M3 Max芯片，32GB内存，1TB存储', 7, 'https://example.com/products/mbp16.jpg', '<p>MacBook Pro 16英寸配备M3 Max芯片，32GB统一内存，1TB固态存储，专业级性能。</p>', 19999.00, 29999.00, 320, 100, 1, 1, 1, 1),
-(5, 'iPad Pro 12.9英寸', 'M2芯片，Liquid Retina XDR显示屏', 6, 'https://example.com/products/ipadpro.jpg', '<p>iPad Pro 12.9英寸搭载M2芯片，配备Liquid Retina XDR显示屏，支持Apple Pencil。</p>', 6799.00, 9299.00, 450, 150, 1, 1, 0, 1),
-(6, 'Nike Air Max 270', '经典气垫，舒适缓震，时尚百搭', 3, 'https://example.com/products/nike270.jpg', '<p>Nike Air Max 270 经典气垫设计，提供舒适缓震，时尚百搭。</p>', 899.00, 1299.00, 1200, 800, 1, 0, 0, 1),
-(7, '有机苹果 5kg装', '新鲜有机，脆甜多汁，产地直供', 4, 'https://example.com/products/apple.jpg', '<p>有机苹果，新鲜有机认证，脆甜多汁，产地直供，5kg装。</p>', 49.90, 79.90, 2500, 2000, 1, 0, 0, 1);
+(1, 'iPhone 15 Pro Max', '钛金属设计，A17 Pro芯片，专业级摄影', 5, 'https://picsum.photos/200/200', '<p>iPhone 15 Pro Max 是苹果最新旗舰手机，采用钛金属材质，配备A17 Pro芯片，支持专业级摄影功能。</p>', 8999.00, 12999.00, 1250, 500, 1, 1, 1, 1),
+(2, '华为 Mate 60 Pro', '麒麟9000S芯片，卫星通信，超强续航', 5, 'https://picsum.photos/200/200', '<p>华为 Mate 60 Pro 搭载麒麟9000S芯片，支持卫星通信，拥有超强续航能力。</p>', 6999.00, 8999.00, 890, 300, 2, 1, 0, 1),
+(3, '小米 14 Ultra', '徕卡影像，骁龙8 Gen3，2K屏幕', 5, 'https://picsum.photos/200/200', '<p>小米 14 Ultra 配备徕卡影像系统，搭载骁龙8 Gen3处理器，2K高清屏幕。</p>', 5999.00, 6999.00, 650, 200, 3, 0, 1, 1),
+(4, 'MacBook Pro 16英寸', 'M3 Max芯片，32GB内存，1TB存储', 7, 'https://picsum.photos/200/200', '<p>MacBook Pro 16英寸配备M3 Max芯片，32GB统一内存，1TB固态存储，专业级性能。</p>', 19999.00, 29999.00, 320, 100, 1, 1, 1, 1),
+(5, 'iPad Pro 12.9英寸', 'M2芯片，Liquid Retina XDR显示屏', 6, 'https://picsum.photos/200/200', '<p>iPad Pro 12.9英寸搭载M2芯片，配备Liquid Retina XDR显示屏，支持Apple Pencil。</p>', 6799.00, 9299.00, 450, 150, 1, 1, 0, 1),
+(6, 'Nike Air Max 270', '经典气垫，舒适缓震，时尚百搭', 3, 'https://picsum.photos/200/200', '<p>Nike Air Max 270 经典气垫设计，提供舒适缓震，时尚百搭。</p>', 899.00, 1299.00, 1200, 800, 1, 0, 0, 1),
+(7, '有机苹果 5kg装', '新鲜有机，脆甜多汁，产地直供', 4, 'https://picsum.photos/200/200', '<p>有机苹果，新鲜有机认证，脆甜多汁，产地直供，5kg装。</p>', 49.90, 79.90, 2500, 2000, 1, 0, 0, 1);
 
 -- ============================================
 -- 4. 插入商品规格测试数据
 -- ============================================
 INSERT INTO `product_skus` (`id`, `product_id`, `sku_code`, `spec_name`, `spec_values`, `price`, `original_price`, `stock`, `sales`, `image`, `status`) VALUES
 -- iPhone 15 Pro Max SKU
-(1, 1, 'IPHONE15PM-256-BLACK', '256GB 深空黑色', '{"storage":"256GB","color":"深空黑色"}', 8999.00, 9999.00, 150, 300, 'https://example.com/skus/iphone15pm-256-black.jpg', 1),
-(2, 1, 'IPHONE15PM-512-BLACK', '512GB 深空黑色', '{"storage":"512GB","color":"深空黑色"}', 10999.00, 11999.00, 100, 200, 'https://example.com/skus/iphone15pm-512-black.jpg', 1),
-(3, 1, 'IPHONE15PM-1TB-BLACK', '1TB 深空黑色', '{"storage":"1TB","color":"深空黑色"}', 12999.00, 13999.00, 50, 100, 'https://example.com/skus/iphone15pm-1tb-black.jpg', 1),
-(4, 1, 'IPHONE15PM-256-WHITE', '256GB 原色钛金属', '{"storage":"256GB","color":"原色钛金属"}', 8999.00, 9999.00, 100, 250, 'https://example.com/skus/iphone15pm-256-white.jpg', 1),
-(5, 1, 'IPHONE15PM-512-WHITE', '512GB 原色钛金属', '{"storage":"512GB","color":"原色钛金属"}', 10999.00, 11999.00, 80, 180, 'https://example.com/skus/iphone15pm-512-white.jpg', 1),
-(30, 1, 'IPHONE15PM-256-BLUE', '256GB 蓝色钛金属', '{"storage":"256GB","color":"蓝色钛金属"}', 8999.00, 9999.00, 90, 220, 'https://example.com/skus/iphone15pm-256-blue.jpg', 1),
-(31, 1, 'IPHONE15PM-512-BLUE', '512GB 蓝色钛金属', '{"storage":"512GB","color":"蓝色钛金属"}', 10999.00, 11999.00, 70, 160, 'https://example.com/skus/iphone15pm-512-blue.jpg', 1),
-(32, 1, 'IPHONE15PM-1TB-WHITE', '1TB 原色钛金属', '{"storage":"1TB","color":"原色钛金属"}', 12999.00, 13999.00, 40, 80, 'https://example.com/skus/iphone15pm-1tb-white.jpg', 1),
+  (1, 1, 'IPHONE15PM-256-BLACK', '256GB 深空黑色', '{"storage":"256GB","color":"深空黑色"}', 8999.00, 9999.00, 150, 300, 'https://picsum.photos/200/200', 1),
+(2, 1, 'IPHONE15PM-512-BLACK', '512GB 深空黑色', '{"storage":"512GB","color":"深空黑色"}', 10999.00, 11999.00, 100, 200, 'https://picsum.photos/200/200', 1),
+(3, 1, 'IPHONE15PM-1TB-BLACK', '1TB 深空黑色', '{"storage":"1TB","color":"深空黑色"}', 12999.00, 13999.00, 50, 100, 'https://picsum.photos/200/200', 1),
+(4, 1, 'IPHONE15PM-256-WHITE', '256GB 原色钛金属', '{"storage":"256GB","color":"原色钛金属"}', 8999.00, 9999.00, 100, 250, 'https://picsum.photos/200/200', 1),
+(5, 1, 'IPHONE15PM-512-WHITE', '512GB 原色钛金属', '{"storage":"512GB","color":"原色钛金属"}', 10999.00, 11999.00, 80, 180, 'https://picsum.photos/200/200', 1),
+(30, 1, 'IPHONE15PM-256-BLUE', '256GB 蓝色钛金属', '{"storage":"256GB","color":"蓝色钛金属"}', 8999.00, 9999.00, 90, 220, 'https://picsum.photos/200/200', 1),
+(31, 1, 'IPHONE15PM-512-BLUE', '512GB 蓝色钛金属', '{"storage":"512GB","color":"蓝色钛金属"}', 10999.00, 11999.00, 70, 150, 'https://picsum.photos/200/200', 1),
+(32, 1, 'IPHONE15PM-1TB-WHITE', '1TB 原色钛金属', '{"storage":"1TB","color":"原色钛金属"}', 12999.00, 13999.00, 40, 80, 'https://picsum.photos/200/200', 1),
 -- 华为 Mate 60 Pro SKU
-(6, 2, 'MATE60PRO-256-BLACK', '256GB 雅川青', '{"storage":"256GB","color":"雅川青"}', 6999.00, 7999.00, 100, 200, 'https://example.com/skus/mate60pro-256-black.jpg', 1),
-(7, 2, 'MATE60PRO-512-BLACK', '512GB 雅川青', '{"storage":"512GB","color":"雅川青"}', 7999.00, 8999.00, 80, 150, 'https://example.com/skus/mate60pro-512-black.jpg', 1),
-(8, 2, 'MATE60PRO-1TB-BLACK', '1TB 雅川青', '{"storage":"1TB","color":"雅川青"}', 8999.00, 9999.00, 50, 100, 'https://example.com/skus/mate60pro-1tb-black.jpg', 1),
-(24, 2, 'MATE60PRO-256-WHITE', '256GB 白沙银', '{"storage":"256GB","color":"白沙银"}', 6999.00, 7999.00, 90, 180, 'https://example.com/skus/mate60pro-256-white.jpg', 1),
-(25, 2, 'MATE60PRO-512-WHITE', '512GB 白沙银', '{"storage":"512GB","color":"白沙银"}', 7999.00, 8999.00, 70, 130, 'https://example.com/skus/mate60pro-512-white.jpg', 1),
-(26, 2, 'MATE60PRO-256-PURPLE', '256GB 南糯紫', '{"storage":"256GB","color":"南糯紫"}', 6999.00, 7999.00, 85, 160, 'https://example.com/skus/mate60pro-256-purple.jpg', 1),
+(6, 2, 'MATE60PRO-256-BLACK', '256GB 雅川青', '{"storage":"256GB","color":"雅川青"}', 6999.00, 7999.00, 100, 200, 'https://picsum.photos/200/200', 1),
+(7, 2, 'MATE60PRO-512-BLACK', '512GB 雅川青', '{"storage":"512GB","color":"雅川青"}', 7999.00, 8999.00, 80, 150, 'https://picsum.photos/200/200', 1),
+(8, 2, 'MATE60PRO-1TB-BLACK', '1TB 雅川青', '{"storage":"1TB","color":"雅川青"}', 8999.00, 9999.00, 50, 100, 'https://picsum.photos/200/200', 1),
+(24, 2, 'MATE60PRO-256-WHITE', '256GB 白沙银', '{"storage":"256GB","color":"白沙银"}', 6999.00, 7999.00, 90, 180, 'https://picsum.photos/200/200', 1),
+(25, 2, 'MATE60PRO-512-WHITE', '512GB 白沙银', '{"storage":"512GB","color":"
 -- 小米 14 Ultra SKU
-(9, 3, 'MI14ULTRA-256-BLACK', '256GB 黑色', '{"storage":"256GB","color":"黑色"}', 5999.00, 6499.00, 80, 120, 'https://example.com/skus/mi14ultra-256-black.jpg', 1),
-(10, 3, 'MI14ULTRA-512-BLACK', '512GB 黑色', '{"storage":"512GB","color":"黑色"}', 6499.00, 6999.00, 60, 100, 'https://example.com/skus/mi14ultra-512-black.jpg', 1),
-(27, 3, 'MI14ULTRA-256-WHITE', '256GB 白色', '{"storage":"256GB","color":"白色"}', 5999.00, 6499.00, 75, 110, 'https://example.com/skus/mi14ultra-256-white.jpg', 1),
-(28, 3, 'MI14ULTRA-512-WHITE', '512GB 白色', '{"storage":"512GB","color":"白色"}', 6499.00, 6999.00, 55, 90, 'https://example.com/skus/mi14ultra-512-white.jpg', 1),
-(29, 3, 'MI14ULTRA-256-BLUE', '256GB 蓝色', '{"storage":"256GB","color":"蓝色"}', 5999.00, 6499.00, 70, 100, 'https://example.com/skus/mi14ultra-256-blue.jpg', 1),
+(9, 3, 'MI14ULTRA-256-BLACK', '256GB 黑色', '{"storage":"256GB","color":"黑色"}', 5999.00, 6499.00, 80, 120, 'https://picsum.photos/200/200', 1),
+(10, 3, 'MI14ULTRA-512-BLACK', '512GB 黑色', '{"storage":"512GB","color":"黑色"}', 6499.00, 6999.00, 60, 100, 'https://picsum.photos/200/200', 1),
+(27, 3, 'MI14ULTRA-256-WHITE', '256GB 白色', '{"storage":"256GB","color":"白色"}', 5999.00, 6499.00, 75, 110, 'https://picsum.photos/200/200', 1),
+(28, 3, 'MI14ULTRA-512-WHITE', '512GB 白色', '{"storage":"512GB","color":"白色"}', 6499.00, 6999.00, 55, 90, 'https://picsum.photos/200/200', 1),
+(29, 3, 'MI14ULTRA-256-BLUE', '256GB 蓝色', '{"storage":"256GB","color":"蓝色"}', 5999.00, 6499.00, 70, 100, 'https://picsum.photos/200/200', 1),
 -- MacBook Pro SKU
 (11, 4, 'MBP16-M3MAX-32GB-1TB', 'M3 Max 32GB 1TB 深空灰色', '{"chip":"M3 Max","memory":"32GB","storage":"1TB","color":"深空灰色"}', 19999.00, 21999.00, 30, 50, 'https://example.com/skus/mbp16-m3max.jpg', 1),
 (12, 4, 'MBP16-M3MAX-64GB-2TB', 'M3 Max 64GB 2TB 深空灰色', '{"chip":"M3 Max","memory":"64GB","storage":"2TB","color":"深空灰色"}', 25999.00, 27999.00, 20, 30, 'https://example.com/skus/mbp16-m3max-64gb.jpg', 1),
 (13, 4, 'MBP16-M3MAX-32GB-1TB-SILVER', 'M3 Max 32GB 1TB 银色', '{"chip":"M3 Max","memory":"32GB","storage":"1TB","color":"银色"}', 19999.00, 21999.00, 25, 40, 'https://example.com/skus/mbp16-m3max-silver.jpg', 1),
 -- iPad Pro SKU
-(14, 5, 'IPADPRO-128GB-WIFI', '128GB WiFi版', '{"storage":"128GB","network":"WiFi"}', 6799.00, 7299.00, 50, 80, 'https://example.com/skus/ipadpro-128gb.jpg', 1),
-(15, 5, 'IPADPRO-256GB-WIFI', '256GB WiFi版', '{"storage":"256GB","network":"WiFi"}', 7599.00, 8099.00, 40, 70, 'https://example.com/skus/ipadpro-256gb.jpg', 1),
-(16, 5, 'IPADPRO-512GB-WIFI', '512GB WiFi版', '{"storage":"512GB","network":"WiFi"}', 9299.00, 9799.00, 30, 50, 'https://example.com/skus/ipadpro-512gb.jpg', 1),
-(33, 5, 'IPADPRO-128GB-CELLULAR', '128GB 蜂窝网络版', '{"storage":"128GB","network":"Cellular"}', 7799.00, 8299.00, 45, 70, 'https://example.com/skus/ipadpro-128gb-cellular.jpg', 1),
-(34, 5, 'IPADPRO-256GB-CELLULAR', '256GB 蜂窝网络版', '{"storage":"256GB","network":"Cellular"}', 8599.00, 9099.00, 35, 60, 'https://example.com/skus/ipadpro-256gb-cellular.jpg', 1),
-(35, 5, 'IPADPRO-512GB-CELLULAR', '512GB 蜂窝网络版', '{"storage":"512GB","network":"Cellular"}', 10299.00, 10799.00, 25, 40, 'https://example.com/skus/ipadpro-512gb-cellular.jpg', 1),
+(14, 5, 'IPADPRO-128GB-WIFI', '128GB WiFi版', '{"storage":"128GB","network":"WiFi"}', 6799.00, 7299.00, 50, 80, 'https://picsum.photos/200/200', 1),
+(15, 5, 'IPADPRO-256GB-WIFI', '256GB WiFi版', '{"storage":"256GB","network":"WiFi"}', 7599.00, 8099.00, 40, 70, 'https://picsum.photos/200/200', 1),
+(16, 5, 'IPADPRO-512GB-WIFI', '512GB WiFi版', '{"storage":"512GB","network":"WiFi"}', 9299.00, 9799.00, 30, 50, 'https://picsum.photos/200/200', 1),
+(33, 5, 'IPADPRO-128GB-CELLULAR', '128GB 蜂窝网络版', '{"storage":"128GB","network":"Cellular"}', 7799.00, 8299.00, 45, 70, 'https://picsum.photos/200/200', 1),
+(34, 5, 'IPADPRO-256GB-CELLULAR', '256GB 蜂窝网络版', '{"storage":"256GB","network":"Cellular"}', 8599.00, 9099.00, 35, 60, 'https://picsum.photos/200/200', 1),
+(35, 5, 'IPADPRO-512GB-CELLULAR', '512GB 蜂窝网络版', '{"storage":"512GB","network":"Cellular"}', 10299.00, 10799.00, 25, 40, 'https://picsum.photos/200/200', 1),
 -- Nike Air Max 270 SKU
-(17, 6, 'NIKE270-42-BLACK', '42码 黑色', '{"size":"42","color":"黑色"}', 899.00, 1299.00, 200, 300, 'https://example.com/skus/nike270-42-black.jpg', 1),
-(18, 6, 'NIKE270-43-BLACK', '43码 黑色', '{"size":"43","color":"黑色"}', 899.00, 1299.00, 180, 280, 'https://example.com/skus/nike270-43-black.jpg', 1),
-(19, 6, 'NIKE270-44-BLACK', '44码 黑色', '{"size":"44","color":"黑色"}', 899.00, 1299.00, 150, 250, 'https://example.com/skus/nike270-44-black.jpg', 1),
-(20, 6, 'NIKE270-42-WHITE', '42码 白色', '{"size":"42","color":"白色"}', 999.00, 1299.00, 150, 200, 'https://example.com/skus/nike270-42-white.jpg', 1),
-(36, 6, 'NIKE270-43-WHITE', '43码 白色', '{"size":"43","color":"白色"}', 999.00, 1299.00, 130, 180, 'https://example.com/skus/nike270-43-white.jpg', 1),
-(37, 6, 'NIKE270-44-WHITE', '44码 白色', '{"size":"44","color":"白色"}', 999.00, 1299.00, 120, 160, 'https://example.com/skus/nike270-44-white.jpg', 1),
-(38, 6, 'NIKE270-41-BLACK', '41码 黑色', '{"size":"41","color":"黑色"}', 899.00, 1299.00, 100, 150, 'https://example.com/skus/nike270-41-black.jpg', 1),
-(39, 6, 'NIKE270-45-BLACK', '45码 黑色', '{"size":"45","color":"黑色"}', 899.00, 1299.00, 80, 120, 'https://example.com/skus/nike270-45-black.jpg', 1),
-(40, 6, 'NIKE270-42-RED', '42码 红色', '{"size":"42","color":"红色"}', 1099.00, 1299.00, 90, 130, 'https://example.com/skus/nike270-42-red.jpg', 1),
+(17, 6, 'NIKE270-42-BLACK', '42码 黑色', '{"size":"42","color":"黑色"}', 899.00, 1299.00, 200, 300, 'https://picsum.photos/200/200', 1),
+(18, 6, 'NIKE270-43-BLACK', '43码 黑色', '{"size":"43","color":"黑色"}', 899.00, 1299.00, 180, 280, 'https://picsum.photos/200/200', 1),
+(19, 6, 'NIKE270-44-BLACK', '44码 黑色', '{"size":"44","color":"黑色"}', 899.00, 1299.00, 150, 250, 'https://picsum.photos/200/200', 1),
+(20, 6, 'NIKE270-42-WHITE', '42码 白色', '{"size":"42","color":"白色"}', 999.00, 1299.00, 150, 200, 'https://picsum.photos/200/200', 1),
+(36, 6, 'NIKE270-43-WHITE', '43码 白色', '{"size":"43","color":"白色"}', 999.00, 1299.00, 130, 180, 'https://picsum.photos/200/200', 1),
+(37, 6, 'NIKE270-44-WHITE', '44码 白色', '{"size":"44","color":"白色"}', 999.00, 1299.00, 120, 160, 'https://picsum.photos/200/200', 1),
+(38, 6, 'NIKE270-41-BLACK', '41码 黑色', '{"size":"41","color":"黑色"}', 899.00, 1299.00, 100, 150, 'https://picsum.photos/200/200', 1),
+(39, 6, 'NIKE270-45-BLACK', '45码 黑色', '{"size":"45","color":"黑色"}', 899.00, 1299.00, 80, 120, 'https://picsum.photos/200/200', 1),
+(40, 6, 'NIKE270-42-RED', '42码 红色', '{"size":"42","color":"红色"}', 1099.00, 1299.00, 90, 130, 'https://picsum.photos/200/200', 1),
 -- 有机苹果 SKU
-(21, 7, 'APPLE-5KG-RED', '5kg 红富士', '{"weight":"5kg","variety":"红富士"}', 49.90, 79.90, 1000, 800, 'https://example.com/skus/apple-5kg-red.jpg', 1),
-(22, 7, 'APPLE-5KG-GREEN', '5kg 青苹果', '{"weight":"5kg","variety":"青苹果"}', 59.90, 79.90, 800, 600, 'https://example.com/skus/apple-5kg-green.jpg', 1),
-(23, 7, 'APPLE-10KG-RED', '10kg 红富士', '{"weight":"10kg","variety":"红富士"}', 89.90, 129.90, 500, 400, 'https://example.com/skus/apple-10kg-red.jpg', 1),
-(41, 7, 'APPLE-10KG-GREEN', '10kg 青苹果', '{"weight":"10kg","variety":"青苹果"}', 99.90, 129.90, 400, 350, 'https://example.com/skus/apple-10kg-green.jpg', 1),
-(42, 7, 'APPLE-3KG-RED', '3kg 红富士', '{"weight":"3kg","variety":"红富士"}', 29.90, 49.90, 1200, 1000, 'https://example.com/skus/apple-3kg-red.jpg', 1),
-(43, 7, 'APPLE-3KG-GREEN', '3kg 青苹果', '{"weight":"3kg","variety":"青苹果"}', 34.90, 49.90, 1000, 800, 'https://example.com/skus/apple-3kg-green.jpg', 1);
+(21, 7, 'APPLE-5KG-RED', '5kg 红富士', '{"weight":"5kg","variety":"红富士"}', 49.90, 79.90, 1000, 800, 'https://picsum.photos/200/200', 1),
+(22, 7, 'APPLE-5KG-GREEN', '5kg 青苹果', '{"weight":"5kg","variety":"青苹果"}', 59.90, 79.90, 800, 600, 'https://picsum.photos/200/200', 1),
+(23, 7, 'APPLE-10KG-RED', '10kg 红富士', '{"weight":"10kg","variety":"红富士"}', 89.90, 129.90, 500, 400, 'https://picsum.photos/200/200', 1),
+(41, 7, 'APPLE-10KG-GREEN', '10kg 青苹果', '{"weight":"10kg","variety":"青苹果"}', 99.90, 129.90, 400, 350, 'https://picsum.photos/200/200', 1),
+(42, 7, 'APPLE-3KG-RED', '3kg 红富士', '{"weight":"3kg","variety":"红富士"}', 29.90, 49.90, 1200, 1000, 'https://picsum.photos/200/200', 1),
+(43, 7, 'APPLE-3KG-GREEN', '3kg 青苹果', '{"weight":"3kg","variety":"青苹果"}', 34.90, 49.90, 1000, 800, 'https://picsum.photos/200/200', 1);
 
 -- ============================================
 -- 5. 插入商品图片测试数据
 -- ============================================
 INSERT INTO `product_images` (`id`, `product_id`, `url`, `sort_order`) VALUES
 -- iPhone 15 Pro Max 图片
-(1, 1, 'https://example.com/products/iphone15pm-1.jpg', 1),
-(2, 1, 'https://example.com/products/iphone15pm-2.jpg', 2),
-(3, 1, 'https://example.com/products/iphone15pm-3.jpg', 3),
-(4, 1, 'https://example.com/products/iphone15pm-4.jpg', 4),
--- 华为 Mate 60 Pro 图片
-(5, 2, 'https://example.com/products/mate60pro-1.jpg', 1),
-(6, 2, 'https://example.com/products/mate60pro-2.jpg', 2),
-(7, 2, 'https://example.com/products/mate60pro-3.jpg', 3),
+(1, 1, 'https://picsum.photos/200/200', 1),
+(2, 1, 'https://picsum.photos/200/200', 2),
+(3, 1, 'https://picsum.photos/200/200', 3),
+(5, 2, 'https://picsum.photos/200/200', 1),
+(6, 2, 'https://picsum.photos/200/200', 2),
+(7, 2, 'https://picsum.photos/200/200', 3),
 -- 小米 14 Ultra 图片
 (8, 3, 'https://example.com/products/mi14ultra-1.jpg', 1),
 (9, 3, 'https://example.com/products/mi14ultra-2.jpg', 2),

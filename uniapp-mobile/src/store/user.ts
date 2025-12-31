@@ -7,10 +7,16 @@ import {
 
 // 初始化状态
 const userInfoState: IUserInfoRes = {
-  userId: -1,
-  username: '',
+  id: -1,
+  userId: -1, // 兼容旧字段
+  openid: '',
   nickname: '',
   avatar: '/static/images/default-avatar.png',
+  gender: 0,
+  balance: 0,
+  points: 0,
+  memberLevel: 0,
+  totalConsumption: 0,
 }
 
 export const useUserStore = defineStore(

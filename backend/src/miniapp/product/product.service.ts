@@ -150,21 +150,34 @@ export class MiniappProductService {
   /**
    * 获取推荐商品
    */
-  async getRecommendProducts(limit: number = 10) {
-    const products = await this.productRepository.find({
+  async getRecommendProducts(page: number = 1, pageSize: number = 10) {
+    const skip = (page - 1) * pageSize;
+    const [products, total] = await this.productRepository.findAndCount({
       where: { status: 1, isRecommend: 1 },
       order: { sales: 'DESC' },
-      take: limit,
+      skip,
+      take: pageSize,
     });
 
-    return products.map((product) => ({
+    const items = products.map((product) => ({
       id: product.id,
       name: product.name,
+      subtitle: product.subtitle,
       mainImage: product.mainImage,
       minPrice: product.minPrice,
       maxPrice: product.maxPrice,
-      sales: product.sales,
+      sales: product.sales, // 总销量
+      stock: product.stock, // 总库存
+      isNew: product.isNew,
     }));
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
   }
 
   /**
@@ -188,19 +201,56 @@ export class MiniappProductService {
   }
 
   /**
-   * 获取分类列表
+   * 获取分类列表（树形结构，包含二级分类）
    */
   async getCategories() {
-    const categories = await this.categoryRepository.find({
-      where: { status: 1, parentId: 0 },
+    // 查询所有启用的分类
+    const allCategories = await this.categoryRepository.find({
+      where: { status: 1 },
       order: { orderNum: 'ASC' },
     });
 
-    return categories.map((category) => ({
-      id: category.id,
-      name: category.name,
-      icon: category.icon,
-    }));
+    // 构建树形结构
+    const tree: Array<{
+      id: number;
+      name: string;
+      icon?: string;
+      children?: Array<{ id: number; name: string; icon?: string }>;
+    }> = [];
+
+    // 先找出所有一级分类（parentId === 0）
+    const rootCategories = allCategories.filter((cat) => cat.parentId === 0);
+
+    // 为每个一级分类查找其子分类
+    rootCategories.forEach((rootCategory) => {
+      const children = allCategories
+        .filter((cat) => cat.parentId === rootCategory.id)
+        .map((child) => ({
+          id: child.id,
+          name: child.name,
+          icon: child.icon,
+        }));
+
+      const categoryNode: {
+        id: number;
+        name: string;
+        icon?: string;
+        children?: Array<{ id: number; name: string; icon?: string }>;
+      } = {
+        id: rootCategory.id,
+        name: rootCategory.name,
+        icon: rootCategory.icon,
+      };
+
+      // 如果有子分类，添加 children 字段
+      if (children.length > 0) {
+        categoryNode.children = children;
+      }
+
+      tree.push(categoryNode);
+    });
+
+    return tree;
   }
 }
 

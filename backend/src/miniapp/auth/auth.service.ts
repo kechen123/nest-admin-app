@@ -76,22 +76,22 @@ export class MiniappAuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('手机号或密码错误');
+      throw new BadRequestException('手机号或密码错误');
     }
 
     // 检查用户状态
     if (user.status !== 1) {
-      throw new UnauthorizedException('用户已被禁用');
+      throw new BadRequestException('用户已被禁用');
     }
 
     // 检查密码
     if (!user.password) {
-      throw new UnauthorizedException('该账号未设置密码，请使用微信登录');
+      throw new BadRequestException('该账号未设置密码，请使用微信登录');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('手机号或密码错误');
+      throw new BadRequestException('手机号或密码错误');
     }
 
     // 生成JWT Token
@@ -187,6 +187,44 @@ export class MiniappAuthService {
     await this.miniappUserRepository.save(user);
 
     return user;
+  }
+
+  /**
+   * 修改密码
+   */
+  async changePassword(userId: number, changePasswordDto: { oldPassword: string; newPassword: string }) {
+    const user = await this.miniappUserRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'password'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('用户不存在');
+    }
+
+    // 检查用户是否设置了密码
+    if (!user.password) {
+      throw new BadRequestException('该账号未设置密码，无法修改');
+    }
+
+    // 验证旧密码
+    const isOldPasswordValid = await bcrypt.compare(changePasswordDto.oldPassword, user.password);
+    if (!isOldPasswordValid) {
+      throw new BadRequestException('旧密码错误');
+    }
+
+    // 检查新密码是否与旧密码相同
+    const isSamePassword = await bcrypt.compare(changePasswordDto.newPassword, user.password);
+    if (isSamePassword) {
+      throw new BadRequestException('新密码不能与旧密码相同');
+    }
+
+    // 更新密码
+    const hashedPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+    user.password = hashedPassword;
+    await this.miniappUserRepository.save(user);
+
+    return { message: '密码修改成功' };
   }
 
   /**

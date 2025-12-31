@@ -21,14 +21,31 @@ export interface IDoubleTokenRes {
 export type IAuthLoginRes = ISingleTokenRes | IDoubleTokenRes
 
 /**
- * 用户信息
+ * 用户信息（小程序）
  */
 export interface IUserInfoRes {
-  userId: number
-  username: string
-  nickname: string
+  id: number
+  userId?: number // 兼容旧字段
+  username?: string // 兼容旧字段
+  openid: string
+  nickname?: string
   avatar?: string
+  phone?: string
+  gender: number // 0-未知, 1-男, 2-女
+  balance: number // 账户余额（元）
+  points: number // 积分
+  memberLevel: number // 会员等级: 0-普通, 1-银卡, 2-金卡, 3-钻石
+  totalConsumption: number // 累计消费金额（元）
   [key: string]: any // 允许其他扩展字段
+}
+
+/**
+ * 更新小程序用户信息参数
+ */
+export interface IUpdateMiniappUserInfo {
+  nickname?: string
+  avatar?: string
+  gender?: number
 }
 
 // 认证存储数据结构

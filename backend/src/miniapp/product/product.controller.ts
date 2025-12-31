@@ -18,8 +18,8 @@ export class MiniappProductController {
   @Get('recommend')
   @ApiOperation({ summary: '获取推荐商品' })
   @ApiResponse({ status: 200, description: '获取成功' })
-  getRecommend(@Query('limit') limit?: number) {
-    return this.productService.getRecommendProducts(limit);
+  getRecommend(@Query() queryDto: QueryProductDto) {
+    return this.productService.getRecommendProducts(queryDto.page, queryDto.pageSize);
   }
 
   @Get('new')
