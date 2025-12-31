@@ -1,126 +1,53 @@
+<script lang="ts" setup>
+defineOptions({
+  name: 'Home',
+})
+definePage({
+  // 使用 type: "home" 属性设置首页，其他页面不需要设置，默认为page
+  type: 'home',
+  style: {
+    // 'custom' 表示开启自定义导航栏，默认 'default'
+    navigationStyle: 'custom',
+    navigationBarTitleText: '首页',
+  },
+})
+
+const description = ref(
+  'unibest 是一个集成了多种工具和技术的 uniapp 开发模板，由 uniapp + Vue3 + Ts + Vite5 + UnoCss + VSCode 构建，模板具有代码提示、自动格式化、统一配置、代码片段等功能，并内置了许多常用的基本组件和基本功能，让你编写 uniapp 拥有 best 体验。',
+)
+console.log('index/index 首页打印了')
+
+onLoad(() => {
+  console.log('测试 uni API 自动引入: onLoad')
+})
+</script>
+
 <template>
-  <view class="container">
-    <view class="header">
-      <text class="title">欢迎使用</text>
-      <text v-if="authStore.isLoggedIn()" class="username">
-        {{ authStore.userInfo?.username }}
-      </text>
+  <view class="bg-white px-4 pt-safe">
+    <view class="mt-10">
+      <image src="/static/logo.svg" alt="" class="mx-auto block h-28 w-28" />
+    </view>
+    <view class="mt-4 text-center text-4xl text-[#d14328]">
+      unibest
+    </view>
+    <view class="mb-8 mt-2 text-center text-2xl">
+      最好用的 uniapp 开发模板
     </view>
 
-    <view class="content">
-      <view class="card" @click="handleNavigate('/pages/user/profile')">
-        <text class="card-title">个人中心</text>
-        <text class="card-desc">查看个人信息</text>
-      </view>
-
-      <view v-if="!authStore.isLoggedIn()" class="card" @click="handleNavigate('/pages/login/login')">
-        <text class="card-title">登录</text>
-        <text class="card-desc">请先登录</text>
-      </view>
-
-      <view v-else class="card" @click="handleLogout">
-        <text class="card-title">退出登录</text>
-      </view>
+    <view class="m-auto mb-2 max-w-100 text-justify indent text-4">
+      {{ description }}
+    </view>
+    <view class="mt-4 text-center">
+      作者：
+      <text class="text-green-500">
+        菲鸽
+      </text>
+    </view>
+    <view class="mt-4 text-center">
+      官网地址：
+      <text class="text-green-500">
+        https://unibest.tech
+      </text>
     </view>
   </view>
 </template>
-
-<script setup lang="ts">
-import { onMounted } from 'vue';
-import { useAuthStore } from '@/stores/auth';
-import { api } from '@/api/request';
-
-const authStore = useAuthStore();
-
-// 页面跳转
-const handleNavigate = (url: string) => {
-  uni.navigateTo({
-    url,
-    fail: () => {
-      // 如果 navigateTo 失败，尝试使用 reLaunch（适用于某些页面）
-      uni.reLaunch({ url });
-    },
-  });
-};
-
-// 退出登录
-const handleLogout = () => {
-  uni.showModal({
-    title: '提示',
-    content: '确定要退出登录吗？',
-    success: (res) => {
-      if (res.confirm) {
-        authStore.logout();
-        uni.reLaunch({
-          url: '/pages/login/login',
-        });
-      }
-    },
-  });
-};
-
-// 示例：调用 API
-onMounted(async () => {
-  if (authStore.isLoggedIn()) {
-    try {
-      // 示例 API 调用
-      // const data = await api.get('/users/me');
-      // console.log('用户信息:', data);
-    } catch (error) {
-      console.error('获取用户信息失败:', error);
-    }
-  }
-});
-</script>
-
-<style scoped>
-.container {
-  min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 20px;
-}
-
-.header {
-  text-align: center;
-  padding: 40px 0;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-}
-
-.username {
-  display: block;
-  margin-top: 10px;
-  font-size: 16px;
-  color: #666;
-}
-
-.content {
-  margin-top: 40px;
-}
-
-.card {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.card-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.card-desc {
-  font-size: 14px;
-  color: #999;
-  display: block;
-}
-</style>
