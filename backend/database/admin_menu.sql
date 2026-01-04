@@ -47,7 +47,7 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `pat
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `query`, `is_frame`, `is_cache`, `visible`, `status`, `icon`, `parent_id`, `order_num`, `remark`) VALUES
 (202, 'CategoryManage', '商品分类管理', 'mall:category:list', 'C', '/mall/product/category', 'mall/product/category/index', NULL, 1, 0, 1, 1, 'Folder', 201, 1, '商品分类管理'),
 (203, 'ProductList', '商品管理', 'mall:product:list', 'C', '/mall/product/list', 'mall/product/list/index', NULL, 1, 0, 1, 1, 'Goods', 201, 2, '商品列表管理'),
-(204, 'ProductSkuManage', '商品规格管理', 'mall:product:sku:list', 'C', '/mall/product/sku', 'mall/product/sku/index', NULL, 1, 0, 1, 1, 'Box', 201, 3, '商品规格管理'),
+(204, 'ProductSkuManage', '商品规格管理', 'mall:product:sku:list', 'C', '/mall/product/sku', 'mall/product/sku/index', NULL, 1, 0, 1, 1, 'Box', 201, 3, '商品规格管理');
 
 -- 订单管理下的菜单
 INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `query`, `is_frame`, `is_cache`, `visible`, `status`, `icon`, `parent_id`, `order_num`, `remark`) VALUES
