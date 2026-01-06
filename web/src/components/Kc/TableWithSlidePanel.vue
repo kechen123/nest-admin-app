@@ -35,7 +35,11 @@ const props = withDefaults(defineProps<Props>(), {
 // 面板状态
 const panelState = ref(false)
 
-// 动态计算列配置
+// 缓存隐藏列和始终显示列的 Set，提升查找性能
+const hiddenSet = computed(() => new Set(props.columnDisplayConfig.hiddenWhenPanelOpen || []))
+const alwaysShowSet = computed(() => new Set(props.columnDisplayConfig.alwaysShow || []))
+
+// 动态计算列配置 - 优化性能，减少不必要的重新计算和对象创建
 const dynamicColumns = computed(() => {
   const rawColumns = props.config.table?.columns
   // 处理 computed ref：如果是 computed ref，需要访问 .value
@@ -43,21 +47,32 @@ const dynamicColumns = computed(() => {
     ? (rawColumns as ComputedRef<ColumnProps[]>).value
     : (rawColumns as ColumnProps[] | undefined) || []
 
+  // 如果面板未打开，直接返回原始列配置，避免不必要的遍历
+  if (!panelState.value) {
+    return originalColumns
+  }
+
+  // 面板打开时，根据配置动态调整列显示状态
+  const hiddenSetValue = hiddenSet.value
+  const alwaysShowSetValue = alwaysShowSet.value
+
   return originalColumns.map(column => {
-    // 如果右侧栏目打开，检查是否需要隐藏该列
-    if (panelState.value && column.prop) {
-      // 如果列在始终显示列表中，则显示
-      if (props.columnDisplayConfig.alwaysShow?.includes(column.prop)) {
-        return column
-      }
-      // 如果列在隐藏列表中，则隐藏
-      if (props.columnDisplayConfig.hiddenWhenPanelOpen?.includes(column.prop)) {
-        return {
-          ...column,
-          show: false
-        }
-      }
+    // 如果没有 prop，直接返回
+    if (!column.prop) {
+      return column
     }
+
+    // 如果列在始终显示列表中，则显示
+    if (alwaysShowSetValue.has(column.prop)) {
+      return column
+    }
+
+    // 如果列在隐藏列表中，则隐藏
+    if (hiddenSetValue.has(column.prop)) {
+      // 只在需要修改时才创建新对象，避免不必要的对象创建
+      return column.show === false ? column : { ...column, show: false }
+    }
+
     return column
   })
 })

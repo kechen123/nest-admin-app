@@ -85,6 +85,9 @@ const moveRight = (e: MouseEvent, mouse: any) => {
 const [rightLineRef, addListener] = useMouse({ down: downRight, move: moveRight, up: upRight })
 // const [containerRef] = useElementResize({ resize: bodyReSize, className: 'slide-container' })
 
+// 存储 watch 停止函数，用于清理
+let stopWatchRef: (() => void) | null = null
+
 interface SideOpenOptions {
   default: {
     component: any
@@ -139,9 +142,27 @@ const open = async (params: SideOpenOptions) => {
   })
 }
 
-  const close = async (val:any) => {
+const close = async (val: any) => {
+  // 清理组件引用和相关状态
+  if (sidePanelState.sideRef) {
+    // 如果组件有清理方法，调用它
+    if (typeof sidePanelState.sideRef.destroy === 'function') {
+      sidePanelState.sideRef.destroy()
+    } else if (typeof sidePanelState.sideRef.unmount === 'function') {
+      sidePanelState.sideRef.unmount()
+    }
+  }
+  
   sidePanelState.show = false
   onCloseCallback.value?.(val)
+  
+  // 清理待处理的组件数据
+  sidePanelState.pendingComponent = null
+  sidePanelState.pendingProps = {}
+  sidePanelState.pendingMethod = ''
+  sidePanelState.pendingData = {}
+  sidePanelState.sideRef = null
+  onCloseCallback.value = null
 }
 
 const onSlideInComplete = () => {
@@ -194,7 +215,7 @@ onMounted(() => {
 })
 
 // 监听组件引用设置，确保 init 方法被调用
-watch(() => sidePanelState.sideRef, async (newRef) => {
+stopWatchRef = watch(() => sidePanelState.sideRef, async (newRef) => {
   if (newRef && sidePanelState.pendingMethod && sidePanelState.isLoading) {
     // 组件引用已设置且有待执行的方法，调用 init
     await nextTick()
@@ -206,6 +227,36 @@ watch(() => sidePanelState.sideRef, async (newRef) => {
     }
   }
 }, { immediate: false })
+
+// 组件卸载时清理资源
+onBeforeUnmount(() => {
+  // 停止 watch 监听
+  if (stopWatchRef) {
+    stopWatchRef()
+    stopWatchRef = null
+  }
+  
+  // 清理组件引用
+  if (sidePanelState.sideRef) {
+    if (typeof sidePanelState.sideRef.destroy === 'function') {
+      sidePanelState.sideRef.destroy()
+    } else if (typeof sidePanelState.sideRef.unmount === 'function') {
+      sidePanelState.sideRef.unmount()
+    }
+  }
+  
+  // 清理回调
+  onCloseCallback.value = null
+  
+  // 重置状态
+  sidePanelState.show = false
+  sidePanelState.sideComponent = null
+  sidePanelState.sideRef = null
+  sidePanelState.pendingComponent = null
+  sidePanelState.pendingProps = {}
+  sidePanelState.pendingMethod = ''
+  sidePanelState.pendingData = {}
+})
 
 defineExpose({ open, close, updateContentLayout })
 provide('slideClose', close)
