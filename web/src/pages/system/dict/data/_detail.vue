@@ -100,7 +100,7 @@ const formConfig = computed(() => ({
     {
       key: 'dictSort',
       label: '字典排序',
-      type: 'input-number' as const,
+      type: 'inputNumber' as const,
       placeholder: '请输入字典排序',
       width: 240,
       disabled: computed(() => type.value === 'view'),

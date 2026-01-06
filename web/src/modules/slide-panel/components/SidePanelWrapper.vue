@@ -52,7 +52,7 @@ const onClose = () => close?.()
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: 6px 16px;
     border-bottom: 1px solid var(--el-border-color);
 
     .title {}
@@ -75,7 +75,7 @@ const onClose = () => close?.()
         }
 
         &:hover {
-          background-color: var(--el-color-primary-light-7);
+          background-color: var(--el-color-primary-light-9);
 
           i {
             animation: scale-pop 0.3s ease;
