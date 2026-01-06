@@ -58,7 +58,7 @@ const baseColumns: ColumnProps[] = [
     align: 'left',
     show: true,
     label: '菜单名称',
-    width: 150,
+    width: 180,
   },
   {
     prop: 'icon',
@@ -66,7 +66,7 @@ const baseColumns: ColumnProps[] = [
     type: 'slot',
     show: true,
     align: 'center',
-    width: 100,
+    width: 60,
   },
   {
     label: '路由路径',
