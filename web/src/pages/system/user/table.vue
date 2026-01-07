@@ -466,6 +466,36 @@ const kcConfig = computed<KcConfig>(() => ({
         placeholder: '请输入邮箱',
       },
       {
+        key: 'email',
+        label: '邮箱',
+        type: 'input' as const,
+        placeholder: '请输入邮箱',
+      },
+      {
+        key: 'email',
+        label: '邮箱',
+        type: 'input' as const,
+        placeholder: '请输入邮箱',
+      },
+      {
+        key: 'email',
+        label: '邮箱',
+        type: 'input' as const,
+        placeholder: '请输入邮箱',
+      },
+      {
+        key: 'email',
+        label: '邮箱',
+        type: 'input' as const,
+        placeholder: '请输入邮箱',
+      },
+      {
+        key: 'email',
+        label: '邮箱',
+        type: 'input' as const,
+        placeholder: '请输入邮箱',
+      },
+      {
         key: 'role',
         label: '角色',
         type: 'select' as const,

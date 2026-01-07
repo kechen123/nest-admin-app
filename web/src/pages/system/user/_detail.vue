@@ -129,6 +129,7 @@ const formConfig = computed(() => ({
       width: 240,
       rules: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view' || !!formData.value.id),
+      compare: true, // 新增用户时需要比较，编辑时由于 disabled 不比较
     },
     {
       key: 'email',
@@ -141,6 +142,7 @@ const formConfig = computed(() => ({
         { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
       ],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'password',
@@ -151,6 +153,7 @@ const formConfig = computed(() => ({
       inputType: 'password',
       disabled: computed(() => type.value === 'view'),
       show: computed(() => type.value !== 'view'), // 编辑和创建模式都显示密码字段
+      compare: false, // 密码字段不参与比较
     },
     {
       key: 'nickname',
@@ -159,6 +162,7 @@ const formConfig = computed(() => ({
       placeholder: '请输入昵称',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'avatar',
@@ -167,6 +171,7 @@ const formConfig = computed(() => ({
       slot: 'avatar',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'roles',
@@ -178,6 +183,7 @@ const formConfig = computed(() => ({
       width: 240,
       rules: [{ required: true, message: '请选择角色', trigger: 'change' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'phone',
@@ -186,6 +192,7 @@ const formConfig = computed(() => ({
       placeholder: '请输入手机号',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'gender',
@@ -198,6 +205,7 @@ const formConfig = computed(() => ({
       placeholder: '请选择性别',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'deptId',
@@ -207,6 +215,7 @@ const formConfig = computed(() => ({
       placeholder: '请选择部门',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'postId',
@@ -216,6 +225,7 @@ const formConfig = computed(() => ({
       placeholder: '请选择岗位',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'remark',
@@ -421,7 +431,12 @@ const init = async (data: any) => {
   }
 }
 
-defineExpose({ init })
+defineExpose({
+  init,
+  // 暴露给 SlideContainer 用于自动检测未保存修改
+  formData,
+  formConfig
+})
 </script>
 
 <style scoped>

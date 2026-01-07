@@ -36,6 +36,7 @@ export interface FormField {
     | { label: string; value: any }[]
     | Ref<{ label: string; value: any }[]>
     | ComputedRef<{ label: string; value: any }[]>
+  compare?: boolean // 是否参与未保存修改检测，默认为 true
   [key: string]: any // 支持所有 Element Plus 组件的原生属性
 }
 

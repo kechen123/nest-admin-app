@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { userApi, type User, type CreateUserDto, type UpdateUserDto } from '@/api/user'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import ImageUpload from '@/components/ImageUpload/index.vue'
 import CommonButton from '@/components/CommonButton/index.vue'
 import KcForm from '@/components/Kc/Form/index.vue'
@@ -62,6 +62,7 @@ const content = ref('')
 
 const type = ref<'edit' | 'view' | 'create'>('edit')
 const formRef = ref()
+
 
 // 字典选项
 const genderOptions = ref<DictOption[]>([])
@@ -93,6 +94,7 @@ const formConfig = computed(() => ({
       width: 240,
       rules: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view' || !!formData.value.id),
+      compare: true, // 新增用户时需要比较，编辑时由于 disabled 不比较
     },
     {
       key: 'email',
@@ -105,6 +107,7 @@ const formConfig = computed(() => ({
         { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
       ],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'password',
@@ -115,6 +118,7 @@ const formConfig = computed(() => ({
       inputType: 'password',
       disabled: computed(() => type.value === 'view'),
       show: computed(() => type.value !== 'view'),
+      compare: false, // 密码字段不参与比较
     },
     {
       key: 'nickname',
@@ -123,6 +127,7 @@ const formConfig = computed(() => ({
       placeholder: '请输入昵称',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'avatar',
@@ -131,6 +136,7 @@ const formConfig = computed(() => ({
       slot: 'avatar',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'phone',
@@ -139,6 +145,7 @@ const formConfig = computed(() => ({
       placeholder: '请输入手机号',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'gender',
@@ -151,6 +158,7 @@ const formConfig = computed(() => ({
       placeholder: '请选择性别',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'status',
@@ -163,6 +171,7 @@ const formConfig = computed(() => ({
       placeholder: '请选择状态',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'remark',
@@ -171,12 +180,60 @@ const formConfig = computed(() => ({
       slot: 'remark',
       width: '100%',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
   ] as any[]).filter(field => field.show !== false),
   labelWidth: '80px',
   showSubmitButton: false,
   showResetButton: false,
 }))
+
+
+// 重置表单
+const onReset = () => {
+  formRef.value?.resetFields()
+}
+
+const init = async (data: any) => {
+  const { rowId, type: _type } = data
+  type.value = _type || 'edit'
+
+  if (rowId) {
+    // 获取用户详情（axios 拦截器已经返回了 data）
+    const user = (await userApi.getUserById(rowId)) as unknown as User
+    const userData = {
+      ...user,
+      password: '', // 不显示密码
+      roles: user.roles?.map((item: any) => {
+        // 如果 item 是对象，取 code；如果是字符串，直接返回
+        return typeof item === 'object' && item.code ? item.code : item
+      }) || [],
+      // 格式化只读字段
+      loginDate: user.loginDate ? new Date(user.loginDate).toLocaleString('zh-CN') : '-',
+      isAdminText: user.isAdmin === 1 ? '是' : user.isAdmin === 0 ? '否' : '-',
+    }
+    formData.value = userData
+
+  } else {
+    // 新增模式
+    type.value = 'create'
+    formData.value = {
+      username: '',
+      email: '',
+      password: '',
+      nickname: '',
+      avatar: '',
+      phone: '',
+      gender: 0,
+      deptId: undefined,
+      postId: undefined,
+      remark: '',
+      role: 'user',
+      status: 1,
+    }
+
+  }
+}
 
 // 提交表单
 const onSubmit = async (data: any) => {
@@ -222,6 +279,7 @@ const onSubmit = async (data: any) => {
       ElMessage.success('创建成功')
     }
 
+
     close(true) // 关闭面板并刷新列表
   } catch (error: any) {
     if (error !== 'validation_failed') {
@@ -230,52 +288,12 @@ const onSubmit = async (data: any) => {
   }
 }
 
-// 重置表单
-const onReset = () => {
-  formRef.value?.resetFields()
-}
-
-const init = async (data: any) => {
-  const { rowId, type: _type } = data
-  type.value = _type || 'edit'
-
-  if (rowId) {
-    // 获取用户详情（axios 拦截器已经返回了 data）
-    const user = (await userApi.getUserById(rowId)) as unknown as User
-    formData.value = {
-      ...user,
-      password: '', // 不显示密码
-      roles: user.roles?.map((item: any) => {
-        // 如果 item 是对象，取 code；如果是字符串，直接返回
-        return typeof item === 'object' && item.code ? item.code : item
-      }) || [],
-      // 格式化只读字段
-      loginDate: user.loginDate ? new Date(user.loginDate).toLocaleString('zh-CN') : '-',
-      isAdminText: user.isAdmin === 1 ? '是' : user.isAdmin === 0 ? '否' : '-',
-    }
-
-  } else {
-    // 新增模式
-    type.value = 'create'
-    formData.value = {
-      username: '',
-      email: '',
-      password: '',
-      nickname: '',
-      avatar: '',
-      phone: '',
-      gender: 0,
-      deptId: undefined,
-      postId: undefined,
-      remark: '',
-      role: 'user',
-      status: 1,
-    }
-  }
-}
-
-
-defineExpose({ init })
+defineExpose({
+  init,
+  // 暴露给 SlideContainer 用于自动检测未保存修改
+  formData,
+  formConfig
+})
 </script>
 
 <style scoped>

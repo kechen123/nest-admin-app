@@ -87,6 +87,7 @@ const formConfig = computed(() => ({
       width: 240,
       rules: [{ required: true, message: '请输入字典标签', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'dictValue',
@@ -104,6 +105,7 @@ const formConfig = computed(() => ({
       placeholder: '请输入字典排序',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
       props: {
         min: 0,
       },
@@ -115,6 +117,7 @@ const formConfig = computed(() => ({
       placeholder: '请输入样式属性',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'listClass',
@@ -123,6 +126,7 @@ const formConfig = computed(() => ({
       placeholder: '请输入表格回显样式',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'isDefault',
@@ -135,6 +139,7 @@ const formConfig = computed(() => ({
       placeholder: '请选择是否默认',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'status',
@@ -147,6 +152,7 @@ const formConfig = computed(() => ({
       placeholder: '请选择状态',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'remark',
@@ -156,6 +162,7 @@ const formConfig = computed(() => ({
       width: '100%',
       rows: 4,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
   ],
   rules: {
@@ -265,7 +272,12 @@ const init = async (data: any) => {
   }
 }
 
-defineExpose({ init })
+defineExpose({
+  init,
+  // 暴露给 SlideContainer 用于自动检测未保存修改
+  formData,
+  formConfig
+})
 </script>
 
 <style scoped lang="less">

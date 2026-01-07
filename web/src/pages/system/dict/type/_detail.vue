@@ -63,6 +63,7 @@ const formConfig = computed(() => ({
       width: 240,
       rules: [{ required: true, message: '请输入字典名称', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'dictType',
@@ -84,6 +85,7 @@ const formConfig = computed(() => ({
       placeholder: '请选择状态',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'remark',
@@ -93,6 +95,7 @@ const formConfig = computed(() => ({
       width: '100%',
       rows: 4,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
   ],
   rules: {
@@ -183,7 +186,12 @@ const init = async (data: any) => {
   formRef.value?.formRef?.clearValidate()
 }
 
-defineExpose({ init })
+defineExpose({
+  init,
+  // 暴露给 SlideContainer 用于自动检测未保存修改
+  formData,
+  formConfig
+})
 </script>
 
 <style scoped lang="less">

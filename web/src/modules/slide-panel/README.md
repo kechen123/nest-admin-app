@@ -2,6 +2,15 @@
 
 用于在页面右侧快速打开滑出面板，支持内容区域/右栏自适应宽度、拖拽调整、统一数据传递与生命周期钩子。
 
+## 功能特性
+
+- ✅ 右栏滑出与收起
+- ✅ 内容区域自适应宽度
+- ✅ 右栏宽度拖拽调整
+- ✅ 统一数据传递与生命周期钩子
+- ✅ 自动未保存修改检测
+- ✅ TypeScript 类型支持
+
 ## 组件与安装
 
 - `SlideContainer`：核心容器，负责右栏滑出、数据下发与布局计算。
@@ -39,7 +48,7 @@ open({
     method?: 'init',    // 组件暴露的方法名，默认 init
     data?: object,      // 统一透传给组件的方法参数
     width?: number,     // 右栏宽度，默认 400
-    title?: string,     // 右栏标题，默认“详情”
+    title?: string,     // 右栏标题，默认"详情"
     onOpen?: () => void,// 动画完成后触发
     onClose?: (v:any)=>void // 关闭时回调
   }
@@ -66,83 +75,179 @@ defineExpose({ init })
 - `width` 控制初始宽度。
 - 右栏可拖拽调整，主内容区域会自动缩放；需要时可手动调用 `updateContentLayout()`（例如容器尺寸变化）。
 
-## AsideContainer API
+## 自动未保存修改检测
 
-封装左侧可折叠区域 + `SlideContainer`。
+SlideContainer 内置了自动未保存修改检测功能，无需在每个组件中重复实现。
 
-### Props
+### 工作原理
 
-| 名称 | 类型 | 默认 | 说明 |
-| ---- | ---- | ---- | ---- |
-| `asideWidth` | `string \| number` | `400px` | 左侧区域宽度 |
-| `minimized` | `boolean` | `false` | 是否初始收起 |
+当调用 `close()` 时，SlideContainer 会自动：
 
-### AsideContainer 插槽
+1. 检查组件是否暴露了 `checkUnsavedChanges` 方法（优先使用）
+2. 如果没有，则自动检测表单数据变化
+3. 根据 `formConfig.fields` 中 `compare` 配置决定哪些字段参与比较
+4. 支持额外数据源检测（如富文本编辑器）
 
-- `asideTitle`：左侧标题区域。
-- `asideBody`：左侧主体内容。
-- 默认插槽：主内容区域（内部已包含 `SlideContainer`）。
+### 表单配置
 
-### 暴露方法
+在 `formConfig.fields` 中为每个字段添加 `compare` 属性：
 
-| 方法 | 说明 |
-| ---- | ---- |
-| `open(options)` / `close()` | 代理内部 `SlideContainer` 的开关 |
-| `toggleAside()` | 展开/收起左侧区域 |
+```ts
+const formConfig = computed(() => ({
+  fields: [
+    {
+      key: 'username',
+      label: '用户名',
+      type: 'input',
+      compare: true,  // 参与比较
+    },
+    {
+      key: 'password',
+      label: '密码',
+      type: 'input',
+      compare: false, // 不参与比较
+    }
+  ]
+}))
+```
 
-## 快速示例
+### 组件数据暴露
+
+组件需要暴露以下数据给 SlideContainer 进行自动检测：
 
 ```vue
+<script setup lang="ts">
+// 表单数据
+const formData = ref({ name: '', email: '' })
+const formConfig = computed(() => ({ /* ... */ }))
+
+// 初始数据（在 init 方法中设置）
+const initialFormData = ref({ name: '', email: '' })
+
+// 额外数据源（如富文本编辑器）
+const content = ref('')
+const initialContent = ref('')
+
+defineExpose({
+  init,
+  // 暴露给 SlideContainer 用于自动检测
+  formData,
+  formConfig,
+  initialFormData,
+  // 额外数据源
+  additionalDataSources: [content],
+  initialAdditionalDataSources: [initialContent]
+})
+</script>
+```
+
+### 自定义检测逻辑
+
+如果需要自定义检测逻辑，可以在组件中暴露 `checkUnsavedChanges` 方法：
+
+```vue
+<script setup lang="ts">
+const checkUnsavedChanges = () => {
+  // 自定义检测逻辑
+  return hasChanges.value
+}
+
+defineExpose({
+  init,
+  checkUnsavedChanges,
+  // 如果有 handleClose，也会优先使用
+  handleClose
+})
+</script>
+```
+
+### 数据重置
+
+提交成功后，需要手动更新初始数据：
+
+```vue
+const onSubmit = async () => {
+  // ... 提交逻辑
+  await api.save(formData.value)
+
+  // 更新初始数据
+  initialFormData.value = { ...formData.value }
+  initialContent.value = content.value
+
+  close(true)
+}
+```
+
+## 完整示例
+
+```vue
+<!-- 父组件 -->
 <template>
   <SlideContainer ref="containerRef">
-    <MainTable @row-click="openDetail" />
+    <!-- 主内容 -->
   </SlideContainer>
 </template>
 
 <script setup lang="ts">
-import Detail from './Detail.vue'
 const containerRef = ref()
 
-const openDetail = (row) => {
+const openDetail = () => {
   containerRef.value.open({
     default: {
-      component: Detail,
-      data: { rowId: row.id, extra: row },
-      width: 600,
-      title: '用户详情',
-      onClose: (val) => console.log('closed with', val)
+      component: DetailComponent,
+      data: { rowId: 1, type: 'edit' },
+      title: '编辑用户'
     }
   })
 }
 </script>
 ```
 
-组件内：
-
 ```vue
+<!-- 子组件 (DetailComponent.vue) -->
+<template>
+  <KcForm :config="formConfig" v-model="formData" />
+</template>
+
 <script setup lang="ts">
-const init = async ({ rowId, extra }) => {
-  // 加载详情
+const formData = ref({ name: '', email: '' })
+const initialFormData = ref({ name: '', email: '' })
+
+const formConfig = computed(() => ({
+  fields: [
+    { key: 'name', label: '姓名', type: 'input', compare: true },
+    { key: 'email', label: '邮箱', type: 'input', compare: true }
+  ]
+}))
+
+const init = async (data: any) => {
+  // 加载数据
+  const result = await api.getById(data.rowId)
+  formData.value = result
+  initialFormData.value = { ...result }
 }
-defineExpose({ init })
+
+const onSubmit = async () => {
+  await api.save(formData.value)
+  // 更新初始数据
+  initialFormData.value = { ...formData.value }
+  close(true)
+}
+
+defineExpose({
+  init,
+  formData,
+  formConfig,
+  initialFormData
+})
 </script>
 ```
 
-## 与 Kc.TableWithSlidePanel 联动
+## 注意事项
 
-`TableWithSlidePanel` 直接内置 `SlideContainer`，可通过 `openPanel` / `closePanel` 调起右栏：
-
-```ts
-tableRef.value.openPanel({
-  component: Detail,
-  data: { rowId },
-  width: 600,
-  title: '用户详情'
-})
-```
-
-## 使用建议
-
-- 右侧组件务必暴露 `init`（或自定义 `method`）以接收数据。
-- 如需避免布局抖动，拖拽时容器禁用动画，释放后自动过渡。
-- 当容器尺寸变化（窗口缩放、父级折叠）时可调用 `updateContentLayout()` 以重新计算宽高。
+1. **compare 配置**：默认为 `true`，只有明确设置为 `false` 的字段才不参与比较
+2. **初始数据设置**：在 `init` 方法中正确设置 `initialFormData`
+3. **数据重置**：提交成功后及时更新 `initialFormData`
+4. **额外数据源**：如有富文本编辑器等非表单数据，通过 `additionalDataSources` 暴露
+5. **查看模式**：查看模式下不进行检测，可通过 `checkUnsavedChanges` 方法返回 `false`
+6. **自定义逻辑**：如需复杂检测逻辑，可暴露 `checkUnsavedChanges` 方法

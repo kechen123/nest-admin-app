@@ -101,6 +101,7 @@ const formConfig = computed(() => ({
       width: 240,
       rules: [{ required: true, message: '请输入部门名称', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'parentId',
@@ -109,6 +110,7 @@ const formConfig = computed(() => ({
       slot: 'parentId',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'leader',
@@ -117,6 +119,7 @@ const formConfig = computed(() => ({
       placeholder: '请输入负责人',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'phone',
@@ -125,6 +128,7 @@ const formConfig = computed(() => ({
       placeholder: '请输入联系电话',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'email',
@@ -136,6 +140,7 @@ const formConfig = computed(() => ({
         { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
       ],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'orderNum',
@@ -147,6 +152,7 @@ const formConfig = computed(() => ({
       props: {
         min: 0,
       },
+      compare: true,
     },
     {
       key: 'status',
@@ -159,6 +165,7 @@ const formConfig = computed(() => ({
       placeholder: '请选择状态',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'remark',
@@ -167,6 +174,9 @@ const formConfig = computed(() => ({
       placeholder: '请输入备注',
       width: '100%',
       rows: 4,
+      disabled: computed(() => type.value === 'view'),
+      compare: true,
+    },
       disabled: computed(() => type.value === 'view'),
     },
   ],
@@ -277,7 +287,12 @@ const init = async (data: any) => {
   }
 }
 
-defineExpose({ init })
+defineExpose({
+  init,
+  // 暴露给 SlideContainer 用于自动检测未保存修改
+  formData,
+  formConfig
+})
 </script>
 
 <style scoped lang="less">

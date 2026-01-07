@@ -95,6 +95,7 @@ const formConfig = reactive({
       placeholder: '请选择菜单类型',
       rules: [{ required: true, message: '请选择菜单类型', trigger: 'change' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'name',
@@ -103,6 +104,7 @@ const formConfig = reactive({
       placeholder: '请输入菜单名称',
       rules: [{ required: true, message: '请输入菜单名称', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'title',
@@ -111,6 +113,7 @@ const formConfig = reactive({
       placeholder: '请输入菜单标题',
       rules: [{ required: true, message: '请输入菜单标题', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'path',
@@ -118,6 +121,7 @@ const formConfig = reactive({
       type: 'input' as const,
       placeholder: '请输入路由路径',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'icon',
@@ -125,6 +129,7 @@ const formConfig = reactive({
       type: 'input' as const,
       placeholder: '请选择图标',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
       slot: 'icon', // 使用自定义插槽
     },
     {
@@ -133,6 +138,7 @@ const formConfig = reactive({
       type: 'select' as const,
       placeholder: '请选择父级菜单',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
       slot: 'parentId', // 使用自定义插槽显示树形选择器
     },
     {
@@ -141,6 +147,7 @@ const formConfig = reactive({
       type: 'input' as const,
       placeholder: '请输入组件路径',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'permissionCode',
@@ -148,6 +155,7 @@ const formConfig = reactive({
       type: 'input' as const,
       placeholder: '请输入权限代码',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'sort',
@@ -156,6 +164,7 @@ const formConfig = reactive({
       placeholder: '请输入排序值',
       inputType: 'number',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'status',
@@ -167,6 +176,7 @@ const formConfig = reactive({
       ],
       placeholder: '请选择状态',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'visible',
@@ -178,6 +188,7 @@ const formConfig = reactive({
       ],
       placeholder: '请选择显示状态',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'isExternal',
@@ -189,6 +200,7 @@ const formConfig = reactive({
       ],
       placeholder: '请选择',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'isCache',
@@ -200,6 +212,7 @@ const formConfig = reactive({
       ],
       placeholder: '请选择',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'query',
@@ -207,6 +220,7 @@ const formConfig = reactive({
       type: 'input' as const,
       placeholder: '请输入路由参数，如：id=1&type=2',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'remark',
@@ -214,6 +228,7 @@ const formConfig = reactive({
       type: 'textarea' as const,
       placeholder: '请输入备注',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
       attrs: {
         rows: 3,
       }
@@ -364,7 +379,12 @@ const init = async (data: any) => {
   }
 }
 
-defineExpose({ init })
+defineExpose({
+  init,
+  // 暴露给 SlideContainer 用于自动检测未保存修改
+  formData,
+  formConfig
+})
 </script>
 
 <style scoped>

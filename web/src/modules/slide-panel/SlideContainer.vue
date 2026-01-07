@@ -13,7 +13,7 @@
         'flex-basis': layout.rightLayout.realTimeWidth + 'px',
         userSelect: isDragging ? 'none' : 'auto'
       }">
-        <div ref="rightLineRef" class="resizer" />
+        <div :ref="resizerRef" class="resizer" />
         <SidePanelWrapper :title="sidePanelState.title" v-loading="sidePanelState.isLoading">
           <component :is="sidePanelState.sideComponent" v-bind="sidePanelState.sideProps"
             :ref="(el: any) => (sidePanelState.sideRef = el)" />
@@ -26,15 +26,14 @@
 
 <script setup lang="ts">
 import { useLayoutStore } from '@/stores/layout'
-import useMouse from './hooks/useMouseDrop'
-// import useElementResize from './hooks/useElementResize'
 import SidePanelWrapper from './components/SidePanelWrapper.vue'
+import { checkFormChanges } from '@/utils/formComparison'
+import { showUnsavedChangesDialog } from '@/utils/slidePanel'
+import { usePanelDrag } from '@/composables/usePanelDrag'
 
 
 const layoutStore = useLayoutStore()
 const layout = layoutStore.mainLayout
-
-const isDragging = ref(false)
 
 const mainRect = reactive({
   width: 0,
@@ -52,25 +51,23 @@ const sidePanelState = reactive({
   pendingProps: {},
   pendingMethod: '',
   pendingData: {} as Record<string, any>,
+  // 自动保存的初始数据快照
+  initialFormDataSnapshot: null as Record<string, any> | null,
 })
-
 
 const containerRef = ref()
 const onCloseCallback = ref<(() => void) | null>(null)
 const isUpdatingLayout = ref(false)
 
-const downRight = () => {
-  isDragging.value = true
-  layout.rightLayout.downWidth = layout.rightLayout.realTimeWidth
-}
-
-const upRight = () => {
-  isDragging.value = false
-  layout.rightLayout.downWidth = layout.rightLayout.realTimeWidth
-}
-
-const moveRight = (e: MouseEvent, mouse: any) => {
-  if (mouse.state === 'down') {
+// 使用拖拽 composable
+const { isDragging, resizerRef: rightLineRef, addListener } = usePanelDrag({
+  onDown: () => {
+    layout.rightLayout.downWidth = layout.rightLayout.realTimeWidth
+  },
+  onUp: () => {
+    layout.rightLayout.downWidth = layout.rightLayout.realTimeWidth
+  },
+  onMove: (e: MouseEvent, mouse: any) => {
     let w = layout.rightLayout.downWidth - mouse.x
     const rightMinWidth = layout.rightLayout.minWidth
     const contentMinWidth = layout.contentLayout.minWidth
@@ -80,9 +77,7 @@ const moveRight = (e: MouseEvent, mouse: any) => {
     layout.rightLayout.realTimeWidth = w
     layout.contentLayout.realTimeWidth = mainRect.width - w
   }
-}
-
-const [rightLineRef, addListener] = useMouse({ down: downRight, move: moveRight, up: upRight })
+})
 // const [containerRef] = useElementResize({ resize: bodyReSize, className: 'slide-container' })
 
 // 存储 watch 停止函数，用于清理
@@ -115,6 +110,12 @@ const open = async (params: SideOpenOptions) => {
     }
   } = params
 
+  // 如果面板已经打开，先重置组件引用和快照，确保 watch 能够再次触发
+  if (sidePanelState.show && sidePanelState.sideRef) {
+    sidePanelState.sideRef = null
+    sidePanelState.initialFormDataSnapshot = null // 清理旧的快照
+  }
+
   // 设置 loading 状态
   sidePanelState.isLoading = true
 
@@ -142,7 +143,44 @@ const open = async (params: SideOpenOptions) => {
   })
 }
 
+// 检查未保存的修改
+const checkUnsavedChanges = (): boolean => {
+  if (!sidePanelState.sideRef) {
+    return false
+  }
+
+  const component = sidePanelState.sideRef
+
+  // 1. 优先使用组件提供的检测方法
+  if (typeof component.checkUnsavedChanges === 'function') {
+    return component.checkUnsavedChanges()
+  }
+
+  // 2. 自动检测表单数据（使用工具函数）
+  const formData = component.formData
+  const formConfig = component.formConfig
+
+  return checkFormChanges(formData, formConfig, sidePanelState.initialFormDataSnapshot)
+}
+
+// 显示确认对话框（使用工具函数）
+
 const close = async (val: any) => {
+  // 检查是否有未保存的修改
+  if (checkUnsavedChanges()) {
+    // 显示确认对话框（使用工具函数）
+    const confirmed = await showUnsavedChangesDialog()
+    if (!confirmed) {
+      return
+    }
+  }
+
+  // 执行实际的关闭操作
+  await doClose(val)
+}
+
+// 实际的关闭操作
+const doClose = async (val: any) => {
   // 清理组件引用和相关状态
   if (sidePanelState.sideRef) {
     // 如果组件有清理方法，调用它
@@ -152,29 +190,56 @@ const close = async (val: any) => {
       sidePanelState.sideRef.unmount()
     }
   }
-  
+
   sidePanelState.show = false
   onCloseCallback.value?.(val)
-  
+
   // 清理待处理的组件数据
   sidePanelState.pendingComponent = null
   sidePanelState.pendingProps = {}
   sidePanelState.pendingMethod = ''
   sidePanelState.pendingData = {}
   sidePanelState.sideRef = null
+  sidePanelState.initialFormDataSnapshot = null // 清理初始数据快照
   onCloseCallback.value = null
 }
 
-const onSlideInComplete = () => {
-  nextTick(() => {
-    // 动画完成后，设置组件和属性
-    sidePanelState.sideComponent = sidePanelState.pendingComponent
-    sidePanelState.sideProps = sidePanelState.pendingProps
+const onSlideInComplete = async () => {
+  await nextTick()
+  // 动画完成后，设置组件和属性
+  sidePanelState.sideComponent = sidePanelState.pendingComponent
+  sidePanelState.sideProps = sidePanelState.pendingProps
 
+  // 等待组件引用设置（处理面板已打开时重新打开的情况）
+  // 组件引用可能已经存在（相同组件）或需要等待挂载（不同组件）
+  await nextTick()
 
+  if (sidePanelState.sideRef && sidePanelState.pendingMethod) {
+    const initMethod = sidePanelState.sideRef[sidePanelState.pendingMethod]
+    if (typeof initMethod === 'function') {
+      try {
+        await initMethod(sidePanelState.pendingData)
 
-    updateContentLayout()
-  })
+        // 组件初始化完成后，自动保存 formData 快照
+        const component = sidePanelState.sideRef
+        if (component.formData && component.formConfig) {
+          // 深度克隆 formData 作为初始快照
+          sidePanelState.initialFormDataSnapshot = JSON.parse(JSON.stringify(component.formData))
+        }
+      } catch (error) {
+        console.error('组件 init 方法调用失败:', error)
+      } finally {
+        // 无论成功还是失败，都设置为非加载状态
+        sidePanelState.isLoading = false
+      }
+    } else {
+      sidePanelState.isLoading = false
+    }
+  } else {
+    sidePanelState.isLoading = false
+  }
+
+  updateContentLayout()
 }
 
 const onSlideOutComplete = () => {
@@ -235,7 +300,7 @@ onBeforeUnmount(() => {
     stopWatchRef()
     stopWatchRef = null
   }
-  
+
   // 清理组件引用
   if (sidePanelState.sideRef) {
     if (typeof sidePanelState.sideRef.destroy === 'function') {
@@ -244,14 +309,15 @@ onBeforeUnmount(() => {
       sidePanelState.sideRef.unmount()
     }
   }
-  
+
   // 清理回调
   onCloseCallback.value = null
-  
+
   // 重置状态
   sidePanelState.show = false
   sidePanelState.sideComponent = null
   sidePanelState.sideRef = null
+  sidePanelState.initialFormDataSnapshot = null
   sidePanelState.pendingComponent = null
   sidePanelState.pendingProps = {}
   sidePanelState.pendingMethod = ''

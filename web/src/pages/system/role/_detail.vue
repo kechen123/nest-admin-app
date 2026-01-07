@@ -168,6 +168,7 @@ const formConfig = reactive({
       placeholder: '请输入角色名称',
       rules: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'code',
@@ -176,6 +177,7 @@ const formConfig = reactive({
       placeholder: '请输入角色代码',
       rules: [{ required: true, message: '请输入角色代码', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'dataScope',
@@ -185,6 +187,7 @@ const formConfig = reactive({
       placeholder: '请选择数据范围',
       rules: [{ required: true, message: '请选择数据范围', trigger: 'change' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'orderNum',
@@ -193,6 +196,7 @@ const formConfig = reactive({
       placeholder: '请输入显示顺序',
       inputType: 'number',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'status',
@@ -202,6 +206,7 @@ const formConfig = reactive({
       placeholder: '请选择状态',
       rules: [{ required: true, message: '请选择状态', trigger: 'change' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'remark',
@@ -209,6 +214,7 @@ const formConfig = reactive({
       type: 'textarea' as const,
       placeholder: '请输入备注',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
   ],
 })
@@ -254,7 +260,12 @@ const onReset = () => {
 }
 
 // 暴露 init 方法供 SlideContainer 调用
-defineExpose({ init })
+defineExpose({
+  init,
+  // 暴露给 SlideContainer 用于自动检测未保存修改
+  formData,
+  formConfig
+})
 </script>
 
 <style scoped lang="less">

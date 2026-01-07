@@ -67,6 +67,7 @@ const formConfig = reactive({
       width: 240,
       rules: [{ required: true, message: '请输入菜单名称', trigger: 'blur' }],
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'path',
@@ -75,6 +76,7 @@ const formConfig = reactive({
       placeholder: '请输入路由路径',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'icon',
@@ -83,6 +85,7 @@ const formConfig = reactive({
       placeholder: '请输入图标名称',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'parentId',
@@ -108,6 +111,7 @@ const formConfig = reactive({
       placeholder: '请选择父级菜单',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'component',
@@ -116,6 +120,7 @@ const formConfig = reactive({
       placeholder: '请输入组件路径',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'permissionCode',
@@ -124,6 +129,7 @@ const formConfig = reactive({
       placeholder: '请输入权限代码',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'sort',
@@ -133,6 +139,7 @@ const formConfig = reactive({
       width: 240,
       inputType: 'number',
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'status',
@@ -145,6 +152,7 @@ const formConfig = reactive({
       placeholder: '请选择状态',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
     {
       key: 'isExternal',
@@ -157,6 +165,7 @@ const formConfig = reactive({
       placeholder: '请选择',
       width: 240,
       disabled: computed(() => type.value === 'view'),
+      compare: true,
     },
   ],
   rules: {
@@ -258,7 +267,12 @@ const init = async (data: any) => {
   }
 }
 
-defineExpose({ init })
+defineExpose({
+  init,
+  // 暴露给 SlideContainer 用于自动检测未保存修改
+  formData,
+  formConfig
+})
 </script>
 
 <style scoped>
