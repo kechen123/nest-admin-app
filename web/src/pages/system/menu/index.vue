@@ -8,9 +8,9 @@
     </template>
     <template #actions="{ row }">
       <div class="actions-buttons">
-        <CommonButton type="primary" plain size="small" :label="'编辑'" @click="() => openMenuDetail(row.id, 'edit')" />
-        <CommonButton type="success" plain size="small" :label="'查看详情'" @click="() => openMenuDetail(row.id, 'view')" />
-        <CommonButton type="danger" plain size="small" :label="'删除'" @click="() => handleDelete(row.id)" />
+        <CommonButton v-if="hasPermission('system:menu:edit')" type="primary" plain size="small" :label="'编辑'" @click="() => openMenuDetail(row.id, 'edit')" />
+        <CommonButton v-if="hasPermission('system:menu:query')" type="success" plain size="small" :label="'查看详情'" @click="() => openMenuDetail(row.id, 'view')" />
+        <CommonButton v-if="hasPermission('system:menu:remove')" type="danger" plain size="small" :label="'删除'" @click="() => handleDelete(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>
@@ -24,6 +24,7 @@ import CommonButton from '@/components/CommonButton/index.vue'
 import { useRouterStore } from '@/stores/router'
 import type { KcConfig, TableConfig, ColumnProps } from '@/components/Kc/types'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { hasPermission } from '@/utils/permission'
 
 const routerStore = useRouterStore()
 
@@ -294,15 +295,15 @@ const tableConfig: TableConfig = {
 // 动态生成工具栏配置
 const toolbarConfig = computed(() => ({
   leftButtons: [
-    {
+    ...(hasPermission('system:menu:add') ? [{
       key: 'add',
       label: '新增菜单',
       type: 'primary' as const,
       onClick: () => {
         openMenuDetail()
       }
-    },
-    {
+    }] : []),
+    ...(hasPermission('system:menu:remove') ? [{
       key: 'batchDelete',
       label: `批量删除${selectedRows.value.length > 0 ? `(${selectedRows.value.length})` : ''}`,
       type: 'danger' as const,
@@ -334,7 +335,7 @@ const toolbarConfig = computed(() => ({
           }
         }
       }
-    }
+    }] : []),
   ],
   rightButtons: [
     {

@@ -74,6 +74,7 @@ declare module 'vue' {
     LayoutHeaderNavigation: typeof import('./../src/components/Layout/Header/navigation.vue')['default']
     LayoutTags: typeof import('./../src/components/Layout/Tags/index.vue')['default']
     MIcon: typeof import('./../src/components/mIcon.vue')['default']
+    PageLoading: typeof import('./../src/components/PageLoading/index.vue')['default']
     PermissionButton: typeof import('./../src/components/PermissionButton/index.vue')['default']
     QuillEditor: typeof import('./../src/components/QuillEditor/index.vue')['default']
     QuillEditorTest: typeof import('./../src/components/QuillEditor/test.vue')['default']

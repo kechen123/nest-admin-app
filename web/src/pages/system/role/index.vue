@@ -2,9 +2,12 @@
   <TableWithSlidePanel :config="kcConfig" :column-display-config="columnDisplayConfig" ref="tableRef">
     <template #actions="{ row }">
       <div class="actions-buttons">
-        <CommonButton type="primary" plain size="small" :label="'编辑'" @click="() => openRoleDetail(row.id, 'edit')" />
-        <CommonButton type="success" plain size="small" :label="'查看详情'" @click="() => openRoleDetail(row.id, 'view')" />
-        <CommonButton type="danger" plain size="small" :label="'删除'" @click="() => handleDelete(row.id)" />
+        <CommonButton v-if="hasPermission('system:role:edit')" type="primary" plain size="small" :label="'编辑'"
+          @click="() => openRoleDetail(row.id, 'edit')" />
+        <CommonButton v-if="hasPermission('system:role:query')" type="success" plain size="small" :label="'查看详情'"
+          @click="() => openRoleDetail(row.id, 'view')" />
+        <CommonButton v-if="hasPermission('system:role:remove')" type="danger" plain size="small" :label="'删除'"
+          @click="() => handleDelete(row.id)" />
       </div>
     </template>
   </TableWithSlidePanel>
@@ -19,6 +22,7 @@ import type { KcConfig, TableConfig, ColumnProps } from '@/components/Kc/types'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getDictOptions } from '@/utils/dict'
 import type { DictOption } from '@/api/dict'
+import { hasPermission } from '@/utils/permission'
 
 // 字典选项
 const statusOptions = ref<DictOption[]>([])
@@ -182,15 +186,15 @@ const tableConfig: TableConfig = {
 const kcConfig: KcConfig = {
   toolbar: {
     leftButtons: [
-      {
+      ...(hasPermission('system:role:add') ? [{
         key: 'add',
         label: '新增',
-        type: 'primary',
+        type: 'primary' as const,
         icon: 'Plus',
         onClick: () => {
           openRoleDetail(undefined, 'add')
         },
-      },
+      }] : []),
     ],
   },
   search: {

@@ -280,6 +280,7 @@ const goToTestA = () => {
   min-height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 // 欢迎区域

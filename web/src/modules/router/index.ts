@@ -6,6 +6,7 @@ import {
 } from 'vue-router'
 import { useRouterStore } from '@/stores/router'
 import { Auth, NotCheckRouter } from './permission'
+import { showPageLoading, hidePageLoading } from '@/utils/loading'
 const baseRoutes = [
   {
     path: '/',
@@ -34,6 +35,11 @@ export const router = createRouter({
 
 // 在路由跳转前，检查用户是否有权限访问该路由
 router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized) => {
+  // 显示页面加载loading（仅在非相同路由时显示）
+  if (to.path !== from.path) {
+    showPageLoading()
+  }
+  
   const routeName = to.name?.toString() || ''
   const routePath = to.path
   const isNotCheckRoute = NotCheckRouter.some((notCheck) => {
@@ -55,6 +61,19 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
     return b
   }
   return true
+})
+
+// 路由跳转完成后隐藏loading
+router.afterEach(() => {
+  // 延迟隐藏loading，确保页面切换效果
+  setTimeout(() => {
+    hidePageLoading()
+  }, 200)
+})
+
+// 路由错误时也隐藏loading
+router.onError(() => {
+  hidePageLoading()
 })
 
 export default router

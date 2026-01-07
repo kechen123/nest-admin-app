@@ -395,6 +395,39 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `pat
 (28, 'RoleAdd', '角色新增', 'system:role:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 2, NULL),
 (29, 'RoleEdit', '角色修改', 'system:role:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 3, NULL),
 (30, 'RoleDelete', '角色删除', 'system:role:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 6, 4, NULL),
+-- 菜单管理按钮权限
+(32, 'MenuQuery', '菜单查询', 'system:menu:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 7, 1, NULL),
+(33, 'MenuAdd', '菜单新增', 'system:menu:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 7, 2, NULL),
+(34, 'MenuEdit', '菜单修改', 'system:menu:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 7, 3, NULL),
+(35, 'MenuDelete', '菜单删除', 'system:menu:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 7, 4, NULL),
+-- 部门管理按钮权限
+(36, 'DeptQuery', '部门查询', 'system:dept:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 8, 1, NULL),
+(37, 'DeptAdd', '部门新增', 'system:dept:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 8, 2, NULL),
+(38, 'DeptEdit', '部门修改', 'system:dept:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 8, 3, NULL),
+(39, 'DeptDelete', '部门删除', 'system:dept:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 8, 4, NULL),
+-- 岗位管理按钮权限
+(40, 'PostQuery', '岗位查询', 'system:post:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 9, 1, NULL),
+(41, 'PostAdd', '岗位新增', 'system:post:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 9, 2, NULL),
+(42, 'PostEdit', '岗位修改', 'system:post:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 9, 3, NULL),
+(43, 'PostDelete', '岗位删除', 'system:post:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 9, 4, NULL),
+-- 字典类型按钮权限
+(44, 'DictTypeQuery', '字典类型查询', 'system:dict:type:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 102, 1, NULL),
+(45, 'DictTypeAdd', '字典类型新增', 'system:dict:type:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 102, 2, NULL),
+(46, 'DictTypeEdit', '字典类型修改', 'system:dict:type:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 102, 3, NULL),
+(47, 'DictTypeDelete', '字典类型删除', 'system:dict:type:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 102, 4, NULL),
+-- 字典数据按钮权限
+(48, 'DictDataQuery', '字典数据查询', 'system:dict:data:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 103, 1, NULL),
+(49, 'DictDataAdd', '字典数据新增', 'system:dict:data:add', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 103, 2, NULL),
+(50, 'DictDataEdit', '字典数据修改', 'system:dict:data:edit', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 103, 3, NULL),
+(51, 'DictDataDelete', '字典数据删除', 'system:dict:data:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 103, 4, NULL),
+-- 操作日志按钮权限
+(52, 'OperLogQuery', '操作日志查询', 'monitor:operlog:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 13, 1, NULL),
+(53, 'OperLogDelete', '操作日志删除', 'monitor:operlog:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 13, 2, NULL),
+(54, 'OperLogExport', '操作日志导出', 'monitor:operlog:export', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 13, 3, NULL),
+-- 登录日志按钮权限
+(55, 'LoginLogQuery', '登录日志查询', 'monitor:logininfor:query', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 14, 1, NULL),
+(56, 'LoginLogDelete', '登录日志删除', 'monitor:logininfor:remove', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 14, 2, NULL),
+(57, 'LoginLogExport', '登录日志导出', 'monitor:logininfor:export', 'F', NULL, NULL, NULL, 1, 0, 1, 1, '#', 14, 3, NULL),
 (31, 'Index', '首页', NULL, 'C', '/', 'index', NULL, 1, 0, 1, 1, 'HomeFilled', 0, 0, NULL),
 (100, '测试目录名称', '测试目录标题', NULL, 'M', '/test', 'Layout', NULL, 1, 0, 1, 1, 'Tools', 0, 33, 'test111'),
 (101, '测试子菜单名称', '测试子菜单标题', NULL, 'C', '/test/testaa', 'test/testaa/index', NULL, 1, 0, 1, 1, 'Document', 100, 1, NULL),
@@ -483,7 +516,8 @@ SELECT 1, id FROM `menus` WHERE `status` = 1;
 INSERT INTO `role_menus` (`role_id`, `menu_id`)
 SELECT 2, id FROM `menus` 
 WHERE `status` = 1 
-AND `permission_code` LIKE 'system:%'
+AND (`permission_code` LIKE 'system:%'
+     OR id = 31)  -- 首页
 AND `permission_code` NOT IN ('system:user:remove', 'system:role:remove', 'system:menu:remove');
 
 -- 部门管理员拥有部门管理权限
@@ -492,7 +526,8 @@ SELECT 3, id FROM `menus`
 WHERE `status` = 1 
 AND (`permission_code` LIKE 'system:dept:%' 
      OR `permission_code` LIKE 'monitor:%'
-     OR id = 4);  -- 个人中心相关
+     OR id = 4  -- 个人中心相关
+     OR id = 31);  -- 首页
 
 -- 开发工程师拥有查看权限
 INSERT INTO `role_menus` (`role_id`, `menu_id`)
@@ -501,13 +536,24 @@ WHERE `status` = 1
 AND (`permission_code` LIKE '%:list' 
      OR `permission_code` LIKE '%:query'
      OR `menu_type` = 'M'
-     OR id = 4);
+     OR id = 4  -- 个人中心相关
+     OR id = 31);  -- 首页
 
--- 普通用户只有个人中心
+-- 普通用户只有个人中心和首页
 INSERT INTO `role_menus` (`role_id`, `menu_id`)
 SELECT 8, id FROM `menus` 
 WHERE `status` = 1 
-AND id = 4;  -- 个人中心相关
+AND (id = 4  -- 个人中心相关
+     OR id = 31);  -- 首页
+
+-- 为所有角色添加首页权限（确保所有角色都能访问首页）
+INSERT INTO `role_menus` (`role_id`, `menu_id`)
+SELECT r.id, 31 FROM `roles` r
+WHERE r.status = 1
+AND NOT EXISTS (
+  SELECT 1 FROM `role_menus` rm 
+  WHERE rm.role_id = r.id AND rm.menu_id = 31
+);
 
 -- ============================================
 -- 25. 插入权限数据

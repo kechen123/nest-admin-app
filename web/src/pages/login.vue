@@ -14,7 +14,7 @@
                 </el-form-item>
                 <el-form-item prop="password">
                   <el-input v-model="ruleForm.password" type="password" autocomplete="off" :prefix-icon="Calendar"
-                    show-password />
+                    show-password @keyup.enter="submitForm(ruleFormRef)" />
                 </el-form-item>
                 <el-form-item>
                   <el-button type="primary" class="loginSubmit" @click="submitForm(ruleFormRef)"
@@ -31,7 +31,7 @@
                 </el-form-item>
                 <el-form-item prop="password">
                   <el-input v-model="ruleForm.password" type="password" autocomplete="off" :prefix-icon="Calendar"
-                    show-password />
+                    show-password @keyup.enter="submitForm(ruleFormRef)" />
                 </el-form-item>
                 <el-form-item>
                   <el-button type="primary" class="loginSubmit" @click="submitForm(ruleFormRef)"
@@ -126,7 +126,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
           }
 
           ElMessage.success('登录成功')
-          router.push('/')
+          location.href = '/'
         } else {
           ElMessage.error('登录失败：响应数据格式错误')
         }
