@@ -527,6 +527,6 @@ docker-compose -f docker-compose.prod.yml exec mysql bash
 
 ## 📚 更多信息
 
-- 开发环境配置：查看 `DOCKER.md`
-- 构建优化：查看 `OPTIMIZATION.md`
-- 项目文档：查看 `README.md`
+- [快速开始](./docs/guide/getting-started.md) - 项目运行指南
+- [Docker 使用](./DOCKER.md) - Docker 开发环境
+- [项目文档](./docs/) - 完整文档中心

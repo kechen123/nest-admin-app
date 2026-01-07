@@ -6,13 +6,11 @@
   "scripts": {
     "help": "echo 查看 DOCKER.md 获取完整命令说明",
     "load-env": "node scripts/load-env-and-run.js",
-    
     "dev": "npm run load-env -- docker-compose -f docker-compose.dev.yml up",
     "dev:up": "npm run load-env -- docker-compose -f docker-compose.dev.yml up -d",
     "dev:down": "docker-compose -f docker-compose.dev.yml down",
     "dev:restart": "npm run load-env -- docker-compose -f docker-compose.dev.yml restart",
     "dev:logs": "docker-compose -f docker-compose.dev.yml logs -f",
-    
     "backend:start": "npm run load-env -- docker-compose -f docker-compose.dev.yml up -d backend",
     "backend:stop": "docker-compose -f docker-compose.dev.yml stop backend",
     "backend:restart": "npm run load-env -- docker-compose -f docker-compose.dev.yml restart backend",
@@ -20,18 +18,15 @@
     "backend:shell": "docker-compose -f docker-compose.dev.yml exec backend sh",
     "backend:init-db": "docker-compose -f docker-compose.dev.yml run --rm backend npm run db:init",
     "mysql:fix-access": "docker-compose -f docker-compose.dev.yml run --rm backend node database/fix-external-access.js",
-    
     "web:start": "docker-compose -f docker-compose.dev.yml up -d web",
     "web:stop": "docker-compose -f docker-compose.dev.yml stop web",
     "web:restart": "docker-compose -f docker-compose.dev.yml restart web",
     "web:logs": "docker-compose -f docker-compose.dev.yml logs -f web",
     "web:shell": "docker-compose -f docker-compose.dev.yml exec web sh",
-    
     "mysql:start": "npm run load-env -- docker-compose -f docker-compose.dev.yml up -d mysql",
     "mysql:stop": "docker-compose -f docker-compose.dev.yml stop mysql",
     "mysql:logs": "docker-compose -f docker-compose.dev.yml logs -f mysql",
     "mysql:shell": "node scripts/mysql-shell.js",
-    
     "build": "node scripts/debug-build.js",
     "prod": "docker-compose -f docker-compose.prod.yml up",
     "prod:up": "docker-compose -f docker-compose.prod.yml up -d",
@@ -40,17 +35,14 @@
     "prod:logs": "docker-compose -f docker-compose.prod.yml logs -f",
     "prod:build": "docker-compose -f docker-compose.prod.yml build",
     "prod:rebuild": "docker-compose -f docker-compose.prod.yml up -d --build",
-    
     "export:images": "bash scripts/export-images.sh",
     "export:images:win": "powershell -ExecutionPolicy Bypass -File scripts/export-images.ps1",
-    
     "deploy": "node -e \"require('child_process').execSync(process.platform === 'win32' ? 'powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 all' : 'bash scripts/deploy.sh all', {stdio:'inherit'})\"",
     "deploy:backend": "node -e \"require('child_process').execSync(process.platform === 'win32' ? 'powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 backend' : 'bash scripts/deploy.sh backend', {stdio:'inherit'})\"",
     "deploy:web": "node -e \"require('child_process').execSync(process.platform === 'win32' ? 'powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 web' : 'bash scripts/deploy.sh web', {stdio:'inherit'})\"",
     "deploy:win": "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 all",
     "deploy:backend:win": "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 backend",
     "deploy:web:win": "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 web",
-    
     "ps": "docker-compose -f docker-compose.dev.yml ps",
     "health": "node scripts/check-health.js",
     "verify": "npm run health && npm run ps",
@@ -58,7 +50,12 @@
     "clean": "docker system prune -f",
     "rebuild": "docker-compose -f docker-compose.dev.yml build --no-cache",
     "reset": "node scripts/reset-dev.js",
-    "reset:all": "docker-compose -f docker-compose.dev.yml down -v && docker volume rm yl_mysql_data 2>$null || docker volume rm yl_mysql_data || echo '数据卷已删除或不存在'"
+    "reset:all": "docker-compose -f docker-compose.dev.yml down -v && docker volume rm yl_mysql_data 2>$null || docker volume rm yl_mysql_data || echo '数据卷已删除或不存在'",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "2.0.0-alpha.15"
   }
 }
-
