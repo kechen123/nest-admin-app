@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 export class QueryUserDto extends PaginationDto {
@@ -17,4 +18,10 @@ export class QueryUserDto extends PaginationDto {
   @IsOptional()
   @IsString()
   role?: string;
+
+  @ApiProperty({ description: '部门ID', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  deptId?: number;
 }

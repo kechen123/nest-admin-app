@@ -74,6 +74,8 @@ const defaultAdapter = (raw: any, params: any): PaginationResponse => ({
 })
 
 // 请求模式
+// 使用 computed 包装 beforeRequest，确保每次调用时都获取最新的函数引用
+const beforeRequestHook = computed(() => props.config.beforeRequest)
 const requestTable = useTable({
   request: async (params) => {
     if (!request) return { list: [], total: 0, page: 1, size: 10 }
@@ -82,7 +84,11 @@ const requestTable = useTable({
   },
   defaultParams: props.config.defaultParams || {},
   defaultPagination: props.config.defaultPagination || {},
-  beforeRequest: props.config.beforeRequest,
+  // 使用函数包装，确保每次调用时都获取最新的 beforeRequest
+  beforeRequest: (params) => {
+    const hook = beforeRequestHook.value
+    return hook ? hook(params) : params
+  },
   immediate: props.config.immediate !== false,
 })
 

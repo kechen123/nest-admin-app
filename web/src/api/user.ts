@@ -74,6 +74,7 @@ export interface QueryUserParams {
   username?: string
   email?: string
   role?: string
+  deptId?: number
 }
 
 export interface PaginationResponse<T> {

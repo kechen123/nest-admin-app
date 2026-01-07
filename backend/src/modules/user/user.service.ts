@@ -48,7 +48,7 @@ export class UserService {
    * 分页查询用户
    */
   async findAll(queryDto: QueryUserDto): Promise<IPaginationResponse<User>> {
-    const { page = 1, pageSize = 10, username, email, role } = queryDto;
+    const { page = 1, pageSize = 10, username, email, role, deptId } = queryDto;
     const skip = (page - 1) * pageSize;
 
     const queryBuilder = this.userRepository.createQueryBuilder('user')
@@ -66,6 +66,10 @@ export class UserService {
     if (role) {
       // 通过关联表查询角色
       queryBuilder.andWhere('roles.code = :roleCode', { roleCode: role });
+    }
+    if (deptId !== undefined && deptId !== null) {
+      // 按部门ID过滤
+      queryBuilder.andWhere('user.deptId = :deptId', { deptId });
     }
 
     queryBuilder
