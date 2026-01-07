@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "yl",
   description: "基于 Docker 的现代化全栈开发解决方案",
+  base: '/yl/',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
