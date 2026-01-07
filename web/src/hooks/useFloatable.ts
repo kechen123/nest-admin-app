@@ -31,6 +31,10 @@ export interface UseFloatableOptions {
    */
   dragBounds?: UseDraggableOptions['bounds']
   /**
+   * 关闭浮动时的动画持续时间（毫秒），默认 300ms
+   */
+  restoreDuration?: number
+  /**
    * 悬浮状态改变时的回调
    */
   onFloatChange?: (isFloating: boolean) => void
@@ -92,6 +96,7 @@ export function useFloatable(options: UseFloatableOptions): UseFloatableReturn {
     scaleDuration = 300,
     zIndex = 2000,
     dragBounds,
+    restoreDuration = 300,
     onFloatChange,
     onDragStart,
     onDragMove,
@@ -188,17 +193,87 @@ export function useFloatable(options: UseFloatableOptions): UseFloatableReturn {
         setPosition(newLeft, newTop)
       }
     } else {
-      // 恢复相对定位
-      targetRef.value.style.position = ''
-      targetRef.value.style.zIndex = ''
-      targetRef.value.style.width = ''
-      targetRef.value.style.height = ''
-      targetRef.value.style.left = ''
-      targetRef.value.style.top = ''
-      targetRef.value.style.transform = ''
-      targetRef.value.style.transition = ''
+      // 恢复相对定位，添加移动动画
+      if (initialRect.value) {
+        // 获取当前浮动位置（实际渲染位置）
+        const currentRect = targetRef.value.getBoundingClientRect()
+        const currentLeft = currentRect.left
+        const currentTop = currentRect.top
 
-      initialRect.value = null
+        // 计算需要移动的距离（从当前位置移动到原始位置）
+        const deltaX = initialRect.value.left - currentLeft
+        const deltaY = initialRect.value.top - currentTop
+
+        // 如果位置有变化，添加移动动画
+        if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
+          // 获取当前的 transform translate 值和 CSS left/top
+          const computedStyle = window.getComputedStyle(targetRef.value)
+          const currentLeftCSS = parseFloat(computedStyle.left) || 0
+          const currentTopCSS = parseFloat(computedStyle.top) || 0
+          const currentTransform = computedStyle.transform
+          let currentTranslateX = 0
+          let currentTranslateY = 0
+
+          if (currentTransform && currentTransform !== 'none') {
+            const translateMatch = currentTransform.match(/translate\(([^)]+)\)/)
+            if (translateMatch) {
+              const values = translateMatch[1].split(',').map(v => parseFloat(v.trim()))
+              currentTranslateX = values[0] || 0
+              currentTranslateY = values[1] || 0
+            }
+          }
+
+          // 计算目标 translate 值
+          // 目标位置 = initialRect.left
+          // 当前实际位置 = currentLeftCSS + currentTranslateX
+          // 所以目标 translate = initialRect.left - currentLeftCSS
+          const targetTranslateX = initialRect.value.left - currentLeftCSS
+          const targetTranslateY = initialRect.value.top - currentTopCSS
+
+          // 添加 transition 动画（只动画 transform，保持 fixed 定位）
+          targetRef.value.style.transition = `transform ${restoreDuration}ms ease-out`
+
+          // 设置目标 transform（移动到原始位置）
+          targetRef.value.style.transform = `translate(${targetTranslateX}px, ${targetTranslateY}px)`
+
+          // 动画结束后恢复样式
+          setTimeout(() => {
+            if (targetRef.value && !isFloating.value) {
+              // 恢复相对定位
+              targetRef.value.style.position = ''
+              targetRef.value.style.zIndex = ''
+              targetRef.value.style.width = ''
+              targetRef.value.style.height = ''
+              targetRef.value.style.left = ''
+              targetRef.value.style.top = ''
+              targetRef.value.style.transform = ''
+              targetRef.value.style.transition = ''
+            }
+            initialRect.value = null
+          }, restoreDuration)
+        } else {
+          // 位置没有变化，直接恢复
+          targetRef.value.style.position = ''
+          targetRef.value.style.zIndex = ''
+          targetRef.value.style.width = ''
+          targetRef.value.style.height = ''
+          targetRef.value.style.left = ''
+          targetRef.value.style.top = ''
+          targetRef.value.style.transform = ''
+          targetRef.value.style.transition = ''
+          initialRect.value = null
+        }
+      } else {
+        // 没有初始位置信息，直接恢复
+        targetRef.value.style.position = ''
+        targetRef.value.style.zIndex = ''
+        targetRef.value.style.width = ''
+        targetRef.value.style.height = ''
+        targetRef.value.style.left = ''
+        targetRef.value.style.top = ''
+        targetRef.value.style.transform = ''
+        targetRef.value.style.transition = ''
+      }
     }
 
     // 触发回调

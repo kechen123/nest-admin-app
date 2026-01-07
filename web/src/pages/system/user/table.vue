@@ -31,7 +31,7 @@
 import { nextTick } from 'vue'
 import { User } from '@element-plus/icons-vue'
 import { userApi, type User as UserType } from '@/api/user'
-import Detail from './list/_detail.vue'
+import Detail from './_detail.vue'
 import TableWithSlidePanel from '@/components/Kc/TableWithSlidePanel.vue'
 import CommonButton from '@/components/CommonButton/index.vue'
 import type { KcConfig, TableConfig, ColumnProps } from '@/components/Kc/types'
