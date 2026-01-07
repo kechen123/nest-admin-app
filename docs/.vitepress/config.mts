@@ -5,6 +5,7 @@ export default defineConfig({
   title: "yl",
   description: "基于 Docker 的现代化全栈开发解决方案",
   base: '/yl/',
+  ignoreDeadLinks: true, // 忽略死链接检查（文档中包含 localhost 示例链接）
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
