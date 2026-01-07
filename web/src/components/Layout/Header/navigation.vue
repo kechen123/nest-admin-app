@@ -10,7 +10,7 @@
         <el-dropdown trigger="click" placement="bottom-end" :teleported="true"
           @visible-change="handleNotificationVisible">
           <div class="notification-trigger">
-            <el-badge :value="unreadCount" class="badge" :hidden="unreadCount === 0">
+            <el-badge :value="unreadCount" is-dot class="badge" :hidden="unreadCount === 0">
               <el-icon size="20">
                 <MIcon iconName="Bell" />
               </el-icon>
@@ -224,6 +224,16 @@ function searchMenu(menuList: MenuItem[], keyword: string): MenuItem[] {
   const lowerKeyword = keyword.toLowerCase()
 
   for (const item of menuList) {
+    // 跳过没有标题或路径的菜单项（如目录类型的父菜单）
+    if (!item.title || !item.path) {
+      // 如果有子菜单，继续递归搜索
+      if (item.children && item.children.length > 0) {
+        const childResults = searchMenu(item.children, keyword)
+        results.push(...childResults)
+      }
+      continue
+    }
+
     // 检查标题是否匹配
     if (item.title.toLowerCase().includes(lowerKeyword)) {
       results.push(item)
@@ -256,7 +266,13 @@ const handleSearchInput = () => {
     return
   }
 
-  const menuList = routerStore.menus as MenuItem[]
+  const menuList = routerStore.roles as MenuItem[]
+  if (!menuList || menuList.length === 0) {
+    console.warn('菜单数据为空，无法搜索')
+    searchResults.value = []
+    return
+  }
+
   const results = searchMenu(menuList, searchKeyword.value.trim())
   searchResults.value = results.slice(0, 10) // 限制显示10条结果
 }
@@ -273,7 +289,7 @@ const handleSearchItemClick = (item: MenuItem) => {
   }
 
   // 查找对应的完整菜单项（包含 children 信息）
-  const menuList = routerStore.menus as MenuItem[]
+  const menuList = routerStore.roles as MenuItem[]
   const menuItem = findNodeInTree(menuList, item.path)
 
   // 如果菜单项存在且有子菜单，跳转到第一个子菜单
@@ -433,7 +449,7 @@ const dropdownList = ref([
   {
     label: '设置',
     icon: 'Setting',
-    path: '/setting'
+    path: '/profile'
   },
   {
     label: '退出登录',

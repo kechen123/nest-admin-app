@@ -21,11 +21,11 @@ const baseRoutes = [
       layout: 'custom',
     },
   },
-  // {
-  //   path: '/404',
-  //   name: '404',
-  //   component: () => import('@/pages/[...notFond].vue'),
-  // },
+  {
+    path: '/404',
+    name: '404',
+    component: () => import('@/pages/[...notFond].vue'),
+  },
 ]
 
 export const router = createRouter({
@@ -39,7 +39,7 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
   if (to.path !== from.path) {
     showPageLoading()
   }
-  
+
   const routeName = to.name?.toString() || ''
   const routePath = to.path
   const isNotCheckRoute = NotCheckRouter.some((notCheck) => {
