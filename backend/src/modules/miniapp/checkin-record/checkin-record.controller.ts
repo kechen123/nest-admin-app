@@ -56,6 +56,15 @@ export class CheckinRecordController {
     return await this.recordService.getStatistics(userId);
   }
 
+  @Get('map/markers')
+  @ApiOperation({ summary: '获取地图标记点' })
+  @ApiResponse({ status: 200, type: [CheckinRecord] })
+  async getMapMarkers(@Req() req: any, @Query('includePublic') includePublic?: string) {
+    const userId = req.user?.userId || req.user?.id;
+    const includePublicBool = includePublic === 'true' || includePublic === true;
+    return await this.recordService.getMapMarkers(userId, includePublicBool);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '获取打卡记录详情' })
   @ApiResponse({ status: 200, type: CheckinRecord })

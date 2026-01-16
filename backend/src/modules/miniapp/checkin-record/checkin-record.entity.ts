@@ -29,6 +29,10 @@ export class CheckinRecord extends BaseEntity {
   @Column({ type: 'json', nullable: true })
   images?: string[];
 
+  @ApiProperty({ description: '是否公开: 0-不公开, 1-公开', example: 0, default: 0 })
+  @Column({ name: 'is_public', type: 'tinyint', default: 0 })
+  isPublic: number;
+
   @ApiProperty({ description: '状态: 0-已删除, 1-正常', example: 1, default: 1 })
   @Column({ type: 'tinyint', default: 1 })
   status: number;

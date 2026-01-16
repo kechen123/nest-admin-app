@@ -12,6 +12,7 @@ export interface CheckinRecord {
   address: string // 地址
   content: string // 打卡内容
   images: string[] // 图片列表
+  isPublic?: boolean | number // 是否公开
   createTime: string // 创建时间
   updateTime: string // 更新时间
   createdAt?: string // 后端字段
@@ -34,6 +35,7 @@ export const useCheckinStore = defineStore(
         address: record.address,
         content: record.content || '',
         images: record.images || [],
+        isPublic: record.isPublic !== undefined ? Boolean(record.isPublic) : false,
         createTime: record.createdAt || record.createdAt || '',
         updateTime: record.updatedAt || record.updatedAt || '',
         createdAt: record.createdAt,
@@ -65,6 +67,7 @@ export const useCheckinStore = defineStore(
           address: record.address,
           content: record.content,
           images: record.images,
+          isPublic: record.isPublic,
         })
         const newRecord = transformRecord(res)
         records.value.unshift(newRecord) // 最新的在前面

@@ -63,6 +63,7 @@ CREATE TABLE `checkin_record` (
   `address` VARCHAR(500) NOT NULL COMMENT '地址描述',
   `content` VARCHAR(1000) COMMENT '打卡内容',
   `images` JSON COMMENT '图片列表（JSON数组）',
+  `is_public` TINYINT DEFAULT 0 COMMENT '是否公开: 0-不公开, 1-公开',
   `status` TINYINT DEFAULT 1 COMMENT '状态: 0-已删除, 1-正常',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -74,6 +75,26 @@ CREATE TABLE `checkin_record` (
   INDEX idx_location (`latitude`, `longitude`),
   FOREIGN KEY (`user_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='打卡记录表';
+
+-- ============================================
+-- 4. 通知表（用于通知另一半打卡）
+-- ============================================
+DROP TABLE IF EXISTS `checkin_notification`;
+CREATE TABLE `checkin_notification` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '通知ID',
+  `user_id` INT NOT NULL COMMENT '接收通知的用户ID',
+  `checkin_id` INT NOT NULL COMMENT '打卡记录ID',
+  `type` TINYINT DEFAULT 1 COMMENT '通知类型: 1-另一半打卡通知',
+  `is_read` TINYINT DEFAULT 0 COMMENT '是否已读: 0-未读, 1-已读',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX idx_user_id (`user_id`),
+  INDEX idx_checkin_id (`checkin_id`),
+  INDEX idx_is_read (`is_read`),
+  INDEX idx_created_at (`created_at`),
+  FOREIGN KEY (`user_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`checkin_id`) REFERENCES `checkin_record`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='打卡通知表';
 
 SET FOREIGN_KEY_CHECKS = 1;
 

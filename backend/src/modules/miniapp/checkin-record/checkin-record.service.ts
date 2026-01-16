@@ -6,12 +6,16 @@ import { CreateCheckinDto } from './dto/create-checkin.dto';
 import { UpdateCheckinDto } from './dto/update-checkin.dto';
 import { QueryCheckinDto } from './dto/query-checkin.dto';
 import { IPaginationResponse } from '../../../common/interfaces/response.interface';
+import { UserCoupleService } from '../user-couple/user-couple.service';
+import { CheckinNotificationService } from '../checkin-notification/checkin-notification.service';
 
 @Injectable()
 export class CheckinRecordService {
   constructor(
     @InjectRepository(CheckinRecord)
     private readonly recordRepository: Repository<CheckinRecord>,
+    private readonly coupleService: UserCoupleService,
+    private readonly notificationService: CheckinNotificationService,
   ) {}
 
   /**
@@ -21,17 +25,32 @@ export class CheckinRecordService {
     const record = this.recordRepository.create({
       userId,
       ...createDto,
+      isPublic: createDto.isPublic ? 1 : 0,
       status: 1,
     });
 
-    return await this.recordRepository.save(record);
+    const savedRecord = await this.recordRepository.save(record);
+
+    // 如果用户绑定了另一半，发送通知
+    try {
+      const couple = await this.coupleService.getCoupleInfo(userId);
+      if (couple) {
+        const partnerId = couple.userId === userId ? couple.partnerId : couple.userId;
+        await this.notificationService.create(partnerId, savedRecord.id, 1);
+      }
+    } catch (error) {
+      console.error('发送通知失败:', error);
+      // 通知失败不影响打卡创建
+    }
+
+    return savedRecord;
   }
 
   /**
    * 分页查询打卡记录
    */
   async findAll(queryDto: QueryCheckinDto, userId?: number): Promise<IPaginationResponse<CheckinRecord>> {
-    const { page = 1, pageSize = 10, startDate, endDate } = queryDto;
+    const { page = 1, pageSize = 10, startDate, endDate, includePublic } = queryDto;
     const skip = (page - 1) * pageSize;
 
     const queryBuilder = this.recordRepository.createQueryBuilder('record')
@@ -39,9 +58,28 @@ export class CheckinRecordService {
       .where('record.status = :status', { status: 1 })
       .andWhere('record.deletedAt IS NULL');
 
-    // 如果指定了userId，只查询该用户的记录
+    // 如果指定了userId
     if (userId) {
-      queryBuilder.andWhere('record.userId = :userId', { userId });
+      // 获取用户的另一半ID
+      const couple = await this.coupleService.getCoupleInfo(userId);
+      const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
+
+      if (includePublic) {
+        // 查询用户、另一半和公开的打卡
+        queryBuilder.andWhere(
+          '(record.userId = :userId OR record.userId = :partnerId OR record.isPublic = 1)',
+          { userId, partnerId: partnerId || -1 }
+        );
+      } else {
+        // 只查询用户和另一半的打卡
+        queryBuilder.andWhere(
+          '(record.userId = :userId OR record.userId = :partnerId)',
+          { userId, partnerId: partnerId || -1 }
+        );
+      }
+    } else if (includePublic) {
+      // 没有userId但需要公开的，只查询公开的
+      queryBuilder.andWhere('record.isPublic = 1');
     }
 
     // 日期范围查询
@@ -68,6 +106,38 @@ export class CheckinRecordService {
   }
 
   /**
+   * 获取地图标记点（用于地图展示）
+   */
+  async getMapMarkers(userId: number, includePublic: boolean = false): Promise<CheckinRecord[]> {
+    const queryBuilder = this.recordRepository.createQueryBuilder('record')
+      .leftJoinAndSelect('record.user', 'user')
+      .where('record.status = :status', { status: 1 })
+      .andWhere('record.deletedAt IS NULL');
+
+    // 获取用户的另一半ID
+    const couple = await this.coupleService.getCoupleInfo(userId);
+    const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
+
+    if (includePublic) {
+      // 查询用户、另一半和公开的打卡
+      queryBuilder.andWhere(
+        '(record.userId = :userId OR record.userId = :partnerId OR record.isPublic = 1)',
+        { userId, partnerId: partnerId || -1 }
+      );
+    } else {
+      // 只查询用户和另一半的打卡
+      queryBuilder.andWhere(
+        '(record.userId = :userId OR record.userId = :partnerId)',
+        { userId, partnerId: partnerId || -1 }
+      );
+    }
+
+    return await queryBuilder
+      .orderBy('record.createdAt', 'DESC')
+      .getMany();
+  }
+
+  /**
    * 根据ID查询打卡记录
    */
   async findOne(id: number, userId?: number): Promise<CheckinRecord> {
@@ -81,7 +151,26 @@ export class CheckinRecordService {
     }
 
     // 如果指定了userId，检查权限
-    if (userId && record.userId !== userId) {
+    if (userId) {
+      // 如果是公开的打卡，允许访问
+      if (record.isPublic === 1) {
+        return record;
+      }
+      
+      // 检查是否是用户自己的打卡
+      if (record.userId === userId) {
+        return record;
+      }
+      
+      // 检查是否是另一半的打卡
+      const couple = await this.coupleService.getCoupleInfo(userId);
+      if (couple) {
+        const partnerId = couple.userId === userId ? couple.partnerId : couple.userId;
+        if (record.userId === partnerId) {
+          return record;
+        }
+      }
+      
       throw new ForbiddenException('无权访问该记录');
     }
 

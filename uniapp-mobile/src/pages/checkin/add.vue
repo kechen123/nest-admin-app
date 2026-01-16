@@ -20,6 +20,9 @@ const address = ref('正在获取位置...')
 // 打卡内容
 const content = ref('')
 
+// 是否公开
+const isPublic = ref(false)
+
 // 图片列表
 const images = ref<string[]>([])
 
@@ -222,6 +225,7 @@ const submitCheckin = () => {
       address: address.value,
       content: content.value.trim(),
       images: images.value,
+      isPublic: isPublic.value,
     })
 
     uni.hideLoading()
@@ -295,6 +299,18 @@ onShow(() => {
         :show-confirm-bar="false"
       />
       <view class="char-count">{{ content.length }}/500</view>
+    </view>
+
+    <!-- 是否公开 -->
+    <view class="section">
+      <view class="section-title">隐私设置</view>
+      <view class="switch-box">
+        <text class="switch-label">公开打卡</text>
+        <switch :checked="isPublic" @change="(e: any) => isPublic = e.detail.value" color="#ff6b9d" />
+      </view>
+      <view class="switch-tip">
+        <text>开启后，其他用户可以在公开地图上看到你的打卡</text>
+      </view>
     </view>
 
     <!-- 图片上传 -->
@@ -385,6 +401,30 @@ onShow(() => {
 .location-btns {
   display: flex;
   gap: 20rpx;
+}
+
+.switch-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+
+  .switch-label {
+    font-size: 28rpx;
+    color: #333;
+  }
+}
+
+.switch-tip {
+  margin-top: 12rpx;
+  padding: 0 20rpx;
+
+  text {
+    font-size: 24rpx;
+    color: #999;
+  }
 }
 
 .location-btn {

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, IsNotEmpty, IsOptional, IsArray, MaxLength } from 'class-validator';
+import { IsNumber, IsString, IsNotEmpty, IsOptional, IsArray, MaxLength, IsBoolean } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateCheckinDto {
   @ApiProperty({ description: '纬度', example: 39.908823 })
@@ -29,4 +30,10 @@ export class CreateCheckinDto {
   @IsOptional()
   @IsString({ each: true })
   images?: string[];
+
+  @ApiProperty({ description: '是否公开', example: false, default: false })
+  @IsBoolean()
+  @IsOptional()
+  @Type(() => Boolean)
+  isPublic?: boolean;
 }

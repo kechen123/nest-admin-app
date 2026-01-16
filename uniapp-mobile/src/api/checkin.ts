@@ -11,6 +11,7 @@ export interface ICheckinRecord {
   address: string
   content?: string
   images?: string[]
+  isPublic?: number | boolean
   status: number
   createdAt: string
   updatedAt: string
@@ -25,6 +26,7 @@ export interface ICreateCheckinDto {
   address: string
   content?: string
   images?: string[]
+  isPublic?: boolean
 }
 
 /**
@@ -46,6 +48,15 @@ export interface IQueryCheckinDto {
   pageSize?: number
   startDate?: string
   endDate?: string
+  includePublic?: boolean
+}
+
+/**
+ * 获取地图标记点
+ */
+export function getMapMarkers(includePublic?: boolean) {
+  const queryString = includePublic !== undefined ? `?includePublic=${includePublic}` : ''
+  return http.get<ICheckinRecord[]>(`/miniapp/checkin/map/markers${queryString}`)
 }
 
 /**
@@ -78,9 +89,12 @@ export function createCheckin(data: ICreateCheckinDto) {
  * 获取打卡记录列表
  */
 export function getCheckinList(params?: IQueryCheckinDto) {
-  return http.get<IPaginationResponse<ICheckinRecord>>('/miniapp/checkin', {
-    params,
-  })
+  const queryString = params ? Object.entries(params)
+    .filter(([_, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join('&') : ''
+  const url = queryString ? `/miniapp/checkin?${queryString}` : '/miniapp/checkin'
+  return http.get<IPaginationResponse<ICheckinRecord>>(url)
 }
 
 /**
@@ -109,4 +123,12 @@ export function deleteCheckin(id: number) {
  */
 export function getCheckinStatistics() {
   return http.get<ICheckinStatistics>('/miniapp/checkin/statistics')
+}
+
+/**
+ * 获取地图标记点
+ */
+export function getMapMarkers(includePublic?: boolean) {
+  const queryString = includePublic !== undefined ? `?includePublic=${includePublic}` : ''
+  return http.get<ICheckinRecord[]>(`/miniapp/checkin/map/markers${queryString}`)
 }

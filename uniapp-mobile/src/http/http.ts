@@ -156,9 +156,17 @@ export function http<T>(options: CustomRequestOptions) {
  * @returns
  */
 export function httpGet<T>(url: string, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+  // 处理query参数，将对象转换为URL查询字符串
+  let finalUrl = url
+  if (query && Object.keys(query).length > 0) {
+    const queryString = Object.entries(query)
+      .filter(([_, value]) => value !== undefined && value !== null)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+      .join('&')
+    finalUrl = `${url}${url.includes('?') ? '&' : '?'}${queryString}`
+  }
   return http<T>({
-    url,
-    query,
+    url: finalUrl,
     method: 'GET',
     header,
     ...options,
