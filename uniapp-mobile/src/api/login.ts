@@ -83,3 +83,12 @@ export function getWxCode() {
 export function wxLogin(data: { code: string }) {
   return http.post<IAuthLoginRes>('/auth/wxLogin', data)
 }
+
+/**
+ * 小程序微信登录
+ * @param data 微信登录参数，包含code和userInfo
+ * @returns Promise 包含登录结果
+ */
+export function miniappWxLogin(data: { code: string; userInfo?: { nickName?: string; avatarUrl?: string; gender?: number } }) {
+  return http.post<{ userId: number; token: string; userInfo: IUserInfoRes }>('/miniapp/user/wxLogin', data)
+}

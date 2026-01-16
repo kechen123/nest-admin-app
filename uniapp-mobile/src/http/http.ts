@@ -12,9 +12,33 @@ let taskQueue: (() => void)[] = [] // 刷新 token 请求队列
 
 export function http<T>(options: CustomRequestOptions) {
   // 1. 返回 Promise 对象
-  return new Promise<T>((resolve, reject) => {
+  return new Promise<T>(async (resolve, reject) => {
+    // 获取token并添加到请求头
+    const tokenStore = useTokenStore()
+    let token = tokenStore.validToken?.value || ''
+    
+    // 如果没有token但可以刷新，尝试刷新
+    if (!token && tokenStore.tryGetValidToken) {
+      try {
+        token = await tokenStore.tryGetValidToken()
+      } catch (error) {
+        console.error('获取token失败:', error)
+      }
+    }
+    
+    const headers = {
+      ...options.header,
+      'Content-Type': 'application/json',
+    }
+    
+    // 如果有token，添加到Authorization头（登录接口除外）
+    if (token && !options.header?.Authorization && !options.url?.includes('/wxLogin')) {
+      headers.Authorization = `Bearer ${token}`
+    }
+    
     uni.request({
       ...options,
+      header: headers,
       dataType: 'json',
       // #ifndef MP-WEIXIN
       responseType: 'json',

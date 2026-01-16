@@ -9,10 +9,12 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 import { UserModule } from "../modules/user/user.module";
 import { User } from "../modules/user/user.entity";
 import { LoginLogModule } from "../modules/login-log/login-log.module";
+import { MiniappUserModule } from "../modules/miniapp/miniapp-user/miniapp-user.module";
 
 @Module({
   imports: [
     UserModule,
+    MiniappUserModule,
     LoginLogModule,
     TypeOrmModule.forFeature([User]),
     PassportModule,

@@ -1,0 +1,83 @@
+-- ============================================
+-- 小程序恋爱打卡系统数据库表
+-- 包含：小程序用户表、用户绑定关系表、打卡记录表
+-- ============================================
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ============================================
+-- 1. 小程序用户表
+-- ============================================
+DROP TABLE IF EXISTS `miniapp_user`;
+CREATE TABLE `miniapp_user` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+  `openid` VARCHAR(100) NOT NULL UNIQUE COMMENT '微信openid',
+  `unionid` VARCHAR(100) COMMENT '微信unionid',
+  `nickname` VARCHAR(50) COMMENT '昵称',
+  `avatar` VARCHAR(500) COMMENT '头像URL',
+  `gender` TINYINT DEFAULT 0 COMMENT '性别: 0-未知, 1-男, 2-女',
+  `phone` VARCHAR(20) COMMENT '手机号',
+  `status` TINYINT DEFAULT 1 COMMENT '状态: 0-禁用, 1-正常',
+  `last_login_time` DATETIME COMMENT '最后登录时间',
+  `last_login_ip` VARCHAR(50) COMMENT '最后登录IP',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
+  INDEX idx_openid (`openid`),
+  INDEX idx_unionid (`unionid`),
+  INDEX idx_status (`status`),
+  INDEX idx_deleted_at (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='小程序用户表';
+
+-- ============================================
+-- 2. 用户绑定关系表（记录用户和另一半的绑定关系）
+-- ============================================
+DROP TABLE IF EXISTS `user_couple`;
+CREATE TABLE `user_couple` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '绑定ID',
+  `user_id` INT NOT NULL COMMENT '用户ID',
+  `partner_id` INT NOT NULL COMMENT '另一半用户ID',
+  `status` TINYINT DEFAULT 1 COMMENT '状态: 0-已解除, 1-绑定中',
+  `bind_time` DATETIME COMMENT '绑定时间',
+  `unbind_time` DATETIME COMMENT '解除绑定时间',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX idx_user_id (`user_id`),
+  INDEX idx_partner_id (`partner_id`),
+  INDEX idx_status (`status`),
+  UNIQUE KEY uk_user_partner (`user_id`, `partner_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`partner_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户绑定关系表';
+
+-- ============================================
+-- 3. 打卡记录表
+-- ============================================
+DROP TABLE IF EXISTS `checkin_record`;
+CREATE TABLE `checkin_record` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '打卡ID',
+  `user_id` INT NOT NULL COMMENT '用户ID',
+  `latitude` DECIMAL(10, 8) NOT NULL COMMENT '纬度',
+  `longitude` DECIMAL(11, 8) NOT NULL COMMENT '经度',
+  `address` VARCHAR(500) NOT NULL COMMENT '地址描述',
+  `content` VARCHAR(1000) COMMENT '打卡内容',
+  `images` JSON COMMENT '图片列表（JSON数组）',
+  `status` TINYINT DEFAULT 1 COMMENT '状态: 0-已删除, 1-正常',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
+  INDEX idx_user_id (`user_id`),
+  INDEX idx_status (`status`),
+  INDEX idx_created_at (`created_at`),
+  INDEX idx_deleted_at (`deleted_at`),
+  INDEX idx_location (`latitude`, `longitude`),
+  FOREIGN KEY (`user_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='打卡记录表';
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ============================================
+-- 初始化完成
+-- ============================================
+SELECT '小程序打卡系统数据库表创建完成' AS '';

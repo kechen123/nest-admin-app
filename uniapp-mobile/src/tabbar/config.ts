@@ -32,10 +32,22 @@ export const nativeTabbarList: NativeTabBarItem[] = [
     text: '首页',
   },
   {
+    iconPath: 'static/tabbar/home.png',
+    selectedIconPath: 'static/tabbar/homeHL.png',
+    pagePath: 'pages/map/map',
+    text: '足迹',
+  },
+  {
+    iconPath: 'static/tabbar/home.png',
+    selectedIconPath: 'static/tabbar/homeHL.png',
+    pagePath: 'pages/checkin/list',
+    text: '记录',
+  },
+  {
     iconPath: 'static/tabbar/personal.png',
     selectedIconPath: 'static/tabbar/personalHL.png',
     pagePath: 'pages/me/me',
-    text: '个人',
+    text: '我的',
   },
 ]
 
@@ -51,6 +63,18 @@ export const customTabbarList: CustomTabBarItem[] = [
     iconType: 'unocss',
     icon: 'i-carbon-home',
     // badge: 'dot',
+  },
+  {
+    text: '足迹',
+    pagePath: 'pages/map/map',
+    iconType: 'unocss',
+    icon: 'i-carbon-location',
+  },
+  {
+    text: '记录',
+    pagePath: 'pages/checkin/list',
+    iconType: 'unocss',
+    icon: 'i-carbon-document',
   },
   {
     pagePath: 'pages/me/me',
@@ -115,7 +139,7 @@ const _tabbar: TabBar = {
   // 只有微信小程序支持 custom。App 和 H5 不生效
   custom: selectedTabbarStrategy === TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE,
   color: '#999999',
-  selectedColor: '#018d71',
+  selectedColor: '#ff6b9d',
   backgroundColor: '#F8F8F8',
   borderStyle: 'black',
   height: '50px',
