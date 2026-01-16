@@ -54,10 +54,10 @@ export interface IQueryCheckinDto {
 /**
  * 获取地图标记点
  */
-export function getMapMarkers(includePublic?: boolean) {
-  const queryString = includePublic !== undefined ? `?includePublic=${includePublic}` : ''
-  return http.get<ICheckinRecord[]>(`/miniapp/checkin/map/markers${queryString}`)
-}
+// export function getMapMarkers(includePublic?: boolean) {
+//   const queryString = includePublic !== undefined ? `?includePublic=${includePublic}` : ''
+//   return http.get<ICheckinRecord[]>(`/miniapp/checkin/map/markers${queryString}`)
+// }
 
 /**
  * 打卡统计信息

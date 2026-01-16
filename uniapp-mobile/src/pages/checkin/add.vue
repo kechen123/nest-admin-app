@@ -138,13 +138,13 @@ const reverseGeocode = (lat: number, lng: number) => {
     },
   })
   // #endif
-  
+
   // #ifndef MP-WEIXIN
   // 非微信小程序，可以使用高德地图或百度地图API
   // 这里先使用默认名称
   address.value = '当前位置'
   uni.hideLoading()
-  
+
   // 示例：使用高德地图API
   // uni.request({
   //   url: 'https://restapi.amap.com/v3/geocode/regeo',
@@ -186,7 +186,7 @@ const selectLocationOnMap = () => {
 }
 
 // 提交打卡
-const submitCheckin = () => {
+const submitCheckin = async () => {
   if (!latitude.value || !longitude.value) {
     uni.showToast({
       title: '请选择位置',
@@ -269,7 +269,7 @@ onShow(() => {
 <template>
   <view class="add-checkin-container">
     <!-- 位置选择 -->
-    <view class="section">
+    <!-- <view class="section">
       <view class="section-title">位置</view>
       <view class="location-box" @click="chooseLocation">
         <view class="location-info">
@@ -286,23 +286,17 @@ onShow(() => {
           <text>在地图上选择</text>
         </view>
       </view>
-    </view>
+    </view> -->
 
     <!-- 打卡内容 -->
-    <view class="section">
+    <!-- <view class="section">
       <view class="section-title">打卡内容</view>
-      <textarea
-        v-model="content"
-        class="content-input"
-        placeholder="记录这一刻的美好..."
-        maxlength="500"
-        :show-confirm-bar="false"
-      />
+      <textarea v-model="content" class="content-input" placeholder="记录这一刻的美好..." :show-confirm-bar="false" />
       <view class="char-count">{{ content.length }}/500</view>
-    </view>
+    </view> -->
 
     <!-- 是否公开 -->
-    <view class="section">
+    <!-- <view class="section">
       <view class="section-title">隐私设置</view>
       <view class="switch-box">
         <text class="switch-label">公开打卡</text>
@@ -311,38 +305,29 @@ onShow(() => {
       <view class="switch-tip">
         <text>开启后，其他用户可以在公开地图上看到你的打卡</text>
       </view>
-    </view>
+    </view> -->
 
     <!-- 图片上传 -->
-    <view class="section">
+    <!-- <view class="section">
       <view class="section-title">照片</view>
       <view class="image-list">
-        <view
-          v-for="(image, index) in images"
-          :key="index"
-          class="image-item"
-          @click="previewImage(index)"
-        >
+        <view v-for="(image, index) in images" :key="index" class="image-item" @click="previewImage(index)">
           <image :src="image" mode="aspectFill" class="image" />
           <view class="image-delete" @click.stop="deleteImage(index)">×</view>
         </view>
-        <view
-          v-if="images.length < 9"
-          class="image-item image-add"
-          @click="chooseImage"
-        >
+        <view v-if="images.length < 9" class="image-item image-add" @click="chooseImage">
           <text class="add-icon">+</text>
           <text class="add-text">添加照片</text>
         </view>
       </view>
-    </view>
+    </view> -->
 
     <!-- 提交按钮 -->
-    <view class="submit-section">
+    <!-- <view class="submit-section">
       <button class="submit-btn" :disabled="uploadLoading" @click="submitCheckin">
         {{ uploadLoading ? '上传中...' : '发布打卡' }}
       </button>
-    </view>
+    </view> -->
   </view>
 </template>
 
@@ -435,7 +420,7 @@ onShow(() => {
   border-radius: 8rpx;
   font-size: 24rpx;
   text-align: center;
-  
+
   &.map-select {
     background: #fff;
     color: #ff6b9d;
