@@ -15,7 +15,7 @@ interface ToLoginPageOptions {
 }
 
 // TODO: 自己增加登录页
-const LOGIN_PAGE = '/pages/login/index'
+const LOGIN_PAGE = '/pages-fg/login/index'
 
 /**
  * 跳转到登录页, 带防抖处理

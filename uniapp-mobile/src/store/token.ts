@@ -1,7 +1,7 @@
 import type {
   ILoginForm,
 } from '@/api/login'
-import type { IAuthLoginRes } from '@/api/types/login'
+import type { IAuthLoginRes, IUserInfoRes } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue' // 修复：导入 computed
 import {
@@ -10,6 +10,9 @@ import {
   refreshToken as _refreshToken,
   wxLogin as _wxLogin,
   getWxCode,
+  getWxUserProfile,
+  miniappWxLogin as _miniappWxLogin,
+  bindPhone as _bindPhone,
 } from '@/api/login'
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { isDoubleTokenMode } from '@/utils'
@@ -174,12 +177,121 @@ export const useTokenStore = defineStore(
     }
 
     /**
+     * 小程序登录（静默登录 + 手机号绑定）
+     * @param options 登录选项，包含是否跳过授权（默认true，静默登录）
+     * @returns 登录结果
+     */
+    const miniappWxLogin = async (options?: { skipAuth?: boolean; phone?: string }) => {
+      try {
+        // 默认静默登录，不需要用户授权
+        const { skipAuth = true, phone } = options || {}
+        
+        // 1. 获取微信小程序登录的code（静默获取，不需要用户授权）
+        const wxCodeRes = await getWxCode()
+        console.log('小程序静默登录-code: ', wxCodeRes)
+        
+        let userInfo: { nickName?: string; avatarUrl?: string; gender?: number } | undefined
+        
+        // 2. 如果需要授权，则获取用户授权信息（通常不需要）
+        if (!skipAuth) {
+          try {
+            const profileRes = await getWxUserProfile()
+            console.log('小程序授权信息: ', profileRes)
+            userInfo = {
+              nickName: profileRes.userInfo.nickName,
+              avatarUrl: profileRes.userInfo.avatarUrl,
+              gender: (profileRes.userInfo as any).gender || 0,
+            }
+          }
+          catch (authError: any) {
+            console.error('获取用户授权失败:', authError)
+            // 如果用户拒绝授权，抛出错误
+            if (authError.message?.includes('deny') || authError.message?.includes('拒绝')) {
+              throw new Error('需要授权才能登录')
+            }
+            throw authError
+          }
+        }
+        
+        // 3. 调用小程序登录接口（静默登录，不传userInfo）
+        const res = await _miniappWxLogin({ 
+          code: wxCodeRes.code,
+          userInfo,
+          phone,
+        })
+        console.log('小程序静默登录-res: ', res)
+        
+        // 4. 将小程序登录返回格式转换为标准格式（单token模式）
+        const standardRes: IAuthLoginRes = {
+          token: res.token,
+          expiresIn: 30 * 24 * 60 * 60, // 30天，单位：秒
+        }
+        
+        // 5. 设置token信息
+        setTokenInfo(standardRes)
+        
+        // 6. 转换并设置用户信息
+        if (res.userInfo) {
+          const userStore = useUserStore()
+          const standardUserInfo: IUserInfoRes = {
+            userId: res.userInfo.id || res.userId,
+            username: res.userInfo.openid || '',
+            nickname: res.userInfo.nickname || '',
+            avatar: res.userInfo.avatar || '',
+            phone: res.userInfo.phone,
+            ...res.userInfo,
+          }
+          userStore.setUserInfo(standardUserInfo)
+        }
+        
+        // 7. 如果需要绑定手机号，返回特殊标识
+        if (res.needBindPhone) {
+          return {
+            ...standardRes,
+            needBindPhone: true,
+          } as IAuthLoginRes & { needBindPhone: boolean }
+        }
+        
+        return standardRes
+      }
+      catch (error) {
+        console.error('小程序登录失败:', error)
+        throw error
+      }
+      finally {
+        updateNowTime()
+      }
+    }
+
+    /**
+     * 绑定手机号
+     * @param phone 手机号
+     * @returns 用户信息
+     */
+    const bindPhone = async (phone: string) => {
+      try {
+        const res = await _bindPhone(phone)
+        const userStore = useUserStore()
+        const currentUserInfo = userStore.userInfo.value
+        userStore.setUserInfo({
+          ...currentUserInfo,
+          phone: res.phone || phone,
+        })
+        return res
+      }
+      catch (error) {
+        console.error('绑定手机号失败:', error)
+        throw error
+      }
+    }
+
+    /**
      * 退出登录 并 删除用户信息
      */
     const logout = async () => {
       try {
         // TODO 实现自己的退出登录逻辑
-        await _logout()
+        // await _logout()
       }
       catch (error) {
         console.error('退出登录失败:', error)
@@ -297,10 +409,14 @@ export const useTokenStore = defineStore(
       // 核心API方法
       login,
       wxLogin,
+      miniappWxLogin,
+      bindPhone,
       logout,
 
       // 认证状态判断（最常用的）
       hasLogin: hasValidLogin,
+      hasLoginInfo,
+      isTokenExpired,
 
       // 内部系统使用的方法
       refreshToken,

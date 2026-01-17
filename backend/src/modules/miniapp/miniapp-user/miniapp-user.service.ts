@@ -16,8 +16,8 @@ export class MiniappUserService {
    * 微信登录/注册
    * 注意：这里简化处理，实际应该调用微信API获取openid
    */
-  async wxLogin(wxLoginDto: WxLoginDto, ip?: string): Promise<{ userId: number; token: string; userInfo: any }> {
-    const { code, userInfo } = wxLoginDto;
+  async wxLogin(wxLoginDto: WxLoginDto, ip?: string): Promise<{ userId: number; token: string; needBindPhone: boolean; userInfo: any }> {
+    const { code, userInfo, phone } = wxLoginDto;
 
     // TODO: 实际应该调用微信API获取openid
     // const wxApiResponse = await this.getWxOpenId(code);
@@ -38,6 +38,7 @@ export class MiniappUserService {
         nickname: userInfo?.nickName,
         avatar: userInfo?.avatarUrl,
         gender: userInfo?.gender || 0,
+        phone: phone || undefined,
         status: 1,
         lastLoginTime: new Date(),
         lastLoginIp: ip,
@@ -52,8 +53,15 @@ export class MiniappUserService {
         if (userInfo.avatarUrl) user.avatar = userInfo.avatarUrl;
         if (userInfo.gender !== undefined) user.gender = userInfo.gender;
       }
+      // 如果传入了手机号且用户未绑定手机号，则绑定
+      if (phone && !user.phone) {
+        user.phone = phone;
+      }
       await this.userRepository.save(user);
     }
+
+    // 检查是否需要绑定手机号
+    const needBindPhone = !user.phone;
 
     // 生成token（使用sub字段，与JWT策略保持一致）
     const token = jwt.sign(
@@ -65,14 +73,35 @@ export class MiniappUserService {
     return {
       userId: user.id,
       token,
+      needBindPhone,
       userInfo: {
         id: user.id,
         openid: user.openid,
         nickname: user.nickname,
         avatar: user.avatar,
         gender: user.gender,
+        phone: user.phone,
       },
     };
+  }
+
+  /**
+   * 绑定手机号
+   */
+  async bindPhone(userId: number, phone: string): Promise<MiniappUser> {
+    const user = await this.findOne(userId);
+    
+    // 检查手机号是否已被其他用户使用
+    const existingUser = await this.userRepository.findOne({
+      where: { phone, status: 1 },
+    });
+    
+    if (existingUser && existingUser.id !== userId) {
+      throw new BadRequestException('该手机号已被其他用户使用');
+    }
+    
+    user.phone = phone;
+    return await this.userRepository.save(user);
   }
 
   /**

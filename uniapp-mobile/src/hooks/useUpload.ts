@@ -1,7 +1,8 @@
 import { ref } from 'vue'
 import { getEnvBaseUrl } from '@/utils/index'
+import { useTokenStore } from '@/store/token'
 
-const VITE_UPLOAD_BASEURL = `${getEnvBaseUrl()}/upload`
+const VITE_UPLOAD_BASEURL = `${getEnvBaseUrl()}/api/upload/image`
 
 type TfileType = 'image' | 'file'
 type TImage = 'png' | 'jpg' | 'jpeg' | 'webp' | '*'
@@ -148,17 +149,52 @@ async function uploadFile({
   onError: (err: any) => void
   onComplete: () => void
 }) {
+  // 获取 token
+  const tokenStore = useTokenStore()
+  let token = tokenStore.validToken.value || ''
+  
+  // 如果没有 token，尝试获取
+  if (!token && tokenStore.tryGetValidToken) {
+    try {
+      token = await tokenStore.tryGetValidToken()
+    } catch (error) {
+      console.error('获取token失败:', error)
+    }
+  }
+
+  // 构建请求头
+  const header: Record<string, string> = {}
+  if (token) {
+    header.Authorization = `Bearer ${token}`
+  }
+
   uni.uploadFile({
     url: VITE_UPLOAD_BASEURL,
     filePath: tempFilePath,
     name: 'file',
     formData,
+    header,
     success: (uploadFileRes) => {
       try {
-        const data = uploadFileRes.data
-        onSuccess(data)
+        // 解析响应数据
+        let responseData = uploadFileRes.data
+        if (typeof responseData === 'string') {
+          try {
+            responseData = JSON.parse(responseData)
+          } catch (e) {
+            // 如果解析失败，使用原始数据
+            console.log('Response is not JSON, using raw data:', responseData)
+          }
+        }
+        
+        // 后端返回格式通常是 { code: 200, data: {...}, msg: '...' }
+        // 或者直接返回数据对象
+        const result = responseData?.data || responseData
+        
+        onSuccess(result)
       }
       catch (err) {
+        console.error('解析上传响应失败:', err)
         onError(err)
       }
     },

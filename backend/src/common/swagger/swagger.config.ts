@@ -25,7 +25,13 @@ export class SwaggerConfig {
   /**
    * 前端页面接口标签
    */
-  static readonly FRONTEND_TAGS = ['认证'];
+  static readonly FRONTEND_TAGS = [
+    '认证',
+    '小程序用户',
+    '用户绑定',
+    '打卡记录',
+    '文件上传',
+  ];
 
   /**
    * 创建 Swagger 基础配置

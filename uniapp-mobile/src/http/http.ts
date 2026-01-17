@@ -10,12 +10,16 @@ import { ResultEnum } from './tools/enum'
 let refreshing = false // 防止重复刷新 token 标识
 let taskQueue: (() => void)[] = [] // 刷新 token 请求队列
 
+// 小程序登录状态管理
+let miniappLogging = false // 防止重复小程序登录标识
+let miniappLoginQueue: (() => void)[] = [] // 小程序登录请求队列
+
 export function http<T>(options: CustomRequestOptions) {
   // 1. 返回 Promise 对象
   return new Promise<T>(async (resolve, reject) => {
     // 获取token并添加到请求头
     const tokenStore = useTokenStore()
-    let token = tokenStore.validToken?.value || ''
+    let token = (tokenStore.validToken as any).value || ''
     
     // 如果没有token但可以刷新，尝试刷新
     if (!token && tokenStore.tryGetValidToken) {
@@ -53,10 +57,66 @@ export function http<T>(options: CustomRequestOptions) {
 
         if (isTokenExpired) {
           const tokenStore = useTokenStore()
+          
+          // #ifdef MP-WEIXIN
+          // 小程序环境：如果没有token或token已过期，直接触发授权登录
+          if (!token) {
+            // 将当前请求加入队列
+            miniappLoginQueue.push(() => {
+              resolve(http<T>(options))
+            })
+
+            // 如果未在登录中，直接触发静默登录（不需要用户授权）
+            if (!miniappLogging) {
+              miniappLogging = true
+              try {
+                console.log('检测到未登录，开始静默登录...')
+                // 调用静默登录（不需要用户授权，直接获取code登录）
+                const loginResult = await tokenStore.miniappWxLogin()
+                console.log('静默登录成功', loginResult)
+                
+                // 如果需要绑定手机号，提示用户
+                // if ((loginResult as any).needBindPhone) {
+                //   nextTick(() => {
+                //     uni.showModal({
+                //       title: '提示',
+                //       content: '请绑定手机号以完善信息',
+                //       showCancel: false,
+                //       confirmText: '知道了',
+                //     })
+                //   })
+                // }
+                
+                miniappLogging = false
+                // 将任务队列的所有任务重新请求
+                miniappLoginQueue.forEach(task => task())
+              }
+              catch (loginErr: any) {
+                console.error('授权登录失败:', loginErr)
+                miniappLogging = false
+                nextTick(() => {
+                  uni.hideToast()
+                  const errorMsg = loginErr.message || '登录失败，请重试'
+                  uni.showToast({
+                    title: errorMsg.includes('授权') ? errorMsg : '需要授权登录才能继续',
+                    icon: 'none',
+                    duration: 2000,
+                  })
+                })
+              }
+              finally {
+                // 不管登录成功与否，都清空任务队列
+                miniappLoginQueue = []
+              }
+            }
+            return reject(res)
+          }
+          // #endif
+
           if (!isDoubleTokenMode) {
             // 未启用双token策略，清理用户信息，跳转到登录页
-            tokenStore.logout()
-            toLoginPage()
+            // tokenStore.logout()
+            // toLoginPage()
             return reject(res)
           }
 

@@ -1,7 +1,8 @@
 import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException, Req } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse } from "@nestjs/swagger";
 import { UploadService } from "./upload.service";
+import { UploadImageResponseDto } from "./dto/upload-image-response.dto";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { extname } from "path";
 import * as crypto from "crypto";
@@ -25,7 +26,10 @@ export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post("image")
-  @ApiOperation({ summary: "上传图片" })
+  @ApiOperation({ 
+    summary: "上传图片",
+    description: "支持上传 jpg、png、gif、webp 格式的图片，最大 5MB。需要 JWT 认证。"
+  })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
     schema: {
@@ -34,9 +38,23 @@ export class UploadController {
         file: {
           type: "string",
           format: "binary",
+          description: "图片文件",
         },
       },
     },
+  })
+  @ApiResponse({
+    status: 200,
+    description: "上传成功",
+    type: UploadImageResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: "请求错误（文件格式不支持、文件过大等）",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "未授权（需要登录）",
   })
   @UseInterceptors(
     FileInterceptor("file", {

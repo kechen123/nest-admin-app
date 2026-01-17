@@ -2,7 +2,8 @@
 import { onShow } from '@dcloudio/uni-app'
 import { onMounted, ref } from 'vue'
 import { useCheckinStore } from '@/store/checkin'
-import useUpload from '@/hooks/useUpload'
+import { useTokenStore } from '@/store/token'
+import { getEnvBaseUrl } from '@/utils/index'
 
 definePage({
   style: {
@@ -23,48 +24,144 @@ const content = ref('')
 // 是否公开
 const isPublic = ref(false)
 
-// 图片列表
+// 图片列表（存储上传后的URL）
 const images = ref<string[]>([])
+// 上传中的图片索引
+const uploadingIndexes = ref<Set<number>>(new Set())
 
-// 上传图片
-const { loading: uploadLoading, run: uploadImage } = useUpload({
-  fileType: 'image',
-  maxSize: 5 * 1024 * 1024, // 5MB
-  success: (res) => {
-    // 如果上传成功，res 应该包含图片URL
-    // 这里假设返回的是 { url: 'xxx' } 格式，根据实际API调整
-    const imageUrl = typeof res === 'string' ? res : (res.url || res.data?.url || res)
-    images.value.push(imageUrl)
-    uni.showToast({
-      title: '上传成功',
-      icon: 'success',
+// 上传单张图片
+const uploadSingleImage = async (tempFilePath: string, index: number) => {
+  uploadingIndexes.value.add(index)
+
+  try {
+    // 使用 uni.uploadFile 直接上传
+    const tokenStore = useTokenStore()
+    let token = tokenStore.validToken.value || ''
+
+    if (!token && tokenStore.tryGetValidToken) {
+      try {
+        token = await tokenStore.tryGetValidToken()
+      } catch (error) {
+        console.error('获取token失败:', error)
+      }
+    }
+
+    const header: Record<string, string> = {}
+    if (token) {
+      header.Authorization = `Bearer ${token}`
+    }
+
+    const baseUrl = getEnvBaseUrl()
+    const uploadUrl = `${baseUrl}/upload/image`
+
+    await new Promise<void>((resolve, reject) => {
+      uni.uploadFile({
+        url: uploadUrl,
+        filePath: tempFilePath,
+        name: 'file',
+        header,
+        success: (uploadRes) => {
+          try {
+            let responseData = uploadRes.data
+            if (typeof responseData === 'string') {
+              try {
+                responseData = JSON.parse(responseData)
+              } catch (e) {
+                console.log('Response is not JSON, using raw data:', responseData)
+              }
+            }
+
+            // 后端返回格式: { code: 200, data: { url: '...', path: '...', ... }, msg: '...' }
+            const result = responseData?.data || responseData
+            const imageUrl = result?.url || result?.path || result
+
+            if (imageUrl) {
+              // 更新对应索引的图片URL
+              images.value[index] = imageUrl
+              resolve()
+            } else {
+              reject(new Error('上传响应中未找到图片URL'))
+            }
+          } catch (err) {
+            console.error('解析上传响应失败:', err)
+            reject(err)
+          }
+        },
+        fail: (err) => {
+          console.error('上传失败:', err)
+          reject(err)
+        },
+      })
     })
-  },
-  error: () => {
+  } catch (error: any) {
+    console.error('上传图片失败:', error)
     uni.showToast({
-      title: '上传失败',
+      title: error?.message || '上传失败',
       icon: 'none',
     })
-  },
-})
+    // 上传失败，移除该图片
+    images.value.splice(index, 1)
+  } finally {
+    uploadingIndexes.value.delete(index)
+  }
+}
 
-// 选择图片（本地预览，不上传）
+// 选择并上传图片
 const chooseImage = () => {
   // #ifdef MP-WEIXIN
   uni.chooseMedia({
     count: 9 - images.value.length,
     mediaType: ['image'],
-    success: (res) => {
-      const tempFiles = res.tempFiles.map((file: any) => file.tempFilePath)
-      images.value.push(...tempFiles)
+    success: async (res) => {
+      const tempFiles = res.tempFiles
+
+      // 先添加占位符（使用临时路径用于预览）
+      const startIndex = images.value.length
+      tempFiles.forEach((file: any) => {
+        images.value.push(file.tempFilePath)
+      })
+
+      // 逐个上传图片
+      for (let i = 0; i < tempFiles.length; i++) {
+        const file = tempFiles[i]
+        const currentIndex = startIndex + i
+        await uploadSingleImage(file.tempFilePath, currentIndex)
+      }
+    },
+    fail: (err) => {
+      console.error('选择图片失败:', err)
+      uni.showToast({
+        title: '选择图片失败',
+        icon: 'none',
+      })
     },
   })
   // #endif
   // #ifndef MP-WEIXIN
   uni.chooseImage({
     count: 9 - images.value.length,
-    success: (res) => {
-      images.value.push(...res.tempFilePaths)
+    success: async (res) => {
+      const tempFilePaths = res.tempFilePaths
+
+      // 先添加占位符（使用临时路径用于预览）
+      const startIndex = images.value.length
+      tempFilePaths.forEach((path: string) => {
+        images.value.push(path)
+      })
+
+      // 逐个上传图片
+      for (let i = 0; i < tempFilePaths.length; i++) {
+        const tempFilePath = tempFilePaths[i]
+        const currentIndex = startIndex + i
+        await uploadSingleImage(tempFilePath, currentIndex)
+      }
+    },
+    fail: (err) => {
+      console.error('选择图片失败:', err)
+      uni.showToast({
+        title: '选择图片失败',
+        icon: 'none',
+      })
     },
   })
   // #endif
@@ -96,11 +193,17 @@ const getCurrentLocation = () => {
       // 逆地理编码获取地址
       reverseGeocode(res.latitude, res.longitude)
     },
-    fail: () => {
+    fail: (err) => {
       uni.hideLoading()
+      console.error('获取位置失败:', err)
+      // 即使获取位置失败，也设置默认值，让页面可以正常使用
+      if (!latitude.value || !longitude.value) {
+        address.value = '请选择位置'
+      }
       uni.showToast({
-        title: '获取位置失败',
+        title: '获取位置失败，请手动选择',
         icon: 'none',
+        duration: 2000,
       })
     },
   })
@@ -203,17 +306,27 @@ const submitCheckin = async () => {
     return
   }
 
-  // 如果有本地图片，先上传（这里简化处理，实际应该上传所有图片）
-  if (images.value.length > 0) {
-    // 检查是否有本地临时路径（需要上传）
-    const needUpload = images.value.some(img => img.startsWith('http://tmp/') || img.startsWith('file://'))
-    if (needUpload) {
-      uni.showToast({
-        title: '请先上传图片',
-        icon: 'none',
-      })
-      return
-    }
+  // 检查是否有图片正在上传中
+  if (uploadingIndexes.value.size > 0) {
+    uni.showToast({
+      title: '图片上传中，请稍候...',
+      icon: 'none',
+    })
+    return
+  }
+
+  // 检查是否有本地临时路径（未上传的图片）
+  const needUpload = images.value.some(img =>
+    img.startsWith('http://tmp/') ||
+    img.startsWith('file://') ||
+    img.startsWith('blob:')
+  )
+  if (needUpload) {
+    uni.showToast({
+      title: '请等待图片上传完成',
+      icon: 'none',
+    })
+    return
   }
 
   try {
@@ -233,6 +346,9 @@ const submitCheckin = async () => {
       title: '发布成功',
       icon: 'success',
     })
+
+    // 发送事件通知首页刷新数据
+    uni.$emit('checkin-published')
 
     setTimeout(() => {
       uni.navigateBack()
@@ -269,7 +385,7 @@ onShow(() => {
 <template>
   <view class="add-checkin-container">
     <!-- 位置选择 -->
-    <!-- <view class="section">
+    <view class="section">
       <view class="section-title">位置</view>
       <view class="location-box" @click="chooseLocation">
         <view class="location-info">
@@ -286,17 +402,17 @@ onShow(() => {
           <text>在地图上选择</text>
         </view>
       </view>
-    </view> -->
+    </view>
 
     <!-- 打卡内容 -->
-    <!-- <view class="section">
+    <view class="section">
       <view class="section-title">打卡内容</view>
       <textarea v-model="content" class="content-input" placeholder="记录这一刻的美好..." :show-confirm-bar="false" />
       <view class="char-count">{{ content.length }}/500</view>
-    </view> -->
+    </view>
 
     <!-- 是否公开 -->
-    <!-- <view class="section">
+    <view class="section">
       <view class="section-title">隐私设置</view>
       <view class="switch-box">
         <text class="switch-label">公开打卡</text>
@@ -305,29 +421,32 @@ onShow(() => {
       <view class="switch-tip">
         <text>开启后，其他用户可以在公开地图上看到你的打卡</text>
       </view>
-    </view> -->
+    </view>
 
     <!-- 图片上传 -->
-    <!-- <view class="section">
+    <view class="section">
       <view class="section-title">照片</view>
       <view class="image-list">
         <view v-for="(image, index) in images" :key="index" class="image-item" @click="previewImage(index)">
           <image :src="image" mode="aspectFill" class="image" />
-          <view class="image-delete" @click.stop="deleteImage(index)">×</view>
+          <view v-if="uploadingIndexes.has(index)" class="image-uploading">
+            <text>上传中...</text>
+          </view>
+          <view v-else class="image-delete" @click.stop="deleteImage(index)">×</view>
         </view>
         <view v-if="images.length < 9" class="image-item image-add" @click="chooseImage">
           <text class="add-icon">+</text>
           <text class="add-text">添加照片</text>
         </view>
       </view>
-    </view> -->
+    </view>
 
     <!-- 提交按钮 -->
-    <!-- <view class="submit-section">
-      <button class="submit-btn" :disabled="uploadLoading" @click="submitCheckin">
-        {{ uploadLoading ? '上传中...' : '发布打卡' }}
+    <view class="submit-section">
+      <button class="submit-btn" :disabled="uploadingIndexes.size > 0" @click="submitCheckin">
+        {{ uploadingIndexes.size > 0 ? '图片上传中...' : '发布打卡' }}
       </button>
-    </view> -->
+    </view>
   </view>
 </template>
 
@@ -477,6 +596,24 @@ onShow(() => {
     justify-content: center;
     font-size: 32rpx;
     line-height: 1;
+  }
+
+  .image-uploading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12rpx;
+
+    text {
+      color: #fff;
+      font-size: 24rpx;
+    }
   }
 
   &.image-add {

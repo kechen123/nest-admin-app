@@ -61,7 +61,7 @@ export class CheckinRecordController {
   @ApiResponse({ status: 200, type: [CheckinRecord] })
   async getMapMarkers(@Req() req: any, @Query('includePublic') includePublic?: string) {
     const userId = req.user?.userId || req.user?.id;
-    const includePublicBool = includePublic === 'true' || includePublic === true;
+    const includePublicBool = includePublic === 'true';
     return await this.recordService.getMapMarkers(userId, includePublicBool);
   }
 

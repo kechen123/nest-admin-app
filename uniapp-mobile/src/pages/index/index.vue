@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import dayjs from 'dayjs'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useCheckinStore } from '@/store/checkin'
 import { getMapMarkers } from '@/api/checkin'
 
@@ -21,51 +22,16 @@ definePage({
 const checkinStore = useCheckinStore()
 const { records } = storeToRefs(checkinStore)
 const stats = ref({ total: 0, thisMonth: 0, thisWeek: 0 })
+const lastRefreshTime = ref(0) // 上次刷新时间
 
 // 地图相关
-const mapLatitude = ref(39.908823)
-const mapLongitude = ref(116.397470)
+const mapLatitude = ref(39.908823) // 默认位置（北京）
+const mapLongitude = ref(116.397470) // 默认位置（北京）
 const mapScale = ref(13)
-const showPublicCheckins = ref(true) // 默认显示所有人和自己的打卡
+const showPublicCheckins = ref(true) // 默认显示公开打卡
 const mapMarkers = ref<any[]>([])
 const statusBarHeight = ref(0) // 状态栏高度
 const safeAreaTop = ref(0) // 安全区域顶部高度
-
-// 静态测试数据 - 足迹点位
-const staticMarkers = [
-  {
-    id: 'static-1',
-    latitude: 39.908823,
-    longitude: 116.397470,
-    content: '天安门广场',
-    address: '北京市东城区天安门广场',
-    image: '/static/images/location.png',
-  },
-  {
-    id: 'static-2',
-    latitude: 39.904211,
-    longitude: 116.407526,
-    content: '故宫博物院',
-    address: '北京市东城区景山前街4号',
-    image: '/static/images/location.png',
-  },
-  {
-    id: 'static-3',
-    latitude: 39.916668,
-    longitude: 116.383331,
-    content: '北海公园',
-    address: '北京市西城区文津街1号',
-    image: '/static/images/location.png',
-  },
-  {
-    id: 'static-4',
-    latitude: 39.918058,
-    longitude: 116.397026,
-    content: '景山公园',
-    address: '北京市西城区景山前街',
-    image: '/static/images/location.png',
-  },
-]
 
 // 获取系统信息，适配安全区域
 function getSystemInfo() {
@@ -83,9 +49,88 @@ function getSystemInfo() {
 // 获取当前位置
 function getCurrentLocation() {
   return new Promise<void>((resolve) => {
+    // #ifdef MP-WEIXIN
+    // 微信小程序需要先检查定位权限
+    uni.getSetting({
+      success: (settingRes) => {
+        if (settingRes.authSetting['scope.userLocation']) {
+          // 已授权，直接获取位置
+          console.log('已授权，直接获取位置')
+          requestLocation()
+        }
+        else if (settingRes.authSetting['scope.userLocation'] === false) {
+          console.log('用户拒绝了定位权限')
+          // 用户拒绝了定位权限，引导用户开启
+          uni.showModal({
+            title: '需要定位权限',
+            content: '为了更好的体验，需要获取您的位置信息',
+            confirmText: '去设置',
+            cancelText: '取消',
+            success: (modalRes) => {
+              if (modalRes.confirm) {
+                uni.openSetting({
+                  success: (openRes) => {
+                    if (openRes.authSetting['scope.userLocation']) {
+                      requestLocation()
+                    }
+                    else {
+                      console.warn('用户未开启定位权限')
+                      resolve()
+                    }
+                  },
+                  fail: () => {
+                    resolve()
+                  },
+                })
+              }
+              else {
+                resolve()
+              }
+            },
+          })
+        }
+        else {
+          console.log('未询问过，直接请求定位')
+          // 未询问过，直接请求定位
+          requestLocation()
+        }
+      },
+      fail: () => {
+        // 获取设置失败，直接尝试定位
+        requestLocation()
+      },
+    })
+
+    function requestLocation() {
+      uni.getLocation({
+        type: 'gcj02',
+        altitude: false,
+        geocode: false,
+        success: (res) => {
+          console.log('定位成功:', res)
+          mapLatitude.value = res.latitude
+          mapLongitude.value = res.longitude
+          mapScale.value = 15 // 定位后放大到合适的比例
+          resolve()
+        },
+        fail: (err) => {
+          console.warn('获取位置失败:', err)
+          // 如果获取位置失败，使用默认位置（北京）
+          mapLatitude.value = 39.908823
+          mapLongitude.value = 116.397470
+          mapScale.value = 13
+          resolve()
+        },
+      })
+    }
+    // #endif
+
+    // #ifndef MP-WEIXIN
+    // 非微信小程序，直接获取位置
     uni.getLocation({
       type: 'gcj02',
       success: (res) => {
+        console.log('定位成功:', res)
         mapLatitude.value = res.latitude
         mapLongitude.value = res.longitude
         mapScale.value = 15 // 定位后放大到合适的比例
@@ -100,20 +145,20 @@ function getCurrentLocation() {
         resolve()
       },
     })
+    // #endif
   })
 }
 
-// 加载地图标记点
+// 加载地图标记点（只加载公开打卡）
 async function loadMapMarkers() {
   try {
-    let markers: any[] = []
-
-    // 先添加静态测试数据
-    markers = staticMarkers.map((record) => ({
+    // 只加载公开打卡数据
+    const apiMarkers = await getMapMarkers(true)
+    const markers = apiMarkers.map((record: any) => ({
       id: record.id,
       latitude: Number(record.latitude),
       longitude: Number(record.longitude),
-      iconPath: record.image || '/static/images/location.png',
+      iconPath: record.images[0] || '/static/images/location.png',
       width: 40,
       height: 40,
       callout: {
@@ -127,42 +172,33 @@ async function loadMapMarkers() {
       },
     }))
 
-    // 尝试加载API数据，如果失败则只使用静态数据
-    try {
-      const apiMarkers = await getMapMarkers(showPublicCheckins.value)
-      const apiMarkerList = apiMarkers.map((record: any) => ({
-        id: record.id,
-        latitude: Number(record.latitude),
-        longitude: Number(record.longitude),
-        iconPath: record.image || '/static/images/location.png',
-        width: 40,
-        height: 40,
-        callout: {
-          content: record.content || record.address,
-          color: '#333',
-          fontSize: 12,
-          borderRadius: 5,
-          bgColor: '#fff',
-          padding: 5,
-          display: 'BYCLICK',
-        },
-      }))
-      // 合并API数据和静态数据
-      markers = [...markers, ...apiMarkerList]
-    } catch (apiError) {
-      console.warn('加载API标记点失败，使用静态数据:', apiError)
-    }
-
     mapMarkers.value = markers
-
-    // 如果有标记点，设置地图中心为第一个点
-    if (mapMarkers.value.length > 0) {
-      mapLatitude.value = mapMarkers.value[0].latitude
-      mapLongitude.value = mapMarkers.value[0].longitude
-    }
   } catch (error) {
     console.error('加载地图标记点失败:', error)
+    // 如果加载失败，清空标记点
+    mapMarkers.value = []
   }
+}
+
+// 刷新数据
+const refreshData = async () => {
+  try {
+    // 加载打卡记录列表
+    await checkinStore.loadRecords()
+    // 获取统计信息
+    stats.value = await checkinStore.getStatistics()
+    // 加载地图标记点
+    await loadMapMarkers()
+    // 更新刷新时间
+    lastRefreshTime.value = Date.now()
+  } catch (error) {
+    console.error('刷新数据失败:', error)
+  }
+}
+
+// 监听发布成功事件，刷新数据
+const onCheckinPublished = () => {
+  refreshData()
 }
 
 // 加载统计数据
@@ -172,15 +208,27 @@ onMounted(async () => {
     getSystemInfo()
     // 先定位到当前位置
     await getCurrentLocation()
-    // 加载打卡记录列表
-    await checkinStore.loadRecords()
-    // 获取统计信息
-    stats.value = await checkinStore.getStatistics()
-    // 加载地图标记点
-    await loadMapMarkers()
+    // 加载数据
+    await refreshData()
+    // 监听发布成功事件
+    uni.$on('checkin-published', onCheckinPublished)
   } catch (error) {
     console.error('加载数据失败:', error)
   }
+})
+
+// 页面显示时刷新数据（从发布页面返回时）
+onShow(() => {
+  // 如果距离上次刷新超过 2 秒，则刷新（避免频繁刷新）
+  const now = Date.now()
+  if (now - lastRefreshTime.value > 2000) {
+    refreshData()
+  }
+})
+
+// 卸载时移除事件监听
+onUnmounted(() => {
+  uni.$off('checkin-published', onCheckinPublished)
 })
 
 // 切换显示公开打卡
@@ -196,18 +244,6 @@ const togglePublicCheckins = async (e?: any) => {
 // 标记点点击事件
 async function onMarkerTap(e: any) {
   const markerId = e.detail.markerId
-  // 如果是静态数据，不跳转详情页
-  if (markerId.startsWith('static-')) {
-    const staticMarker = staticMarkers.find((m) => m.id === markerId)
-    if (staticMarker) {
-      uni.showToast({
-        title: staticMarker.content || staticMarker.address,
-        icon: 'none',
-        duration: 2000,
-      })
-    }
-    return
-  }
   // 先从本地records查找
   let record = records.value.find((r: any) => r.id === markerId)
   // 如果本地没有，尝试从API获取

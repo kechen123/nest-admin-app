@@ -20,4 +20,10 @@ export default defineUniPages({
   },
   // tabbar 的配置统一在 “./src/tabbar/config.ts” 文件中
   tabBar: tabBar as any,
+  permission: {
+    'scope.userLocation': {
+      desc: '你的位置信息将用于小程序位置接口的效果展示',
+    },
+  },
+  requiredPrivateInfos: ['getLocation'],
 })

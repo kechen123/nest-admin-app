@@ -46,7 +46,37 @@ async function bootstrap() {
 
   // CORS 配置
   app.enableCors({
-    origin: corsOrigin.split(",").map((origin) => origin.trim()),
+    origin: (origin, callback) => {
+      // 如果 CORS_ORIGIN 为 "*"，允许所有来源
+      if (corsOrigin === "*") {
+        callback(null, true);
+        return;
+      }
+      
+      const allowedOrigins = corsOrigin.split(",").map((origin) => origin.trim());
+      
+      // 允许没有 origin 的请求（如移动应用、Postman 等）
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      
+      // 检查是否在允许列表中
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      
+      // 开发环境：允许本地 IP 访问（192.168.x.x, 10.x.x.x, 172.16-31.x.x）
+      // 匹配格式：http://192.168.x.x:port 或 https://192.168.x.x:port
+      const isLocalNetwork = /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?/.test(origin);
+      if (isLocalNetwork && configService.get<string>("NODE_ENV") !== "production") {
+        callback(null, true);
+        return;
+      }
+      
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
@@ -56,8 +86,10 @@ async function bootstrap() {
   // 设置 Swagger 文档
   SwaggerSetup.setup(app, configService);
 
-  await app.listen(port);
+  // 监听所有网络接口（0.0.0.0），允许通过本地 IP 访问
+  await app.listen(port, '0.0.0.0');
   console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`Application is also accessible via your local IP: http://<your-ip>:${port}`);
   console.log(`API Documentation: http://localhost:${port}/api`);
 }
 bootstrap();

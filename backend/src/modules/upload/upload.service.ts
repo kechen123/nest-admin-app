@@ -72,11 +72,21 @@ export class UploadService {
       fullUrl = `${appUrl.replace(/\/$/, '')}${filePath}`;
     } else if (req) {
       // 2. 从 Origin 或 Referer 头获取域名（最准确，因为这是客户端实际访问的地址）
+      // 但需要过滤掉微信小程序等特殊域名
       const origin = req.get('origin') || req.get('referer');
       if (origin) {
         try {
           const originUrl = new URL(origin);
-          fullUrl = `${originUrl.origin}${filePath}`;
+          // 过滤掉微信小程序域名（servicewechat.com）和其他特殊域名
+          const hostname = originUrl.hostname;
+          const isSpecialDomain = hostname.includes('servicewechat.com') || 
+                                 hostname.includes('weixin.qq.com') ||
+                                 hostname.includes('localhost') ||
+                                 hostname.includes('127.0.0.1');
+          
+          if (!isSpecialDomain) {
+            fullUrl = `${originUrl.origin}${filePath}`;
+          }
         } catch (e) {
           // URL 解析失败，继续使用其他方法
         }

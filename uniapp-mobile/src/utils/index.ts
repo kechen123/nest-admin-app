@@ -133,7 +133,7 @@ export function getEnvBaseUrl() {
 
     switch (envVersion) {
       case 'develop':
-        baseUrl = VITE_SERVER_BASEURL__WEIXIN_DEVELOP || baseUrl
+        baseUrl =  baseUrl
         break
       case 'trial':
         baseUrl = VITE_SERVER_BASEURL__WEIXIN_TRIAL || baseUrl

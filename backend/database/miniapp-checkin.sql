@@ -43,9 +43,11 @@ CREATE TABLE `user_couple` (
   `unbind_time` DATETIME COMMENT '解除绑定时间',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
   INDEX idx_user_id (`user_id`),
   INDEX idx_partner_id (`partner_id`),
   INDEX idx_status (`status`),
+  INDEX idx_deleted_at (`deleted_at`),
   UNIQUE KEY uk_user_partner (`user_id`, `partner_id`),
   FOREIGN KEY (`user_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`partner_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE
@@ -88,10 +90,12 @@ CREATE TABLE `checkin_notification` (
   `is_read` TINYINT DEFAULT 0 COMMENT '是否已读: 0-未读, 1-已读',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
   INDEX idx_user_id (`user_id`),
   INDEX idx_checkin_id (`checkin_id`),
   INDEX idx_is_read (`is_read`),
   INDEX idx_created_at (`created_at`),
+  INDEX idx_deleted_at (`deleted_at`),
   FOREIGN KEY (`user_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`checkin_id`) REFERENCES `checkin_record`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='打卡通知表';
