@@ -31,18 +31,24 @@ export const nativeTabbarList: NativeTabBarItem[] = [
     pagePath: 'pages/index/index',
     text: '首页',
   },
-  {
-    iconPath: 'static/tabbar/home.png',
-    selectedIconPath: 'static/tabbar/homeHL.png',
-    pagePath: 'pages/map/map',
-    text: '足迹',
-  },
-  {
-    iconPath: 'static/tabbar/home.png',
-    selectedIconPath: 'static/tabbar/homeHL.png',
-    pagePath: 'pages/checkin/list',
-    text: '记录',
-  },
+  // {
+  //   iconPath: 'static/tabbar/home.png',
+  //   selectedIconPath: 'static/tabbar/homeHL.png',
+  //   pagePath: 'pages/map/map',
+  //   text: '足迹',
+  // },
+  // {
+  //   text: '发布',
+  //   pagePath: 'pages/checkin/add',
+  //   iconType: 'unocss',
+  //   icon: 'i-carbon-location',
+  // },
+  // {
+  //   iconPath: 'static/tabbar/home.png',
+  //   selectedIconPath: 'static/tabbar/homeHL.png',
+  //   pagePath: 'pages/checkin/list',
+  //   text: '记录',
+  // },
   {
     iconPath: 'static/tabbar/personal.png',
     selectedIconPath: 'static/tabbar/personalHL.png',
@@ -70,6 +76,12 @@ export const customTabbarList: CustomTabBarItem[] = [
     iconType: 'unocss',
     icon: 'i-carbon-location',
   },
+  // {
+  //   text: '发布',
+  //   pagePath: 'pages/checkin/add',
+  //   iconType: 'unocss',
+  //   icon: 'i-carbon-location',
+  // },
   {
     text: '记录',
     pagePath: 'pages/checkin/list',
