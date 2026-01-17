@@ -26,33 +26,96 @@ const stats = ref({ total: 0, thisMonth: 0, thisWeek: 0 })
 const mapLatitude = ref(39.908823)
 const mapLongitude = ref(116.397470)
 const mapScale = ref(13)
-const showPublicCheckins = ref(false)
+const showPublicCheckins = ref(true) // 默认显示所有人和自己的打卡
 const mapMarkers = ref<any[]>([])
+const statusBarHeight = ref(0) // 状态栏高度
+const safeAreaTop = ref(0) // 安全区域顶部高度
 
-// 加载统计数据
-onMounted(async () => {
+// 静态测试数据 - 足迹点位
+const staticMarkers = [
+  {
+    id: 'static-1',
+    latitude: 39.908823,
+    longitude: 116.397470,
+    content: '天安门广场',
+    address: '北京市东城区天安门广场',
+    image: '/static/images/location.png',
+  },
+  {
+    id: 'static-2',
+    latitude: 39.904211,
+    longitude: 116.407526,
+    content: '故宫博物院',
+    address: '北京市东城区景山前街4号',
+    image: '/static/images/location.png',
+  },
+  {
+    id: 'static-3',
+    latitude: 39.916668,
+    longitude: 116.383331,
+    content: '北海公园',
+    address: '北京市西城区文津街1号',
+    image: '/static/images/location.png',
+  },
+  {
+    id: 'static-4',
+    latitude: 39.918058,
+    longitude: 116.397026,
+    content: '景山公园',
+    address: '北京市西城区景山前街',
+    image: '/static/images/location.png',
+  },
+]
+
+// 获取系统信息，适配安全区域
+function getSystemInfo() {
   try {
-    // 加载打卡记录列表
-    await checkinStore.loadRecords()
-    // 获取统计信息
-    stats.value = await checkinStore.getStatistics()
-    // 加载地图标记点
-    await loadMapMarkers()
+    const systemInfo = uni.getSystemInfoSync()
+    statusBarHeight.value = systemInfo.statusBarHeight || 0
+    // 计算安全区域顶部高度（状态栏高度，用于动态设置padding-top）
+    safeAreaTop.value = statusBarHeight.value
   } catch (error) {
-    console.error('加载数据失败:', error)
+    console.error('获取系统信息失败:', error)
+    safeAreaTop.value = 0
   }
-})
+}
+
+// 获取当前位置
+function getCurrentLocation() {
+  return new Promise<void>((resolve) => {
+    uni.getLocation({
+      type: 'gcj02',
+      success: (res) => {
+        mapLatitude.value = res.latitude
+        mapLongitude.value = res.longitude
+        mapScale.value = 15 // 定位后放大到合适的比例
+        resolve()
+      },
+      fail: (err) => {
+        console.warn('获取位置失败，使用默认位置:', err)
+        // 如果获取位置失败，使用默认位置（北京）
+        mapLatitude.value = 39.908823
+        mapLongitude.value = 116.397470
+        mapScale.value = 13
+        resolve()
+      },
+    })
+  })
+}
 
 // 加载地图标记点
-const loadMapMarkers = async () => {
+async function loadMapMarkers() {
   try {
-    const markers = await getMapMarkers(showPublicCheckins.value)
-    mapMarkers.value = markers.map((record: any) => ({
+    let markers: any[] = []
+
+    // 先添加静态测试数据
+    markers = staticMarkers.map((record) => ({
       id: record.id,
       latitude: Number(record.latitude),
       longitude: Number(record.longitude),
-      width: 30,
-      height: 30,
+      iconPath: record.image || '/static/images/location.png',
+      width: 40,
+      height: 40,
       callout: {
         content: record.content || record.address,
         color: '#333',
@@ -63,30 +126,62 @@ const loadMapMarkers = async () => {
         display: 'BYCLICK',
       },
     }))
-    
+
+    // 尝试加载API数据，如果失败则只使用静态数据
+    try {
+      const apiMarkers = await getMapMarkers(showPublicCheckins.value)
+      const apiMarkerList = apiMarkers.map((record: any) => ({
+        id: record.id,
+        latitude: Number(record.latitude),
+        longitude: Number(record.longitude),
+        iconPath: record.image || '/static/images/location.png',
+        width: 40,
+        height: 40,
+        callout: {
+          content: record.content || record.address,
+          color: '#333',
+          fontSize: 12,
+          borderRadius: 5,
+          bgColor: '#fff',
+          padding: 5,
+          display: 'BYCLICK',
+        },
+      }))
+      // 合并API数据和静态数据
+      markers = [...markers, ...apiMarkerList]
+    } catch (apiError) {
+      console.warn('加载API标记点失败，使用静态数据:', apiError)
+    }
+
+    mapMarkers.value = markers
+
     // 如果有标记点，设置地图中心为第一个点
     if (mapMarkers.value.length > 0) {
       mapLatitude.value = mapMarkers.value[0].latitude
       mapLongitude.value = mapMarkers.value[0].longitude
-    } else {
-      // 否则获取当前位置
-      getCurrentLocation()
     }
   } catch (error) {
     console.error('加载地图标记点失败:', error)
   }
 }
 
-// 获取当前位置
-const getCurrentLocation = () => {
-  uni.getLocation({
-    type: 'gcj02',
-    success: (res) => {
-      mapLatitude.value = res.latitude
-      mapLongitude.value = res.longitude
-    },
-  })
-}
+// 加载统计数据
+onMounted(async () => {
+  try {
+    // 获取系统信息
+    getSystemInfo()
+    // 先定位到当前位置
+    await getCurrentLocation()
+    // 加载打卡记录列表
+    await checkinStore.loadRecords()
+    // 获取统计信息
+    stats.value = await checkinStore.getStatistics()
+    // 加载地图标记点
+    await loadMapMarkers()
+  } catch (error) {
+    console.error('加载数据失败:', error)
+  }
+})
 
 // 切换显示公开打卡
 const togglePublicCheckins = async (e?: any) => {
@@ -99,8 +194,20 @@ const togglePublicCheckins = async (e?: any) => {
 }
 
 // 标记点点击事件
-const onMarkerTap = async (e: any) => {
+async function onMarkerTap(e: any) {
   const markerId = e.detail.markerId
+  // 如果是静态数据，不跳转详情页
+  if (markerId.startsWith('static-')) {
+    const staticMarker = staticMarkers.find((m) => m.id === markerId)
+    if (staticMarker) {
+      uni.showToast({
+        title: staticMarker.content || staticMarker.address,
+        icon: 'none',
+        duration: 2000,
+      })
+    }
+    return
+  }
   // 先从本地records查找
   let record = records.value.find((r: any) => r.id === markerId)
   // 如果本地没有，尝试从API获取
@@ -158,15 +265,28 @@ function goToDetail(id: string | number) {
 
 <template>
   <view class="home-container">
-    <!-- 头部背景 -->
-    <view class="header-bg">
+    <!-- 地图区域 - 全屏背景 -->
+    <view class="map-section">
+      <view class="map-container">
+        <map :latitude="mapLatitude" :longitude="mapLongitude" :scale="mapScale" :markers="mapMarkers"
+          :show-location="true" class="map" @markertap="onMarkerTap" />
+        <!-- 悬浮开关 -->
+        <view class="map-switch-float">
+          <text class="switch-text">{{ showPublicCheckins ? '隐藏' : '显示' }}公开打卡</text>
+          <switch color="#ff6b9d" :checked="showPublicCheckins" @change="togglePublicCheckins" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 头部背景 - 悬浮在顶部 -->
+    <view class="header-bg" :style="{ paddingTop: `${safeAreaTop}px` }">
       <view class="header-content">
         <text class="app-title">💕 恋爱足迹</text>
         <text class="app-subtitle">记录我们的美好时光</text>
       </view>
     </view>
 
-    <!-- 统计卡片 -->
+    <!-- 统计卡片 - 悬浮在header下方 -->
     <view class="stats-section">
       <view class="stats-card">
         <text class="stats-number">{{ stats.total }}</text>
@@ -181,95 +301,38 @@ function goToDetail(id: string | number) {
         <text class="stats-label">本周打卡</text>
       </view>
     </view>
-
-    <!-- 地图区域 -->
-    <view class="map-section">
-      <view class="map-header">
-        <text class="map-title">打卡地图</text>
-        <view class="map-switch">
-          <text class="switch-text">{{ showPublicCheckins ? '隐藏' : '显示' }}公开打卡</text>
-          <switch :checked="showPublicCheckins" @change="togglePublicCheckins" color="#ff6b9d" />
-        </view>
-      </view>
-      <view class="map-container">
-        <map
-          :latitude="mapLatitude"
-          :longitude="mapLongitude"
-          :scale="mapScale"
-          :markers="mapMarkers"
-          :show-location="true"
-          class="map"
-          @markertap="onMarkerTap"
-        />
-      </view>
-    </view>
-
-    <!-- 快捷操作 -->
-    <view class="actions-section">
-      <view class="action-btn primary" @click="goToAddCheckin">
-        <text class="action-icon">➕</text>
-        <text class="action-text">发布打卡</text>
-      </view>
-      <view class="action-btn" @click="goToMap">
-        <text class="action-icon">📍</text>
-        <text class="action-text">查看地图</text>
-      </view>
-      <view class="action-btn" @click="goToList">
-        <text class="action-icon">📝</text>
-        <text class="action-text">打卡记录</text>
-      </view>
-    </view>
-
-    <!-- 最新打卡 -->
-    <view v-if="latestRecord" class="latest-section">
-      <view class="section-title">
-        <text>最新打卡</text>
-        <text class="more-link" @click="goToList">查看全部 ›</text>
-      </view>
-      <view class="latest-card" @click="goToDetail(latestRecord.id)">
-        <view v-if="latestRecord.images.length > 0" class="latest-image">
-          <image :src="latestRecord.images[0]" mode="aspectFill" class="image" />
-        </view>
-        <view class="latest-content">
-          <view class="latest-location">
-            <text class="location-icon">📍</text>
-            <text class="location-text">{{ latestRecord.address }}</text>
-          </view>
-          <view v-if="latestRecord.content" class="latest-text">
-            {{ latestRecord.content }}
-          </view>
-          <view class="latest-time">
-            {{ dayjs(latestRecord.createdAt || latestRecord.createTime).format('YYYY-MM-DD HH:mm') }}
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <!-- 空状态 -->
-    <view v-else class="empty-section">
-      <text class="empty-icon">💕</text>
-      <text class="empty-text">还没有打卡记录</text>
-      <text class="empty-tip">点击下方按钮开始记录吧~</text>
-    </view>
   </view>
 </template>
 
 <style lang="scss" scoped>
 .home-container {
-  min-height: 100vh;
-  background: #f5f5f5;
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
 
 .header-bg {
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: linear-gradient(180deg,
+      rgba(255, 107, 157, 0.95) 0%,
+      rgba(255, 143, 171, 0.9) 50%,
+      rgba(255, 143, 171, 0) 100%);
   padding: 60rpx 30rpx 80rpx;
+  padding-top: calc(60rpx + env(safe-area-inset-top));
   color: #fff;
+  pointer-events: none;
 }
 
 .header-content {
   display: flex;
   flex-direction: column;
   align-items: center;
+  pointer-events: auto;
 
   .app-title {
     font-size: 48rpx;
@@ -284,22 +347,28 @@ function goToDetail(id: string | number) {
 }
 
 .stats-section {
+  position: absolute;
+  top: calc(160rpx + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  z-index: 10;
   display: flex;
   gap: 20rpx;
   padding: 0 30rpx;
-  margin-top: -40rpx;
-  margin-bottom: 30rpx;
+  pointer-events: none;
 }
 
 .stats-card {
   flex: 1;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10rpx);
   border-radius: 16rpx;
   padding: 30rpx 20rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
 
   .stats-number {
     font-size: 48rpx;
@@ -461,46 +530,44 @@ function goToDetail(id: string | number) {
 }
 
 .map-section {
-  margin: 0 30rpx 30rpx;
-  background: #fff;
-  border-radius: 16rpx;
-  overflow: hidden;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
-}
-
-.map-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24rpx 30rpx;
-  border-bottom: 1rpx solid #f0f0f0;
-
-  .map-title {
-    font-size: 32rpx;
-    font-weight: 600;
-    color: #333;
-  }
-
-  .map-switch {
-    display: flex;
-    align-items: center;
-    gap: 12rpx;
-
-    .switch-text {
-      font-size: 24rpx;
-      color: #666;
-    }
-  }
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 .map-container {
   width: 100%;
-  height: 500rpx;
+  height: 100%;
   position: relative;
 }
 
 .map {
   width: 100%;
   height: 100%;
+}
+
+.map-switch-float {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50rpx;
+  padding: 12rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+  z-index: 10;
+
+  .switch-text {
+    font-size: 24rpx;
+    color: #333;
+    white-space: nowrap;
+  }
 }
 </style>

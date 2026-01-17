@@ -70,24 +70,24 @@ export const customTabbarList: CustomTabBarItem[] = [
     icon: 'i-carbon-home',
     // badge: 'dot',
   },
-  {
-    text: '足迹',
-    pagePath: 'pages/map/map',
-    iconType: 'unocss',
-    icon: 'i-carbon-location',
-  },
+  // {
+  //   text: '足迹',
+  //   pagePath: 'pages/map/map',
+  //   iconType: 'unocss',
+  //   icon: 'i-carbon-location',
+  // },
   // {
   //   text: '发布',
   //   pagePath: 'pages/checkin/add',
   //   iconType: 'unocss',
   //   icon: 'i-carbon-location',
   // },
-  {
-    text: '记录',
-    pagePath: 'pages/checkin/list',
-    iconType: 'unocss',
-    icon: 'i-carbon-document',
-  },
+  // {
+  //   text: '记录',
+  //   pagePath: 'pages/checkin/list',
+  //   iconType: 'unocss',
+  //   icon: 'i-carbon-document',
+  // },
   {
     pagePath: 'pages/me/me',
     text: '我的',
