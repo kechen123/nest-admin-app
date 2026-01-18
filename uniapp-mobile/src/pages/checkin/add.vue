@@ -73,7 +73,9 @@ const uploadSingleImage = async (tempFilePath: string, index: number) => {
 
             // 后端返回格式: { code: 200, data: { url: '...', path: '...', ... }, msg: '...' }
             const result = responseData?.data || responseData
-            const imageUrl = result?.url || result?.path || result
+            // TODO: 修改为后端返回的URL
+            // const imageUrl = result?.url || result?.path || result
+            const imageUrl = `http://192.168.2.138:3000${result?.path}`
 
             if (imageUrl) {
               // 更新对应索引的图片URL

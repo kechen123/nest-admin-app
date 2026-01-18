@@ -5,6 +5,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useCheckinStore } from '@/store/checkin'
 import { getMapMarkers } from '@/api/checkin'
+import { mergeMarkerImage } from '@/utils/imageMerge'
 
 defineOptions({
   name: 'Home',
@@ -154,23 +155,42 @@ async function loadMapMarkers() {
   try {
     // 只加载公开打卡数据
     const apiMarkers = await getMapMarkers(true)
-    const markers = apiMarkers.map((record: any) => ({
-      id: record.id,
-      latitude: Number(record.latitude),
-      longitude: Number(record.longitude),
-      iconPath: record.images[0] || '/static/images/location.png',
-      width: 40,
-      height: 40,
-      callout: {
-        content: record.content || record.address,
-        color: '#333',
-        fontSize: 12,
-        borderRadius: 5,
-        bgColor: '#fff',
-        padding: 5,
-        display: 'BYCLICK',
-      },
-    }))
+    const promises = apiMarkers.map(async (record: any) => {
+      const iconPath = await mergeMarkerImage({
+        canvasId: 'canvas-marker',
+        foregroundSrc: record.images[0],
+        backgroundSrc: '/static/images/marker_bg.png',
+        size: 30,
+        fgSize: 30,
+        id: record.id,
+      })
+      return iconPath
+    })
+    const iconPaths = await Promise.all(promises)
+    console.log('iconPaths', iconPaths)
+
+    const markers = apiMarkers.map((record: any) => {
+      const iconPath = iconPaths.find((iconPath: { id: string }) => iconPath.id === record.id)
+      return {
+        id: record.id,
+        latitude: Number(record.latitude),
+        longitude: Number(record.longitude),
+        iconPath: iconPath?.tempFilePath || '/static/images/location.png',
+        width: 60,
+        height: 60,
+        callout: {
+          content: record.content || record.address,
+          color: '#ff6b9d',
+          fontSize: 12,
+          borderRadius: 5,
+          borderColor: '#ff6b9d',
+          borderWidth: 0,
+          bgColor: '#fff',
+          padding: 5,
+          display: 'ALWAYS',
+        },
+      }
+    })
 
     mapMarkers.value = markers
   } catch (error) {
@@ -301,6 +321,8 @@ function goToDetail(id: string | number) {
 
 <template>
   <view class="home-container">
+    <canvas canvas-id="canvas-marker"
+      style="width: 100px; height: 100px;position: absolute; top: 200rpx; left: 200rpx; z-index: 999;"></canvas>
     <!-- 地图区域 - 全屏背景 -->
     <view class="map-section">
       <view class="map-container">
