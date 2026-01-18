@@ -12,6 +12,8 @@ export interface MergeMarkerOptions {
   id: string
 }
 
+
+
 function getImageInfo(src: string) {
   console.log('src', src)
   return new Promise<UniApp.GetImageInfoSuccessData>((resolve, reject) => {
@@ -54,6 +56,30 @@ function imageToBase64Sync(imagePath: string) {
   }
 }
 
+function getLocalImagePath(imagePath: string): string {
+  // 如果是 base64，直接返回
+  if (imagePath.startsWith('data:') || imagePath.startsWith('http')) {
+    return imagePath
+  }
+  
+  // 如果是本地路径，尝试转换为临时路径
+  if (imagePath.startsWith('/')) {
+    try {
+      const fs = wx.getFileSystemManager()
+      const tempPath = wx.env.USER_DATA_PATH + '/' + Date.now() + '.png'
+      
+      // 复制文件到临时目录
+      fs.copyFileSync(imagePath, tempPath)
+      return tempPath
+    } catch (error) {
+      console.warn('复制本地文件失败，使用原路径:', error)
+      return imagePath
+    }
+  }
+  
+  return imagePath
+}
+
 export async function mergeMarkerImage(
   options: MergeMarkerOptions,
 ): Promise<{ id: string, tempFilePath: string }> {
@@ -66,10 +92,10 @@ export async function mergeMarkerImage(
     id,
   } = options
 
-  const bgRes = await imageToBase64Sync(backgroundSrc)
+  const bgRes = await getLocalImagePath(backgroundSrc)
   const fgRes = await getImageInfo(foregroundSrc)
-  console.log('fgRes', fgRes)
-  console.log('bgRes', bgRes)
+  // console.log('fgRes', fgRes)
+  // console.log('bgRes', bgRes)
   const ctx = uni.createCanvasContext(canvasId)
   ctx.setFillStyle('#3B61F2')
   ctx.fillRect(0, 0, 100, 100)
@@ -81,9 +107,9 @@ export async function mergeMarkerImage(
 
   // 3️⃣ 裁剪成圆形（前景图）- 顶部距离4px，左右居中
   const x = (size * 2 - size) / 2 // 左右居中
-  const y = 8 // 顶部距离
+  const y = 10 // 顶部距离
   const r = size / 2 // 圆形半径
-
+  
   ctx.save()
   ctx.beginPath()
   ctx.arc(x + r, y + r, r, 0, Math.PI * 2)
@@ -91,8 +117,9 @@ export async function mergeMarkerImage(
   ctx.drawImage(fgRes.path, x, y, size, size)
   ctx.restore()
 
+
   return new Promise((resolve, reject) => {
-    ctx.draw(true, () => {
+    ctx.draw(false, () => {
       uni.canvasToTempFilePath({
         canvasId,
         width: size * 2,
@@ -100,7 +127,6 @@ export async function mergeMarkerImage(
         destWidth: size * 2,
         destHeight: size * 2,
         success(res) {
-          console.log('res', res)
           resolve({
             id,
             tempFilePath: res.tempFilePath,

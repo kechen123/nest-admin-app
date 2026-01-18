@@ -74,8 +74,13 @@ const uploadSingleImage = async (tempFilePath: string, index: number) => {
             // 后端返回格式: { code: 200, data: { url: '...', path: '...', ... }, msg: '...' }
             const result = responseData?.data || responseData
             // TODO: 修改为后端返回的URL
-            // const imageUrl = result?.url || result?.path || result
-            const imageUrl = `http://192.168.2.138:3000${result?.path}`
+            let imageUrl = result?.url || result?.path || result
+            // const imageUrl = `http://192.168.0.101:3000${result?.path}`
+
+            // 确保 imageUrl 是字符串类型
+            if (typeof imageUrl !== 'string') {
+              imageUrl = String(imageUrl)
+            }
 
             if (imageUrl) {
               // 更新对应索引的图片URL
@@ -143,7 +148,7 @@ const chooseImage = () => {
   uni.chooseImage({
     count: 9 - images.value.length,
     success: async (res) => {
-      const tempFilePaths = res.tempFilePaths
+      const tempFilePaths = Array.isArray(res.tempFilePaths) ? res.tempFilePaths : [res.tempFilePaths]
 
       // 先添加占位符（使用临时路径用于预览）
       const startIndex = images.value.length
@@ -318,11 +323,15 @@ const submitCheckin = async () => {
   }
 
   // 检查是否有本地临时路径（未上传的图片）
-  const needUpload = images.value.some(img =>
-    img.startsWith('http://tmp/') ||
-    img.startsWith('file://') ||
-    img.startsWith('blob:')
-  )
+  const needUpload = images.value.some(img => {
+    // 确保 img 是字符串类型
+    if (typeof img !== 'string') {
+      return false
+    }
+    return img.startsWith('http://tmp/') ||
+      img.startsWith('file://') ||
+      img.startsWith('blob:')
+  })
   if (needUpload) {
     uni.showToast({
       title: '请等待图片上传完成',

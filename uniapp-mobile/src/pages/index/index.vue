@@ -160,8 +160,8 @@ async function loadMapMarkers() {
         canvasId: 'canvas-marker',
         foregroundSrc: record.images[0],
         backgroundSrc: '/static/images/marker_bg.png',
-        size: 30,
-        fgSize: 30,
+        size: 60,
+        fgSize: 60,
         id: record.id,
       })
       return iconPath
@@ -321,8 +321,8 @@ function goToDetail(id: string | number) {
 
 <template>
   <view class="home-container">
-    <canvas canvas-id="canvas-marker"
-      style="width: 100px; height: 100px;position: absolute; top: 200rpx; left: 200rpx; z-index: 999;"></canvas>
+    <canvas canvas-id="canvas-marker" id="canvas-marker"
+      style="width: 200px; height: 200px;position: absolute; top: -500rpx; left: -500rpx; z-index: -1;"></canvas>
     <!-- 地图区域 - 全屏背景 -->
     <view class="map-section">
       <view class="map-container">
