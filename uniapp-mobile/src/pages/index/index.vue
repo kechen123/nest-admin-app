@@ -1,10 +1,10 @@
 <script lang="ts" setup>
+import { onShow } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
-import { useCheckinStore } from '@/store/checkin'
 import { getMapMarkers } from '@/api/checkin'
+import { useCheckinStore } from '@/store/checkin'
 import { mergeMarkerImage } from '@/utils/imageMerge'
 
 defineOptions({
@@ -22,7 +22,6 @@ definePage({
 
 const checkinStore = useCheckinStore()
 const { records } = storeToRefs(checkinStore)
-const stats = ref({ total: 0, thisMonth: 0, thisWeek: 0 })
 const lastRefreshTime = ref(0) // 上次刷新时间
 
 // 地图相关
@@ -41,7 +40,8 @@ function getSystemInfo() {
     statusBarHeight.value = systemInfo.statusBarHeight || 0
     // 计算安全区域顶部高度（状态栏高度，用于动态设置padding-top）
     safeAreaTop.value = statusBarHeight.value
-  } catch (error) {
+  }
+  catch (error) {
     console.error('获取系统信息失败:', error)
     safeAreaTop.value = 0
   }
@@ -193,7 +193,8 @@ async function loadMapMarkers() {
     })
 
     mapMarkers.value = markers
-  } catch (error) {
+  }
+  catch (error) {
     console.error('加载地图标记点失败:', error)
     // 如果加载失败，清空标记点
     mapMarkers.value = []
@@ -201,23 +202,22 @@ async function loadMapMarkers() {
 }
 
 // 刷新数据
-const refreshData = async () => {
+async function refreshData() {
   try {
     // 加载打卡记录列表
     await checkinStore.loadRecords()
-    // 获取统计信息
-    stats.value = await checkinStore.getStatistics()
     // 加载地图标记点
     await loadMapMarkers()
     // 更新刷新时间
     lastRefreshTime.value = Date.now()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('刷新数据失败:', error)
   }
 }
 
 // 监听发布成功事件，刷新数据
-const onCheckinPublished = () => {
+function onCheckinPublished() {
   refreshData()
 }
 
@@ -232,7 +232,8 @@ onMounted(async () => {
     await refreshData()
     // 监听发布成功事件
     uni.$on('checkin-published', onCheckinPublished)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('加载数据失败:', error)
   }
 })
@@ -252,10 +253,11 @@ onUnmounted(() => {
 })
 
 // 切换显示公开打卡
-const togglePublicCheckins = async (e?: any) => {
+async function togglePublicCheckins(e?: any) {
   if (e) {
     showPublicCheckins.value = e.detail.value
-  } else {
+  }
+  else {
     showPublicCheckins.value = !showPublicCheckins.value
   }
   await loadMapMarkers()
@@ -270,7 +272,8 @@ async function onMarkerTap(e: any) {
   if (!record) {
     try {
       record = await checkinStore.getRecordById(markerId)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('获取记录失败:', error)
     }
   }
@@ -321,13 +324,17 @@ function goToDetail(id: string | number) {
 
 <template>
   <view class="home-container">
-    <canvas canvas-id="canvas-marker" id="canvas-marker"
-      style="width: 200px; height: 200px;position: absolute; top: -500rpx; left: -500rpx; z-index: -1;"></canvas>
+    <canvas
+      id="canvas-marker" canvas-id="canvas-marker"
+      style="width: 200px; height: 200px;position: absolute; top: -500rpx; left: -500rpx; z-index: -1;"
+    />
     <!-- 地图区域 - 全屏背景 -->
     <view class="map-section">
       <view class="map-container">
-        <map :latitude="mapLatitude" :longitude="mapLongitude" :scale="mapScale" :markers="mapMarkers"
-          :show-location="true" class="map" @markertap="onMarkerTap" />
+        <map
+          :latitude="mapLatitude" :longitude="mapLongitude" :scale="mapScale" :markers="mapMarkers"
+          :show-location="true" class="map" @markertap="onMarkerTap"
+        />
         <!-- 悬浮开关 -->
         <view class="map-switch-float">
           <text class="switch-text">{{ showPublicCheckins ? '隐藏' : '显示' }}公开打卡</text>
@@ -341,22 +348,6 @@ function goToDetail(id: string | number) {
       <view class="header-content">
         <text class="app-title">💕 恋爱足迹</text>
         <text class="app-subtitle">记录我们的美好时光</text>
-      </view>
-    </view>
-
-    <!-- 统计卡片 - 悬浮在header下方 -->
-    <view class="stats-section">
-      <view class="stats-card">
-        <text class="stats-number">{{ stats.total }}</text>
-        <text class="stats-label">总打卡数</text>
-      </view>
-      <view class="stats-card">
-        <text class="stats-number">{{ stats.thisMonth }}</text>
-        <text class="stats-label">本月打卡</text>
-      </view>
-      <view class="stats-card">
-        <text class="stats-number">{{ stats.thisWeek }}</text>
-        <text class="stats-label">本周打卡</text>
       </view>
     </view>
   </view>
@@ -376,10 +367,12 @@ function goToDetail(id: string | number) {
   left: 0;
   right: 0;
   z-index: 10;
-  background: linear-gradient(180deg,
-      rgba(255, 107, 157, 0.95) 0%,
-      rgba(255, 143, 171, 0.9) 50%,
-      rgba(255, 143, 171, 0) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 107, 157, 0.95) 0%,
+    rgba(255, 143, 171, 0.9) 50%,
+    rgba(255, 143, 171, 0) 100%
+  );
   padding: 60rpx 30rpx 80rpx;
   padding-top: calc(60rpx + env(safe-area-inset-top));
   color: #fff;
