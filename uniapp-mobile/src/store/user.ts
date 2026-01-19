@@ -55,7 +55,7 @@ export const useUserStore = defineStore(
       setUserAvatar,
     }
   },
-  {
-    persist: true,
-  },
+  // {
+  //   persist: true,
+  // },
 )

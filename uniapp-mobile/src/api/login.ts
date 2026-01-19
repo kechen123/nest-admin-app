@@ -27,9 +27,8 @@ export function login(loginForm: ILoginForm) {
 
 // 小程序登录
 export function miniappLogin(data: { code: string }) {
-  return http.post<{ userId: number; token: string; userInfo: IUserInfoRes }>('/miniapp/user/wxLogin', data)
+  return http.post<{ userId: number, token: string, userInfo: IUserInfoRes }>('/miniapp/user/wxLogin', data)
 }
-
 
 /**
  * 刷新token
@@ -40,10 +39,10 @@ export function refreshToken(refreshToken: string) {
 }
 
 /**
- * 获取用户信息（后台管理系统）
+ * 获取当前登录用户信息
  */
 export function getUserInfo() {
-  return http.get<IUserInfoRes>('/user/info')
+  return http.get<IUserInfoRes>('/miniapp/user/info')
 }
 
 /**
@@ -51,7 +50,7 @@ export function getUserInfo() {
  * @param userId 用户ID
  */
 export function getMiniappUserInfo(userId: number) {
-  return http.get<{ id: number; openid: string; nickname?: string; avatar?: string; gender?: number }>(`/miniapp/user/${userId}`)
+  return http.get<{ id: number, openid: string, nickname?: string, avatar?: string, gender?: number }>(`/miniapp/user/${userId}`)
 }
 
 /**
@@ -115,7 +114,7 @@ export function getWxUserProfile() {
  * @returns Promise 包含手机号信息
  */
 export function getWxPhoneNumber(encryptedData: string, iv: string) {
-  return new Promise<{ phoneNumber: string; purePhoneNumber: string; countryCode: string }>((resolve, reject) => {
+  return new Promise<{ phoneNumber: string, purePhoneNumber: string, countryCode: string }>((resolve, reject) => {
     // #ifdef MP-WEIXIN
     // 注意：实际应该调用后端接口解密手机号
     // 这里只是示例，实际需要后端配合
@@ -126,7 +125,8 @@ export function getWxPhoneNumber(encryptedData: string, iv: string) {
       success: (res: any) => {
         if (res.data.code === 0 || res.data.code === 200) {
           resolve(res.data.data)
-        } else {
+        }
+        else {
           reject(new Error(res.data.message || '获取手机号失败'))
         }
       },
@@ -153,16 +153,16 @@ export function wxLogin(data: { code: string }) {
  * @param data 微信登录参数，包含code、userInfo和phone
  * @returns Promise 包含登录结果
  */
-export function miniappWxLogin(data: { 
+export function miniappWxLogin(data: {
   code: string
-  userInfo?: { 
+  userInfo?: {
     nickName?: string
     avatarUrl?: string
     gender?: number
   }
   phone?: string
 }) {
-  return http.post<{ 
+  return http.post<{
     userId: number
     token: string
     needBindPhone: boolean
@@ -185,4 +185,12 @@ export function bindPhone(phone: string) {
  */
 export function getMiniappCurrentUserInfo() {
   return http.get<IUserInfoRes>('/miniapp/user/info')
+}
+
+/**
+ * 更新用户资料
+ * @param data 用户资料数据
+ */
+export function updateProfile(data: { nickname: string, avatar: string }) {
+  return http.put<IUserInfoRes>('/miniapp/user/profile', data)
 }

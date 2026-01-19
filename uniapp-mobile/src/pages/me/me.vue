@@ -34,6 +34,9 @@ async function loadStatistics() {
 // 页面挂载时加载统计数据
 onMounted(() => {
   loadStatistics()
+  if (userInfo.value.userId === -1) {
+    userStore.fetchUserInfo()
+  }
 })
 
 // 微信小程序下登录
@@ -432,9 +435,7 @@ function goToCheckinRecords() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
     position: relative;
-    box-shadow: 0 8rpx 20rpx rgba(255, 107, 157, 0.25);
     transition: all 0.3s ease;
 
     &::after {

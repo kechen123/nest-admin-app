@@ -17,6 +17,8 @@ import {
 } from '@nestjs/swagger';
 import { MiniappUserService } from './miniapp-user.service';
 import { WxLoginDto, WxLoginResponseDto, BindPhoneDto } from './dto/wx-login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UserInfoResponseDto } from './dto/user-info.dto';
 import { MiniappUser } from './miniapp-user.entity';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 
@@ -47,10 +49,10 @@ export class MiniappUserController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '获取当前登录用户信息' })
-  @ApiResponse({ status: 200, type: MiniappUser })
+  @ApiResponse({ status: 200, type: UserInfoResponseDto })
   async getCurrentUserInfo(@Req() req: any) {
     const userId = req.user?.userId || req.user?.id;
-    return await this.userService.findOne(userId);
+    return await this.userService.getUserInfoWithPartner(userId);
   }
 
   @Get(':id')
@@ -60,5 +62,15 @@ export class MiniappUserController {
   @ApiResponse({ status: 200, type: MiniappUser })
   async getUserInfo(@Param('id', ParseIntPipe) id: number) {
     return await this.userService.findOne(id);
+  }
+
+  @Put('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: '修改当前用户资料' })
+  @ApiResponse({ status: 200, type: MiniappUser })
+  async updateProfile(@Req() req: any, @Body() updateProfileDto: UpdateProfileDto) {
+    const userId = req.user?.userId || req.user?.id;
+    return await this.userService.updateProfile(userId, updateProfileDto);
   }
 }

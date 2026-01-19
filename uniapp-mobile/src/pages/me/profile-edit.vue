@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
-import { ref, reactive } from 'vue'
+import { reactive, ref } from 'vue'
+import { updateProfile } from '@/api/login'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
 
@@ -27,20 +28,24 @@ const formData = reactive({
 const isLoading = ref(false)
 
 // 保存资料
-const handleSave = async () => {
-  if (isLoading.value) return
+async function handleSave() {
+  if (isLoading.value)
+    return
 
   try {
     isLoading.value = true
 
-    // 这里应该调用更新用户信息的API
-    // 暂时先模拟更新本地状态
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 调用更新用户资料接口，只传递 nickname 和 avatar
+    await updateProfile({
+      nickname: formData.nickname,
+      avatar: formData.avatar,
+    })
 
     // 更新store中的用户信息
     userStore.setUserInfo({
       ...userInfo.value,
-      ...formData,
+      nickname: formData.nickname,
+      avatar: formData.avatar,
     })
 
     uni.showToast({
@@ -52,35 +57,22 @@ const handleSave = async () => {
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
-
-  } catch (error) {
+  }
+  catch (error) {
     console.error('保存失败:', error)
     uni.showToast({
       title: '保存失败，请重试',
       icon: 'error',
     })
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
 
 // 选择头像
-const chooseAvatar = async () => {
-  try {
-    const res = await uni.chooseImage({
-      count: 1,
-      sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
-    })
-
-    if (res.tempFilePaths && res.tempFilePaths[0]) {
-      formData.avatar = res.tempFilePaths[0]
-      // 这里应该上传图片到服务器并获取URL
-      // 暂时先直接使用临时路径
-    }
-  } catch (error) {
-    console.error('选择头像失败:', error)
-  }
+async function chooseAvatar(data: any) {
+  formData.avatar = data.detail.avatarUrl
 }
 </script>
 
@@ -90,24 +82,12 @@ const chooseAvatar = async () => {
       <!-- 头像 -->
       <view class="form-item">
         <text class="form-label">头像</text>
-        <view class="avatar-section" @click="chooseAvatar">
-          <view class="avatar-preview">
+        <view class="avatar-section">
+          <button class="avatar-preview" open-type="chooseAvatar" @chooseavatar="chooseAvatar">
             <image v-if="formData.avatar" :src="formData.avatar" mode="aspectFill" />
             <text v-else class="default-avatar">👤</text>
-          </view>
-          <text class="avatar-tip">点击更换头像</text>
+          </button>
         </view>
-      </view>
-
-      <!-- 用户名 -->
-      <view class="form-item">
-        <text class="form-label">用户名</text>
-        <input
-          v-model="formData.username"
-          class="form-input"
-          placeholder="请输入用户名"
-          maxlength="20"
-        />
       </view>
 
       <!-- 昵称 -->
@@ -117,42 +97,8 @@ const chooseAvatar = async () => {
           v-model="formData.nickname"
           class="form-input"
           placeholder="请输入昵称"
-          maxlength="20"
-        />
-      </view>
-
-      <!-- 邮箱 -->
-      <view class="form-item">
-        <text class="form-label">邮箱</text>
-        <input
-          v-model="formData.email"
-          class="form-input"
-          placeholder="请输入邮箱"
-          type="email"
-        />
-      </view>
-
-      <!-- 手机号 -->
-      <view class="form-item">
-        <text class="form-label">手机号</text>
-        <input
-          v-model="formData.phone"
-          class="form-input"
-          placeholder="请输入手机号"
-          type="number"
-        />
-      </view>
-
-      <!-- 个性签名 -->
-      <view class="form-item">
-        <text class="form-label">个性签名</text>
-        <textarea
-          v-model="formData.signature"
-          class="form-textarea"
-          placeholder="请输入个性签名"
-          maxlength="100"
-          :auto-height="true"
-        />
+          :maxlength="20"
+        >
       </view>
     </view>
 
@@ -214,17 +160,16 @@ const chooseAvatar = async () => {
     height: 100rpx;
     border-radius: 50rpx;
     overflow: hidden;
-    margin-right: 24rpx;
+    margin: 0;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
     border: 2rpx solid #fff;
-    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 
     image {
-      width: 100%;
-      height: 100%;
+      width: 100rpx;
+      height: 100rpx;
     }
 
     .default-avatar {
