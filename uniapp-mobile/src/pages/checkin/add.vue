@@ -30,7 +30,7 @@ const images = ref<string[]>([])
 const uploadingIndexes = ref<Set<number>>(new Set())
 
 // 上传单张图片
-const uploadSingleImage = async (tempFilePath: string, index: number) => {
+async function uploadSingleImage(tempFilePath: string, index: number) {
   uploadingIndexes.value.add(index)
 
   try {
@@ -41,7 +41,8 @@ const uploadSingleImage = async (tempFilePath: string, index: number) => {
     if (!token && tokenStore.tryGetValidToken) {
       try {
         token = await tokenStore.tryGetValidToken()
-      } catch (error) {
+      }
+      catch (error) {
         console.error('获取token失败:', error)
       }
     }
@@ -66,7 +67,8 @@ const uploadSingleImage = async (tempFilePath: string, index: number) => {
             if (typeof responseData === 'string') {
               try {
                 responseData = JSON.parse(responseData)
-              } catch (e) {
+              }
+              catch (e) {
                 console.log('Response is not JSON, using raw data:', responseData)
               }
             }
@@ -86,10 +88,12 @@ const uploadSingleImage = async (tempFilePath: string, index: number) => {
               // 更新对应索引的图片URL
               images.value[index] = imageUrl
               resolve()
-            } else {
+            }
+            else {
               reject(new Error('上传响应中未找到图片URL'))
             }
-          } catch (err) {
+          }
+          catch (err) {
             console.error('解析上传响应失败:', err)
             reject(err)
           }
@@ -100,7 +104,8 @@ const uploadSingleImage = async (tempFilePath: string, index: number) => {
         },
       })
     })
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('上传图片失败:', error)
     uni.showToast({
       title: error?.message || '上传失败',
@@ -108,13 +113,14 @@ const uploadSingleImage = async (tempFilePath: string, index: number) => {
     })
     // 上传失败，移除该图片
     images.value.splice(index, 1)
-  } finally {
+  }
+  finally {
     uploadingIndexes.value.delete(index)
   }
 }
 
 // 选择并上传图片
-const chooseImage = () => {
+function chooseImage() {
   // #ifdef MP-WEIXIN
   uni.chooseMedia({
     count: 9 - images.value.length,
@@ -175,12 +181,12 @@ const chooseImage = () => {
 }
 
 // 删除图片
-const deleteImage = (index: number) => {
+function deleteImage(index: number) {
   images.value.splice(index, 1)
 }
 
 // 预览图片
-const previewImage = (index: number) => {
+function previewImage(index: number) {
   uni.previewImage({
     urls: images.value,
     current: index,
@@ -188,7 +194,7 @@ const previewImage = (index: number) => {
 }
 
 // 获取当前位置
-const getCurrentLocation = () => {
+function getCurrentLocation() {
   uni.showLoading({
     title: '获取位置中...',
   })
@@ -217,7 +223,7 @@ const getCurrentLocation = () => {
 }
 
 // 逆地理编码（获取地址）
-const reverseGeocode = (lat: number, lng: number) => {
+function reverseGeocode(lat: number, lng: number) {
   // 使用腾讯地图API进行逆地理编码
   // #ifdef MP-WEIXIN
   // 微信小程序可以使用腾讯地图API
@@ -236,7 +242,8 @@ const reverseGeocode = (lat: number, lng: number) => {
         address.value = result.pois && result.pois.length > 0
           ? result.pois[0].title || result.address
           : (result.address || result.formatted_addresses?.recommend || '当前位置')
-      } else {
+      }
+      else {
         address.value = '当前位置'
       }
       uni.hideLoading()
@@ -271,32 +278,15 @@ const reverseGeocode = (lat: number, lng: number) => {
   // #endif
 }
 
-// 选择位置（使用系统选择位置）
-const chooseLocation = () => {
-  uni.chooseLocation({
-    success: (res) => {
-      latitude.value = res.latitude
-      longitude.value = res.longitude
-      address.value = res.address || res.name || '已选择位置'
-    },
-    fail: () => {
-      uni.showToast({
-        title: '选择位置失败',
-        icon: 'none',
-      })
-    },
-  })
-}
-
 // 在地图上选择位置
-const selectLocationOnMap = () => {
+function selectLocationOnMap() {
   uni.navigateTo({
     url: `/pages/checkin/select-location?lat=${latitude.value}&lng=${longitude.value}`,
   })
 }
 
 // 提交打卡
-const submitCheckin = async () => {
+async function submitCheckin() {
   if (!latitude.value || !longitude.value) {
     uni.showToast({
       title: '请选择位置',
@@ -323,14 +313,14 @@ const submitCheckin = async () => {
   }
 
   // 检查是否有本地临时路径（未上传的图片）
-  const needUpload = images.value.some(img => {
+  const needUpload = images.value.some((img) => {
     // 确保 img 是字符串类型
     if (typeof img !== 'string') {
       return false
     }
-    return img.startsWith('http://tmp/') ||
-      img.startsWith('file://') ||
-      img.startsWith('blob:')
+    return img.startsWith('http://tmp/')
+      || img.startsWith('file://')
+      || img.startsWith('blob:')
   })
   if (needUpload) {
     uni.showToast({
@@ -364,14 +354,15 @@ const submitCheckin = async () => {
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
-  } catch (error) {
+  }
+  catch (error) {
     uni.hideLoading()
     console.error('提交失败:', error)
   }
 }
 
 // 监听页面显示，接收从地图选择页面返回的位置信息
-const onPageShow = () => {
+function onPageShow() {
   const app = getApp()
   if (app.globalData?.selectedLocation) {
     const { latitude: lat, longitude: lng, address: addr } = app.globalData.selectedLocation
@@ -397,37 +388,37 @@ onShow(() => {
   <view class="add-checkin-container">
     <!-- 位置选择 -->
     <view class="section">
-      <view class="section-title">位置</view>
-      <view class="location-box" @click="chooseLocation">
+      <view class="section-title">
+        位置
+      </view>
+      <view class="location-box" @click="selectLocationOnMap">
         <view class="location-info">
           <text class="location-icon">📍</text>
           <text class="location-text">{{ address }}</text>
         </view>
         <text class="location-arrow">›</text>
       </view>
-      <view class="location-btns">
-        <view class="location-btn" @click="getCurrentLocation">
-          <text>重新定位</text>
-        </view>
-        <view class="location-btn map-select" @click="selectLocationOnMap">
-          <text>在地图上选择</text>
-        </view>
-      </view>
     </view>
 
     <!-- 打卡内容 -->
     <view class="section">
-      <view class="section-title">打卡内容</view>
+      <view class="section-title">
+        打卡内容
+      </view>
       <textarea v-model="content" class="content-input" placeholder="记录这一刻的美好..." :show-confirm-bar="false" />
-      <view class="char-count">{{ content.length }}/500</view>
+      <view class="char-count">
+        {{ content.length }}/500
+      </view>
     </view>
 
     <!-- 是否公开 -->
     <view class="section">
-      <view class="section-title">隐私设置</view>
+      <view class="section-title">
+        隐私设置
+      </view>
       <view class="switch-box">
         <text class="switch-label">公开打卡</text>
-        <switch :checked="isPublic" @change="(e: any) => isPublic = e.detail.value" color="#ff6b9d" />
+        <switch :checked="isPublic" color="#ff6b9d" @change="(e: any) => isPublic = e.detail.value" />
       </view>
       <view class="switch-tip">
         <text>开启后，其他用户可以在公开地图上看到你的打卡</text>
@@ -436,14 +427,18 @@ onShow(() => {
 
     <!-- 图片上传 -->
     <view class="section">
-      <view class="section-title">照片</view>
+      <view class="section-title">
+        照片
+      </view>
       <view class="image-list">
         <view v-for="(image, index) in images" :key="index" class="image-item" @click="previewImage(index)">
           <image :src="image" mode="aspectFill" class="image" />
           <view v-if="uploadingIndexes.has(index)" class="image-uploading">
             <text>上传中...</text>
           </view>
-          <view v-else class="image-delete" @click.stop="deleteImage(index)">×</view>
+          <view v-else class="image-delete" @click.stop="deleteImage(index)">
+            ×
+          </view>
         </view>
         <view v-if="images.length < 9" class="image-item image-add" @click="chooseImage">
           <text class="add-icon">+</text>
