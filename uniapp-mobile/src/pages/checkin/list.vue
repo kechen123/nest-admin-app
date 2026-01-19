@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useCheckinStore } from '@/store/checkin'
 import dayjs from 'dayjs'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted } from 'vue'
+import { useCheckinStore } from '@/store/checkin'
 
 definePage({
   style: {
@@ -17,7 +17,8 @@ const { records } = storeToRefs(checkinStore)
 onMounted(async () => {
   try {
     await checkinStore.loadRecords()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('加载打卡记录失败:', error)
   }
 })
@@ -25,7 +26,7 @@ onMounted(async () => {
 // 按日期分组的打卡记录
 const groupedRecords = computed(() => {
   const groups: Record<string, typeof records.value> = {}
-  
+
   records.value.forEach((record) => {
     const time = record.createdAt || record.createTime
     const date = dayjs(time).format('YYYY-MM-DD')
@@ -50,37 +51,40 @@ const groupedRecords = computed(() => {
 })
 
 // 格式化日期显示
-const formatDate = (date: string) => {
+function formatDate(date: string) {
   const today = dayjs().format('YYYY-MM-DD')
   const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD')
-  
+
   if (date === today) {
     return '今天'
-  } else if (date === yesterday) {
+  }
+  else if (date === yesterday) {
     return '昨天'
-  } else if (dayjs(date).year() === dayjs().year()) {
+  }
+  else if (dayjs(date).year() === dayjs().year()) {
     return dayjs(date).format('MM月DD日')
-  } else {
+  }
+  else {
     return dayjs(date).format('YYYY年MM月DD日')
   }
 }
 
 // 格式化时间
-const formatTime = (time: string) => {
+function formatTime(time: string) {
   return dayjs(time).format('HH:mm')
 }
 
 // 跳转到详情页
-const goToDetail = (id: string | number) => {
+function goToDetail(id: string | number) {
   uni.navigateTo({
     url: `/pages/checkin/detail?id=${id}`,
   })
 }
 
 // 跳转到地图页
-const goToMap = () => {
-  uni.switchTab({
-    url: '/pages/map/map',
+function goToAdd() {
+  uni.navigateTo({
+    url: '/pages/checkin/add',
   })
 }
 </script>
@@ -92,7 +96,9 @@ const goToMap = () => {
       <text class="empty-icon">💕</text>
       <text class="empty-text">还没有打卡记录</text>
       <text class="empty-tip">快去记录你们的美好时光吧~</text>
-      <button class="empty-btn" @click="goToMap">去打卡</button>
+      <button class="empty-btn" @click="goToAdd">
+        去打卡
+      </button>
     </view>
 
     <!-- 打卡记录列表 -->
@@ -125,7 +131,9 @@ const goToMap = () => {
           <!-- 内容区域 -->
           <view class="record-content">
             <!-- 时间 -->
-            <view class="record-time">{{ formatTime(record.createdAt || record.createTime) }}</view>
+            <view class="record-time">
+              {{ formatTime(record.createdAt || record.createTime) }}
+            </view>
 
             <!-- 位置 -->
             <view class="record-location">

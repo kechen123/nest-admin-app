@@ -96,7 +96,6 @@ export class MiniappUserService {
     // 生成token（使用sub字段，与JWT策略保持一致）
     const token = this.jwtService.sign(
       { sub: user.id, userId: user.id, openid: user.openid },
-      { expiresIn: '30d' },
     );
 
     return {
