@@ -44,8 +44,11 @@ async function handleSave() {
     // 更新store中的用户信息
     userStore.setUserInfo({
       ...userInfo.value,
-      nickname: formData.nickname,
-      avatar: formData.avatar,
+      userInfo: {
+        ...userInfo.value.userInfo,
+        nickname: formData.nickname,
+        avatar: formData.avatar,
+      },
     })
 
     uni.showToast({
@@ -93,23 +96,13 @@ async function chooseAvatar(data: any) {
       <!-- 昵称 -->
       <view class="form-item">
         <text class="form-label">昵称</text>
-        <input
-          v-model="formData.nickname"
-          class="form-input"
-          placeholder="请输入昵称"
-          :maxlength="20"
-        >
+        <input v-model="formData.nickname" class="form-input" placeholder="请输入昵称" :maxlength="20">
       </view>
     </view>
 
     <!-- 保存按钮 -->
     <view class="save-section">
-      <button
-        type="primary"
-        class="save-btn"
-        :loading="isLoading"
-        @click="handleSave"
-      >
+      <button type="primary" class="save-btn" :loading="isLoading" @click="handleSave">
         保存资料
       </button>
     </view>

@@ -24,10 +24,12 @@ export type IAuthLoginRes = ISingleTokenRes | IDoubleTokenRes
  * 用户信息
  */
 export interface IUserInfoRes {
-  userId: number
-  username: string
-  nickname: string
-  avatar?: string
+  userInfo: {
+    userId: number
+    username: string
+    nickname: string
+    avatar?: string
+  }
   hasPartner?: boolean
   hasPendingInvite?: boolean // 已发送邀请但对方未同意
   partnerInfo?: IPartnerInfo

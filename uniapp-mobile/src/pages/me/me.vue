@@ -43,7 +43,7 @@ onMounted(() => {
 })
 
 onShow(() => {
-  console.log('onShow>>>>>>>>>>>>')
+  console.log('onShow>>>>>>>>>>>>', userInfo.value)
   if (userInfo.value.userId !== -1 && !userInfo.value.hasPartner) {
     // generateInviteCode()
   }
@@ -167,11 +167,11 @@ export default {
       <!-- 用户信息卡片 -->
       <view class="user-card">
         <view class="user-avatar">
-          <image v-if="userInfo.userInfo.avatar" :src="userInfo.userInfo.avatar" mode="aspectFill" />
+          <image v-if="userInfo.userInfo?.avatar" :src="userInfo.userInfo?.avatar" mode="aspectFill" />
           <text v-else class="default-avatar">👤</text>
         </view>
         <view class="user-info">
-          <text class="user-name">{{ userInfo.userInfo.nickname || '未设置昵称' }}</text>
+          <text class="user-name">{{ userInfo.userInfo?.nickname || '未设置昵称' }}</text>
           <view v-if="userInfo.hasPartner" class="partner-relation">
             <view class="relation-icon">
               ❤️
@@ -184,7 +184,7 @@ export default {
         <view v-if="!userInfo.hasPartner && !userInfo.hasPendingInvite" class="invite-btn">
           <text class="invite-icon">💌</text>
           <button class="invite-text" open-type="share" @tap.stop="">
-            分享
+            邀请
           </button>
         </view>
         <!-- 已邀请但对方未同意时显示等待状态 -->
@@ -434,7 +434,7 @@ export default {
       left: 100%;
     }
 
-    animation: slideInUp 0.6s ease-out 0.8s both;
+    // animation: slideInUp 0.6s ease-out 0.8s both;
   }
 
   @keyframes slideInUp {
@@ -682,6 +682,10 @@ export default {
 
     .invite-text {
       font-size: 26rpx;
+      background-color: transparent;
+      border: none;
+      padding: 0;
+      margin: 0;
       color: #fff;
       font-weight: 600;
     }
