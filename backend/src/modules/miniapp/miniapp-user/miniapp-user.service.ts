@@ -3,14 +3,43 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MiniappUser } from './miniapp-user.entity';
 import { WxLoginDto } from './dto/wx-login.dto';
-import * as jwt from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class MiniappUserService {
   constructor(
     @InjectRepository(MiniappUser)
     private readonly userRepository: Repository<MiniappUser>,
+    private readonly jwtService: JwtService,
   ) {}
+
+  /**
+   * 生成随机用户名（4-6个字符，中英文混合）
+   */
+  private generateRandomName(): string {
+    const length = Math.floor(Math.random() * 3) + 4; // 4-6个字符
+    let name = '';
+
+    // 中文字符范围：\u4e00-\u9fff
+    // 英文字符：大小写字母 + 数字
+    const englishChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (let i = 0; i < length; i++) {
+      // 随机决定使用中文字符还是英文字符
+      const useChinese = Math.random() > 0.3; // 70%概率使用中文字符
+
+      if (useChinese) {
+        // 生成随机中文字符
+        const code = Math.floor(Math.random() * (0x9fff - 0x4e00 + 1)) + 0x4e00;
+        name += String.fromCharCode(code);
+      } else {
+        // 使用英文字符
+        name += englishChars[Math.floor(Math.random() * englishChars.length)];
+      }
+    }
+
+    return name;
+  }
 
   /**
    * 微信登录/注册
@@ -33,9 +62,10 @@ export class MiniappUserService {
 
     if (!user) {
       // 创建新用户
+      const nickname = userInfo?.nickName || this.generateRandomName();
       user = this.userRepository.create({
         openid,
-        nickname: userInfo?.nickName,
+        nickname,
         avatar: userInfo?.avatarUrl,
         gender: userInfo?.gender || 0,
         phone: phone || undefined,
@@ -64,9 +94,8 @@ export class MiniappUserService {
     const needBindPhone = !user.phone;
 
     // 生成token（使用sub字段，与JWT策略保持一致）
-    const token = jwt.sign(
+    const token = this.jwtService.sign(
       { sub: user.id, userId: user.id, openid: user.openid },
-      process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '30d' },
     );
 
