@@ -6,10 +6,12 @@ import { MiniappUser } from './miniapp-user.entity';
 import { UserCouple } from '../user-couple/user-couple.entity';
 import { MiniappUserService } from './miniapp-user.service';
 import { MiniappUserController } from './miniapp-user.controller';
+import { InviteCodeModule } from '../invite-code/invite-code.module';
 
 @Module({
   imports: [
     ConfigModule,
+    InviteCodeModule,
     TypeOrmModule.forFeature([MiniappUser, UserCouple]),
     JwtModule.registerAsync({
       imports: [ConfigModule],

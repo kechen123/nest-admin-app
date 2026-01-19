@@ -100,6 +100,32 @@ CREATE TABLE `checkin_notification` (
   FOREIGN KEY (`checkin_id`) REFERENCES `checkin_record`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='打卡通知表';
 
+-- ============================================
+-- 5. 邀请码表（用于管理用户邀请关系）
+-- ============================================
+DROP TABLE IF EXISTS `user_invite_code`;
+CREATE TABLE `user_invite_code` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '邀请码ID',
+  `code` VARCHAR(32) NOT NULL UNIQUE COMMENT '邀请码（唯一）',
+  `inviter_id` INT NOT NULL COMMENT '邀请者用户ID',
+  `status` ENUM('pending', 'accepted', 'expired', 'cancelled') DEFAULT 'pending' COMMENT '状态: pending-等待接受, accepted-已接受, expired-已过期, cancelled-已取消',
+  `expire_time` DATETIME NOT NULL COMMENT '过期时间',
+  `accepted_at` DATETIME NULL COMMENT '接受时间',
+  `accepted_by` INT NULL COMMENT '接受者用户ID',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
+  INDEX idx_code (`code`),
+  INDEX idx_inviter_id (`inviter_id`),
+  INDEX idx_status (`status`),
+  INDEX idx_expire_time (`expire_time`),
+  INDEX idx_accepted_by (`accepted_by`),
+  INDEX idx_created_at (`created_at`),
+  INDEX idx_deleted_at (`deleted_at`),
+  FOREIGN KEY (`inviter_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`accepted_by`) REFERENCES `miniapp_user`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户邀请码表';
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================

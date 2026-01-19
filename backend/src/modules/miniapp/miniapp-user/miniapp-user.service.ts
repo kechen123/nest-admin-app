@@ -7,6 +7,7 @@ import { WxLoginDto } from './dto/wx-login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserInfoResponseDto } from './dto/user-info.dto';
 import { JwtService } from '@nestjs/jwt';
+import { InviteCodeService } from '../invite-code/invite-code.service';
 
 @Injectable()
 export class MiniappUserService {
@@ -15,6 +16,7 @@ export class MiniappUserService {
     private readonly userRepository: Repository<MiniappUser>,
     @InjectRepository(UserCouple)
     private readonly userCoupleRepository: Repository<UserCouple>,
+    private readonly inviteCodeService: InviteCodeService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -179,6 +181,7 @@ export class MiniappUserService {
         updatedAt: user.updatedAt,
       },
       hasPartner: false,
+      hasPendingInvite: false,
     };
 
     if (couple) {
@@ -194,6 +197,13 @@ export class MiniappUserService {
         createdAt: partner.createdAt,
         updatedAt: partner.updatedAt,
       };
+    } else {
+      // 检查是否有pending状态的邀请码
+      const hasActiveInvite = await this.inviteCodeService.hasUserActiveInvite(userId);
+
+      if (hasActiveInvite) {
+        response.hasPendingInvite = true;
+      }
     }
 
     return response;

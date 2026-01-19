@@ -29,6 +29,7 @@ export interface IUserInfoRes {
   nickname: string
   avatar?: string
   hasPartner?: boolean
+  hasPendingInvite?: boolean // 已发送邀请但对方未同意
   partnerInfo?: IPartnerInfo
   [key: string]: any // 允许其他扩展字段
 }

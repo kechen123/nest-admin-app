@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
+import { generateInviteCode } from '@/api/couple'
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useCheckinStore } from '@/store/checkin'
@@ -34,24 +35,23 @@ async function loadStatistics() {
 // 页面挂载时加载统计数据
 onMounted(() => {
   loadStatistics()
+  console.log('onMounted>>>>>>>>>>>>>>>>')
   console.log(userInfo.value)
   if (userInfo.value.userId === -1) {
     userStore.fetchUserInfo()
   }
 })
 
+onShow(() => {
+  console.log('onShow>>>>>>>>>>>>')
+  if (userInfo.value.userId !== -1 && !userInfo.value.hasPartner) {
+    // generateInviteCode()
+  }
+})
+
 // 微信小程序下登录
 async function handleLogin() {
-  // #ifdef MP-WEIXIN
-  // 微信登录
   await tokenStore.wxLogin()
-
-  // #endif
-  // #ifndef MP-WEIXIN
-  uni.navigateTo({
-    url: `${LOGIN_PAGE}`,
-  })
-  // #endif
 }
 
 function handleLogout() {
@@ -67,14 +67,6 @@ function handleLogout() {
           title: '退出登录成功',
           icon: 'success',
         })
-        // #ifdef MP-WEIXIN
-        // 微信小程序，去首页
-        // uni.reLaunch({ url: '/pages/index/index' })
-        // #endif
-        // #ifndef MP-WEIXIN
-        // 非微信小程序，去登录页
-        // uni.navigateTo({ url: LOGIN_PAGE })
-        // #endif
       }
     },
   })
@@ -94,13 +86,63 @@ function goToCheckinRecords() {
   })
 }
 
-// 邀请另一半
-function handleInvitePartner() {
-  // TODO: 实现邀请另一半的逻辑
-  uni.showToast({
-    title: '邀请功能开发中',
-    icon: 'none',
-  })
+defineExpose({
+  userInfo,
+  generateInviteCode,
+})
+</script>
+
+<script lang="ts">
+export default {
+  name: 'MePage',
+  data() {
+    return {
+    }
+  },
+  onShareAppMessage: async (options: any) => {
+    try {
+      const pages = getCurrentPages()
+      const currentPage = pages[pages.length - 1]
+      const pageInstance = currentPage.$vm
+      const userInfo = pageInstance.userInfo
+      // 获取当前有效邀请码
+      const inviteCode = await pageInstance.generateInviteCode()
+
+      return {
+        title: `${userInfo.userInfo.nickname}邀请你共同记录美好时光`,
+        path: `pages/invite/invite?code=${inviteCode.code}`,
+        imageUrl: '/static/images/login_logo.png',
+        success: (res: any) => {
+          console.log('分享成功:', res)
+          uni.showToast({
+            title: '分享成功',
+            icon: 'success',
+          })
+        },
+        fail: (err: any) => {
+          console.log('分享失败:', err)
+          uni.showToast({
+            title: '分享失败',
+            icon: 'none',
+          })
+        },
+      }
+    } catch (error: any) {
+      console.error('获取邀请码失败:', error)
+      uni.showToast({
+        title: '获取邀请码失败',
+        icon: 'none',
+      })
+      return {
+        title: '邀请码获取失败',
+        path: 'pages/index/index',
+        imageUrl: '/static/images/login_logo.png',
+      }
+    }
+  },
+  methods: {
+
+  },
 }
 </script>
 
@@ -138,10 +180,19 @@ function handleInvitePartner() {
           </view>
           <text v-else class="user-desc">记录我们的美好时光</text>
         </view>
-        <view v-if="!userInfo.hasPartner" class="invite-btn" @click="handleInvitePartner">
+        <!-- 未绑定且未邀请时显示邀请按钮 -->
+        <view v-if="!userInfo.hasPartner && !userInfo.hasPendingInvite" class="invite-btn">
           <text class="invite-icon">💌</text>
-          <text class="invite-text">邀请</text>
+          <button class="invite-text" open-type="share" @tap.stop="">
+            分享
+          </button>
         </view>
+        <!-- 已邀请但对方未同意时显示等待状态 -->
+        <view v-else-if="!userInfo.hasPartner && userInfo.hasPendingInvite" class="pending-invite">
+          <text class="pending-icon">⏳</text>
+          <text class="pending-text">等待对方同意</text>
+        </view>
+        <!-- 已绑定时显示编辑按钮 -->
         <view v-else class="edit-btn" @click="goToProfileEdit">
           <text class="edit-icon">✏️</text>
           <text class="edit-text">编辑</text>
@@ -223,6 +274,7 @@ function handleInvitePartner() {
     radial-gradient(circle at 80% 20%, rgba(255, 143, 171, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 40% 80%, rgba(255, 179, 189, 0.1) 0%, transparent 50%),
     linear-gradient(135deg, #ff6b9d 0%, #ff8fab 50%, #ffb3bd 100%);
+
   &::before {
     content: '';
     position: absolute;
@@ -250,6 +302,7 @@ function handleInvitePartner() {
     opacity: 0;
     transform: translateY(30rpx);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -298,13 +351,16 @@ function handleInvitePartner() {
       opacity: 0;
       transform: scale(0.3);
     }
+
     50% {
       opacity: 1;
       transform: scale(1.05);
     }
+
     70% {
       transform: scale(0.9);
     }
+
     100% {
       opacity: 1;
       transform: scale(1);
@@ -328,6 +384,7 @@ function handleInvitePartner() {
       opacity: 0;
       transform: translateX(-20rpx);
     }
+
     to {
       opacity: 1;
       transform: translateX(0);
@@ -385,6 +442,7 @@ function handleInvitePartner() {
       opacity: 0;
       transform: translateY(20rpx);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -430,10 +488,12 @@ function handleInvitePartner() {
   }
 
   @keyframes gradientShift {
+
     0%,
     100% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
@@ -626,6 +686,53 @@ function handleInvitePartner() {
       font-weight: 600;
     }
   }
+
+  .pending-invite {
+    padding: 20rpx 28rpx;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-radius: 24rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6rpx 16rpx rgba(251, 191, 36, 0.25);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.4s ease;
+    }
+
+    &:active {
+      transform: translateY(2rpx);
+      box-shadow: 0 3rpx 8rpx rgba(251, 191, 36, 0.35);
+    }
+
+    &:active::before {
+      left: 100%;
+    }
+
+    .pending-icon {
+      font-size: 24rpx;
+      margin-right: 8rpx;
+      filter: drop-shadow(0 1rpx 2rpx rgba(0, 0, 0, 0.1));
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .pending-text {
+      font-size: 26rpx;
+      color: #fff;
+      font-weight: 600;
+    }
+  }
 }
 
 .stats-section {
@@ -651,6 +758,7 @@ function handleInvitePartner() {
       opacity: 0;
       transform: translateY(-20rpx);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -688,9 +796,11 @@ function handleInvitePartner() {
     &:nth-child(1) {
       animation-delay: 0.1s;
     }
+
     &:nth-child(2) {
       animation-delay: 0.2s;
     }
+
     &:nth-child(3) {
       animation-delay: 0.3s;
     }
@@ -700,6 +810,7 @@ function handleInvitePartner() {
         opacity: 0;
         transform: scale(0.8);
       }
+
       to {
         opacity: 1;
         transform: scale(1);
@@ -754,6 +865,7 @@ function handleInvitePartner() {
         from {
           width: 0;
         }
+
         to {
           width: 40rpx;
         }
@@ -799,9 +911,11 @@ function handleInvitePartner() {
     &:nth-child(1) {
       animation-delay: 0.4s;
     }
+
     &:nth-child(2) {
       animation-delay: 0.5s;
     }
+
     &:nth-child(3) {
       animation-delay: 0.6s;
     }
@@ -811,6 +925,7 @@ function handleInvitePartner() {
         opacity: 0;
         transform: translateX(-30rpx);
       }
+
       to {
         opacity: 1;
         transform: translateX(0);
@@ -824,12 +939,10 @@ function handleInvitePartner() {
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(
-        135deg,
-        rgba(255, 107, 157, 0.03) 0%,
-        rgba(255, 143, 171, 0.03) 50%,
-        rgba(255, 179, 189, 0.03) 100%
-      );
+      background: linear-gradient(135deg,
+          rgba(255, 107, 157, 0.03) 0%,
+          rgba(255, 143, 171, 0.03) 50%,
+          rgba(255, 179, 189, 0.03) 100%);
       opacity: 0;
       transition: opacity 0.3s ease;
       border-radius: 20rpx;
@@ -941,6 +1054,7 @@ function handleInvitePartner() {
 }
 
 @keyframes bounce {
+
   0%,
   20%,
   50%,
@@ -948,11 +1062,25 @@ function handleInvitePartner() {
   100% {
     transform: translateY(0);
   }
+
   40% {
     transform: translateY(-4rpx);
   }
+
   60% {
     transform: translateY(-2rpx);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
   }
 }
 </style>

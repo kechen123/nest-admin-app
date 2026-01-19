@@ -30,6 +30,9 @@ export class UserInfoResponseDto {
   @ApiProperty({ description: '是否绑定了另一半', example: false })
   hasPartner: boolean;
 
+  @ApiProperty({ description: '是否已发送邀请但对方未同意', example: false })
+  hasPendingInvite: boolean;
+
   @ApiProperty({ description: '另一半用户信息', required: false })
   partnerInfo?: UserInfoDto;
 }
