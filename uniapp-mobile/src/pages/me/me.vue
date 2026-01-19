@@ -34,6 +34,7 @@ async function loadStatistics() {
 // 页面挂载时加载统计数据
 onMounted(() => {
   loadStatistics()
+  console.log(userInfo.value)
   if (userInfo.value.userId === -1) {
     userStore.fetchUserInfo()
   }
@@ -92,6 +93,15 @@ function goToCheckinRecords() {
     url: '/pages/checkin/list',
   })
 }
+
+// 邀请另一半
+function handleInvitePartner() {
+  // TODO: 实现邀请另一半的逻辑
+  uni.showToast({
+    title: '邀请功能开发中',
+    icon: 'none',
+  })
+}
 </script>
 
 <template>
@@ -115,14 +125,24 @@ function goToCheckinRecords() {
       <!-- 用户信息卡片 -->
       <view class="user-card">
         <view class="user-avatar">
-          <image v-if="userInfo.avatar" :src="userInfo.avatar" mode="aspectFill" />
+          <image v-if="userInfo.userInfo.avatar" :src="userInfo.userInfo.avatar" mode="aspectFill" />
           <text v-else class="default-avatar">👤</text>
         </view>
         <view class="user-info">
-          <text class="user-name">{{ userInfo.nickname || '未设置昵称' }}</text>
-          <text class="user-desc">记录我们的美好时光</text>
+          <text class="user-name">{{ userInfo.userInfo.nickname || '未设置昵称' }}</text>
+          <view v-if="userInfo.hasPartner" class="partner-relation">
+            <view class="relation-icon">
+              ❤️
+            </view>
+            <text class="partner-name">{{ userInfo.partnerInfo?.nickname || '未设置昵称' }}</text>
+          </view>
+          <text v-else class="user-desc">记录我们的美好时光</text>
         </view>
-        <view class="edit-btn" @click="goToProfileEdit">
+        <view v-if="!userInfo.hasPartner" class="invite-btn" @click="handleInvitePartner">
+          <text class="invite-icon">💌</text>
+          <text class="invite-text">邀请</text>
+        </view>
+        <view v-else class="edit-btn" @click="goToProfileEdit">
           <text class="edit-icon">✏️</text>
           <text class="edit-text">编辑</text>
         </view>
@@ -490,6 +510,30 @@ function goToCheckinRecords() {
       line-height: 1.4;
       opacity: 0.8;
     }
+
+    .partner-relation {
+      display: flex;
+      align-items: center;
+      margin-top: 12rpx;
+
+      .relation-icon {
+        font-size: 32rpx;
+        margin: 0 16rpx;
+        filter: drop-shadow(0 2rpx 4rpx rgba(255, 107, 157, 0.3));
+        animation: heartbeat 2s ease-in-out infinite;
+      }
+
+      .partner-name {
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #ff6b9d;
+        background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.2;
+      }
+    }
   }
 
   .edit-btn {
@@ -531,6 +575,52 @@ function goToCheckinRecords() {
     }
 
     .edit-text {
+      font-size: 26rpx;
+      color: #fff;
+      font-weight: 600;
+    }
+  }
+
+  .invite-btn {
+    padding: 20rpx 28rpx;
+    background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+    border-radius: 24rpx;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 6rpx 16rpx rgba(255, 107, 157, 0.25);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.4s ease;
+    }
+
+    &:active {
+      transform: translateY(2rpx);
+      box-shadow: 0 3rpx 8rpx rgba(255, 107, 157, 0.35);
+    }
+
+    &:active::before {
+      left: 100%;
+    }
+
+    .invite-icon {
+      font-size: 24rpx;
+      margin-right: 8rpx;
+      filter: drop-shadow(0 1rpx 2rpx rgba(0, 0, 0, 0.1));
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .invite-text {
       font-size: 26rpx;
       color: #fff;
       font-weight: 600;
@@ -847,6 +937,22 @@ function goToCheckinRecords() {
         color: #ef4444;
       }
     }
+  }
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4rpx);
+  }
+  60% {
+    transform: translateY(-2rpx);
   }
 }
 </style>

@@ -28,7 +28,22 @@ export interface IUserInfoRes {
   username: string
   nickname: string
   avatar?: string
+  hasPartner?: boolean
+  partnerInfo?: IPartnerInfo
   [key: string]: any // 允许其他扩展字段
+}
+
+/**
+ * 另一半信息
+ */
+export interface IPartnerInfo {
+  id: number
+  nickname: string
+  avatar: string
+  gender: number
+  phone: string
+  createdAt: string
+  updatedAt: string
 }
 
 // 认证存储数据结构
