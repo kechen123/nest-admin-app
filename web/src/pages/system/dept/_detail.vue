@@ -177,8 +177,6 @@ const formConfig = computed(() => ({
       disabled: computed(() => type.value === 'view'),
       compare: true,
     },
-      disabled: computed(() => type.value === 'view'),
-    },
   ],
   rules: {
     name: [{ required: true, message: '请输入部门名称', trigger: 'blur' }],
