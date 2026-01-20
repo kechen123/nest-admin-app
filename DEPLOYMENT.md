@@ -2,16 +2,18 @@
 
 本项目支持两种部署方式，可根据实际情况选择：
 
-## 📦 方式一：镜像打包部署（适合首次部署、离线环境）
+## 方式一：镜像打包部署（适合首次部署、离线环境）
 
 ### 本地操作（Windows）
 
 1. **构建镜像**
+
    ```powershell
    npm run build
    ```
 
 2. **导出镜像**
+
    ```powershell
    # Windows PowerShell
    npm run export:images:win
@@ -32,6 +34,7 @@
 ### 服务器操作（Linux）
 
 1. **加载镜像**
+
    ```bash
    cd /opt/app
    docker load -i yl-backend.tar
@@ -42,9 +45,9 @@
    ```
 
 2. **修改 docker-compose.prod.yml**
-   
+
    创建 `docker-compose.prod.yml` 的副本或修改现有文件，将 `build` 改为 `image`：
-   
+
    ```yaml
    backend:
      image: yl-backend:latest
@@ -78,13 +81,15 @@
    ```
 
 3. **配置环境变量**
+
    ```bash
    mkdir -p backend
    cp backend/.env.example backend/.env  # 如果有示例文件
    vim backend/.env
    ```
-   
+
    配置示例（`backend/.env`）：
+
    ```env
    DB_HOST=mysql
    DB_PORT=3306
@@ -96,8 +101,9 @@
    JWT_SECRET=你的JWT密钥（必须修改）
    CORS_ORIGIN=*
    ```
-   
+
    **同时需要在项目根目录创建 `.env` 文件**（用于 docker-compose 变量替换）：
+
    ```bash
    # 在项目根目录创建 .env 文件
    cat > .env << EOF
@@ -106,12 +112,13 @@
    JWT_SECRET=你的JWT密钥
    EOF
    ```
-   
+
    **为什么需要两个 .env 文件？**
    - `backend/.env` - 后端应用运行时读取的环境变量
    - 根目录 `.env` - docker-compose 在解析配置文件时使用的变量（用于 `${DB_PASSWORD}` 等替换）
 
 4. **准备其他必要文件**
+
    ```bash
    # 确保有以下文件/目录
    - docker-compose.prod.yml
@@ -121,6 +128,7 @@
    ```
 
 5. **启动服务**
+
    ```bash
    docker-compose -f docker-compose.prod.yml up -d
    
@@ -132,6 +140,7 @@
    ```
 
 6. **初始化数据库（首次部署）**
+
    ```bash
    # 等待 MySQL 容器完全启动（约 30 秒）
    docker-compose -f docker-compose.prod.yml ps mysql
@@ -147,6 +156,7 @@
 ### 首次部署
 
 1. **在服务器上克隆项目**
+
    ```bash
    cd /opt
    git clone your-repo-url app
@@ -154,6 +164,7 @@
    ```
 
 2. **配置环境变量**
+
    ```bash
    # 配置后端环境变量
    cp backend/.env.example backend/.env
@@ -167,12 +178,13 @@
    JWT_SECRET=你的JWT密钥
    EOF
    ```
-   
+
    **注意**：需要配置两个 `.env` 文件：
    - `backend/.env` - 后端应用使用
    - 根目录 `.env` - docker-compose 使用（用于变量替换）
 
 3. **构建并启动**
+
    ```bash
    # 构建所有镜像
    npm run build
@@ -191,6 +203,7 @@
 ### 后续更新
 
 **方法1：使用部署脚本（推荐）**
+
 ```bash
 cd /opt/app
 
@@ -205,6 +218,7 @@ npm run deploy:web
 ```
 
 **方法2：手动操作**
+
 ```bash
 cd /opt/app
 git pull origin main  # 或 master，根据你的分支名
@@ -212,6 +226,7 @@ docker-compose -f docker-compose.prod.yml up -d --build
 ```
 
 **方法3：使用部署脚本（直接执行）**
+
 ```bash
 cd /opt/app
 chmod +x scripts/deploy.sh
@@ -231,12 +246,14 @@ chmod +x scripts/deploy.sh
 #### 在本地测试（模拟服务器环境）
 
 **前提条件：**
+
 - 项目已提交到 Git 仓库
 - 已配置根目录 `.env` 文件（包含 `DB_PASSWORD`、`DB_DATABASE`、`JWT_SECRET`）
 
 **测试步骤：**
 
 1. **使用 Git Bash 或 WSL 测试**
+
    ```bash
    # 打开 Git Bash，进入项目目录
    cd /d/code/me/yl
@@ -249,6 +266,7 @@ chmod +x scripts/deploy.sh
    ```
 
 2. **使用 PowerShell 测试核心功能**
+
    ```powershell
    # 测试重新构建功能（相当于部署的核心部分）
    npm run prod:rebuild
@@ -261,6 +279,7 @@ chmod +x scripts/deploy.sh
    ```
 
 3. **验证部署结果**
+
    ```bash
    # 检查所有服务是否运行
    docker-compose -f docker-compose.prod.yml ps
@@ -275,6 +294,7 @@ chmod +x scripts/deploy.sh
 #### 在真实服务器上测试
 
 1. **确保代码已推送到 Git 仓库**
+
    ```powershell
    # 在本地
    git add .
@@ -283,6 +303,7 @@ chmod +x scripts/deploy.sh
    ```
 
 2. **在服务器上首次部署**
+
    ```bash
    # SSH 登录服务器
    ssh user@your-server
@@ -310,6 +331,7 @@ chmod +x scripts/deploy.sh
    ```
 
 3. **测试更新流程**
+
    ```bash
    # 在本地修改代码并推送
    # ... 修改代码 ...
@@ -346,6 +368,7 @@ chmod +x scripts/deploy.sh
 ### 镜像打包方式
 
 **本地（Windows）：**
+
 ```powershell
 npm run build                    # 构建镜像
 npm run export:images:win        # 导出镜像（Windows）
@@ -353,6 +376,7 @@ npm run export:images           # 导出镜像（Linux/Mac，如果有 bash）
 ```
 
 **服务器（Linux）：**
+
 ```bash
 docker load -i yl-backend.tar    # 加载后端镜像
 docker load -i yl-web.tar        # 加载前端镜像
@@ -362,6 +386,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ### Git + 服务器构建方式
 
 **服务器（Linux）：**
+
 ```bash
 # 一键部署（拉取代码 + 构建 + 启动）
 npm run deploy
@@ -397,16 +422,19 @@ npm run prod:down
 - 生产环境必须修改 `JWT_SECRET` 和数据库密码
 
 **为什么需要两个 .env 文件？**
+
 - `backend/.env` - 后端应用运行时读取的环境变量（通过 `env_file` 加载到容器中）
 - 根目录 `.env` - docker-compose 在解析配置文件时使用的变量（用于 `${DB_PASSWORD}` 等变量替换）
 
 **docker-compose 变量替换机制：**
+
 - `${VAR}` 会从**主机环境变量**或**项目根目录的 .env 文件**中读取
 - `env_file` 中的变量只会加载到**容器环境**中，不会用于配置文件中的变量替换
 
 ### 2. 数据库初始化
 
 - **首次部署必须执行**数据库初始化：
+
   ```bash
   npm run backend:init-db
   # 或
@@ -417,6 +445,7 @@ npm run prod:down
 
 - 确保 `backend/uploads` 目录有写权限
 - 如果使用镜像打包方式，需要手动创建目录：
+
   ```bash
   mkdir -p backend/uploads
   chmod 755 backend/uploads
@@ -437,6 +466,7 @@ npm run prod:down
 
 - MySQL 数据存储在 Docker volume 中
 - 定期备份数据库和上传文件：
+
   ```bash
   # 备份数据库
   docker-compose -f docker-compose.prod.yml exec mysql mysqldump -uroot -p${DB_PASSWORD} ${DB_DATABASE} > backup.sql
@@ -468,11 +498,13 @@ npm run prod:down
 ## 📞 故障排查
 
 ### 查看服务状态
+
 ```bash
 docker-compose -f docker-compose.prod.yml ps
 ```
 
 ### 查看日志
+
 ```bash
 # 所有服务日志
 npm run prod:logs
@@ -484,6 +516,7 @@ docker-compose -f docker-compose.prod.yml logs -f mysql
 ```
 
 ### 重启服务
+
 ```bash
 npm run prod:restart
 # 或
@@ -491,6 +524,7 @@ docker-compose -f docker-compose.prod.yml restart
 ```
 
 ### 重新构建
+
 ```bash
 npm run prod:rebuild
 # 或
@@ -498,6 +532,7 @@ docker-compose -f docker-compose.prod.yml up -d --build
 ```
 
 ### 进入容器调试
+
 ```bash
 # 进入后端容器
 docker-compose -f docker-compose.prod.yml exec backend sh
@@ -512,14 +547,17 @@ docker-compose -f docker-compose.prod.yml exec mysql bash
 ### 常见错误
 
 **错误：`DB_PASSWORD` variable is not set**
+
 - **原因**：缺少根目录 `.env` 文件
 - **解决**：在项目根目录创建 `.env` 文件，包含 `DB_PASSWORD`、`DB_DATABASE`、`JWT_SECRET`
 
 **错误：MySQL container is unhealthy**
+
 - **原因**：MySQL 启动失败，通常是密码配置问题
 - **解决**：检查根目录 `.env` 文件中的 `DB_PASSWORD` 是否正确
 
 **错误：Cannot find module**
+
 - **原因**：构建时依赖安装不完整
 - **解决**：重新构建镜像 `npm run build` 或 `npm run prod:rebuild`
 
