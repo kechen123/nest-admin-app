@@ -24,11 +24,13 @@ npm run ps
 ```
 
 **访问地址**：
-- 前端应用：http://localhost:4000
-- 后端 API：http://localhost:3000/api
-- Swagger 文档：http://localhost:3000/api
+
+- 前端应用：<http://localhost:4000>
+- 后端 API：<http://localhost:3000/api>
+- Swagger 文档：<http://localhost:3000/api>
 
 **默认登录信息**：
+
 - 用户名：`admin`
 - 密码：`admin123`
 
@@ -75,15 +77,37 @@ npm run dev:logs        # 查看日志
 npm run health          # 健康检查
 ```
 
-### 生产环境
+### 生产部署
 
 ```bash
-npm run build           # 构建生产镜像
-npm run prod:up         # 启动生产环境
-npm run deploy          # 一键部署
+# 自动部署（推荐，自动检测系统环境）
+npm run deploy          # 部署所有服务
+npm run deploy:backend  # 只部署后端
+npm run deploy:web     # 只部署前端
+
+# 手动部署（查看步骤提示）
+npm run deploy:manual        # 查看手动部署步骤
+npm run deploy:backend:manual
+npm run deploy:web:manual
 ```
 
-更多命令请查看 [快速开始文档](./docs/guide/getting-started.md)
+### 文档
+
+```bash
+# 自动运行（推荐）
+npm run docs:dev        # 启动文档开发服务器
+npm run docs:build      # 构建文档
+npm run docs:preview    # 预览文档
+
+# 手动运行（查看步骤提示）
+npm run docs:dev:manual
+npm run docs:build:manual
+npm run docs:preview:manual
+```
+
+**📖 完整命令列表：** 查看 [COMMANDS.md](./COMMANDS.md) 获取所有可用命令
+
+**✨ 特性：** 所有命令都支持跨平台（Windows/Linux/macOS），自动检测 Docker Compose 版本
 
 ## 技术栈
 
