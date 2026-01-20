@@ -16,6 +16,23 @@ if [ ! -f "docker-compose.prod.yml" ]; then
     exit 1
 fi
 
+# 检测 Docker Compose 命令（兼容新旧版本）
+# 新版本使用: docker compose (无连字符)
+# 旧版本使用: docker-compose (有连字符)
+if docker compose version > /dev/null 2>&1; then
+    DOCKER_COMPOSE="docker compose"
+    echo "   使用新版本 Docker Compose (docker compose)"
+elif docker-compose version > /dev/null 2>&1; then
+    DOCKER_COMPOSE="docker-compose"
+    echo "   使用旧版本 Docker Compose (docker-compose)"
+else
+    echo "错误: 未找到 Docker Compose，请先安装 Docker Compose"
+    echo "安装方法:"
+    echo "  Ubuntu/Debian: sudo apt update && sudo apt install docker.io docker-compose-plugin"
+    echo "  CentOS/RHEL: sudo yum install docker docker-compose"
+    exit 1
+fi
+
 # 拉取最新代码
 echo "1. 拉取最新代码..."
 if git rev-parse --git-dir > /dev/null 2>&1; then
@@ -36,36 +53,36 @@ fi
 case $SERVICE in
     backend)
         echo "2. 重新构建后端服务..."
-        docker-compose -f docker-compose.prod.yml up -d --build backend
+        $DOCKER_COMPOSE -f docker-compose.prod.yml up -d --build backend
         echo "3. 等待服务启动..."
         sleep 3
         echo "4. 查看后端日志..."
-        docker-compose -f docker-compose.prod.yml logs --tail=50 backend
+        $DOCKER_COMPOSE -f docker-compose.prod.yml logs --tail=50 backend
         ;;
     web)
         echo "2. 重新构建前端服务..."
-        docker-compose -f docker-compose.prod.yml up -d --build web
+        $DOCKER_COMPOSE -f docker-compose.prod.yml up -d --build web
         echo "3. 等待服务启动..."
         sleep 3
         echo "4. 查看前端日志..."
-        docker-compose -f docker-compose.prod.yml logs --tail=50 web
+        $DOCKER_COMPOSE -f docker-compose.prod.yml logs --tail=50 web
         ;;
     all|*)
         echo "2. 重新构建所有服务..."
-        docker-compose -f docker-compose.prod.yml up -d --build
+        $DOCKER_COMPOSE -f docker-compose.prod.yml up -d --build
         echo "3. 等待服务启动..."
         sleep 5
         echo "4. 查看服务状态..."
-        docker-compose -f docker-compose.prod.yml ps
+        $DOCKER_COMPOSE -f docker-compose.prod.yml ps
         echo "5. 查看最新日志..."
-        docker-compose -f docker-compose.prod.yml logs --tail=50
+        $DOCKER_COMPOSE -f docker-compose.prod.yml logs --tail=50
         ;;
 esac
 
 echo "=========================================="
 echo "部署完成！"
 echo "=========================================="
-echo "查看日志: docker-compose -f docker-compose.prod.yml logs -f"
-echo "查看状态: docker-compose -f docker-compose.prod.yml ps"
-echo "重启服务: docker-compose -f docker-compose.prod.yml restart"
+echo "查看日志: $DOCKER_COMPOSE -f docker-compose.prod.yml logs -f"
+echo "查看状态: $DOCKER_COMPOSE -f docker-compose.prod.yml ps"
+echo "重启服务: $DOCKER_COMPOSE -f docker-compose.prod.yml restart"
 
