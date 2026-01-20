@@ -5,11 +5,9 @@ RUN apk add --no-cache git mysql-client wget curl netcat-openbsd
 
 WORKDIR /app
 
-# 安装 pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# 配置国内镜像源
+# 配置国内镜像源并安装 pnpm
 RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm && \
     pnpm config set registry https://registry.npmmirror.com
 
 # 复制 package 文件
