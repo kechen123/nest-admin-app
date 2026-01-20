@@ -5,11 +5,18 @@ RUN apk add --no-cache git mysql-client wget curl netcat-openbsd
 
 WORKDIR /app
 
+# 安装 pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# 配置国内镜像源
+RUN npm config set registry https://registry.npmmirror.com && \
+    pnpm config set registry https://registry.npmmirror.com
+
 # 复制 package 文件
 COPY package*.json ./
 
 # 安装依赖
-RUN npm install
+RUN pnpm install
 
 # 复制源代码（会被 volume 覆盖，但确保初始状态正确）
 COPY . .
