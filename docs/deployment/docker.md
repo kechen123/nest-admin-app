@@ -4,6 +4,12 @@
 
 ## 📋 目录
 
+- [新服务器初始化（从 0 开始）](#新服务器初始化从-0-开始)
+  - [选择服务器系统（推荐）](#选择服务器系统推荐)
+  - [Linux 通用初始化（必做）](#linux-通用初始化必做)
+  - [Ubuntu/Debian：安装 Docker 与 Compose](#ubuntudebian安装-docker-与-compose)
+  - [CentOS/Rocky：安装 Docker 与 Compose](#centosrocky安装-docker-与-compose)
+  - [Windows Server：不推荐但可选](#windows-server不推荐但可选)
 - [前置要求](#前置要求)
 - [部署方式选择](#部署方式选择)
 - [方式一：镜像打包部署](#方式一镜像打包部署)
@@ -16,13 +22,146 @@
 
 ---
 
+## 新服务器初始化（从 0 开始）
+
+本章节**假设您拿到的是一台全新服务器**（除 SSH 以外几乎什么都没有）。完成后，服务器将具备：
+- **解压/下载工具**（`tar`/`unzip`/`curl`）
+- **Git**（用于方式二：服务器构建）
+- **Docker + Docker Compose（v2 插件）**
+- **防火墙放行 80/443（以及可选 22/3000）**
+
+### 选择服务器系统（推荐）
+
+- **推荐**：Ubuntu 22.04/24.04 LTS（文档步骤最简单、生态最全）
+- **也可**：Debian 11/12、Rocky Linux 9、CentOS 7/8（旧系统建议升级）
+- **不推荐**：Windows Server（生产容器生态与运维复杂度更高；如必须用，请看下文“Windows Server”）
+
+### Linux 通用初始化（必做）
+
+> 下面命令默认您已通过 SSH 登录服务器，并具备 `sudo` 权限（或使用 root 账户）。
+
+#### 1) 更新系统与安装常用工具
+
+**Ubuntu/Debian：**
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg lsb-release git unzip tar
+```
+
+**CentOS/Rocky：**
+
+```bash
+sudo yum makecache -y
+sudo yum install -y ca-certificates curl gnupg2 git unzip tar yum-utils
+```
+
+#### 2) 设置时区（可选但推荐）
+
+```bash
+sudo timedatectl set-timezone Asia/Shanghai
+timedatectl status
+```
+
+#### 3) 放行防火墙端口（必做）
+
+需要对外开放：
+- **80**：HTTP（必需）
+- **443**：HTTPS（推荐）
+- **22**：SSH（通常云厂商默认已放行）
+- **3000**：后端 API（可选；若用 Nginx 反代通常不需对外开放）
+
+**Ubuntu/Debian（UFW）：**
+
+```bash
+sudo ufw allow 22/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+sudo ufw status
+```
+
+**CentOS/Rocky（firewalld）：**
+
+```bash
+sudo systemctl enable --now firewalld
+sudo firewall-cmd --permanent --add-service=ssh
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-all
+```
+
+#### 4) 校验网络与 DNS（可选）
+
+```bash
+curl -I https://www.baidu.com || true
+```
+
+### Ubuntu/Debian：安装 Docker 与 Compose
+
+```bash
+# 1) 安装依赖
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg lsb-release
+
+# 2) 添加 Docker 官方 GPG 密钥
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# 3) 添加 Docker 官方仓库
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 4) 安装 Docker Engine + Compose v2
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# 5) 启动并设置开机自启
+sudo systemctl enable --now docker
+
+# 6) 验证
+docker --version
+docker compose version
+```
+
+### CentOS/Rocky：安装 Docker 与 Compose
+
+```bash
+# 1) 安装 yum-utils（提供 yum-config-manager）
+sudo yum install -y yum-utils
+
+# 2) 添加 Docker 官方仓库
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+# 3) 安装 Docker Engine + Compose v2
+sudo yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# 4) 启动并设置开机自启
+sudo systemctl enable --now docker
+
+# 5) 验证
+docker --version
+docker compose version
+```
+
+### Windows Server：不推荐但可选
+
+Windows Server 的 Docker 安装与 Linux 差异很大（容器模式、内核、网络、镜像兼容性都不同），**生产环境强烈建议使用 Linux 服务器**。
+
+如果您确实只能使用 Windows Server：
+- **优先方案**：使用 Linux 虚拟机（Hyper-V/VMware）在 VM 内按本文 Linux 步骤部署
+- **次选方案**：使用 Windows 容器与对应的 Docker Engine（需要严格匹配 Windows 版本与镜像生态；不建议新手直接走这条路）
+
+---
+
 ## 前置要求
 
 ### 1. 服务器环境要求
 
 **操作系统：**
 - Linux（推荐 Ubuntu 20.04+ 或 CentOS 7+）
-- Windows Server（需要 Docker Desktop）
+- Windows Server（不推荐；如必须，请优先使用 Linux 虚拟机方案）
 - macOS（开发测试环境）
 
 **硬件要求：**
@@ -32,68 +171,15 @@
 
 ### 2. 软件安装
 
-#### 安装 Docker
+如果您是**新服务器（从 0 开始）**，请先完整执行：
+- [新服务器初始化（从 0 开始）](#新服务器初始化从-0-开始)
 
-**Ubuntu/Debian：**
+如果您的服务器已经安装好了 Docker 与 Docker Compose（v2），请确保以下命令可用：
+
 ```bash
-# 更新软件包索引
-sudo apt-get update
-
-# 安装必要的依赖
-sudo apt-get install -y \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
-
-# 添加 Docker 官方 GPG 密钥
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-
-# 设置 Docker 仓库
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# 安装 Docker Engine
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-
-# 启动 Docker 服务
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# 验证安装
 docker --version
 docker compose version
 ```
-
-**CentOS/RHEL：**
-```bash
-# 安装必要的工具
-sudo yum install -y yum-utils
-
-# 添加 Docker 仓库
-sudo yum-config-manager \
-    --add-repo \
-    https://download.docker.com/linux/centos/docker-ce.repo
-
-# 安装 Docker Engine
-sudo yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-
-# 启动 Docker 服务
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# 验证安装
-docker --version
-docker compose version
-```
-
-**Windows：**
-1. 下载并安装 [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
-2. 安装完成后重启电脑
-3. 打开 Docker Desktop，等待 Docker 启动完成
 
 #### 配置 Docker（可选）
 
@@ -124,24 +210,14 @@ sudo systemctl restart docker
 
 ### 3. 网络要求
 
-确保服务器开放以下端口：
-- **80** - HTTP 访问（必需）
-- **443** - HTTPS 访问（推荐）
-- **3000** - 后端 API（可选，如果使用 Nginx 反向代理则不需要对外开放）
+确保服务器/安全组对外开放以下端口：
+- **80**：HTTP 访问（必需）
+- **443**：HTTPS 访问（推荐）
+- **22**：SSH（通常云厂商默认已放行）
+- **3000**：后端 API（可选；如果使用 Nginx 反向代理则通常不需要对外开放）
 
-**配置防火墙（Ubuntu/Debian）：**
-```bash
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw enable
-```
-
-**配置防火墙（CentOS/RHEL）：**
-```bash
-sudo firewall-cmd --permanent --add-port=80/tcp
-sudo firewall-cmd --permanent --add-port=443/tcp
-sudo firewall-cmd --reload
-```
+防火墙放行步骤请参考上面的：
+- [Linux 通用初始化（必做）](#linux-通用初始化必做)
 
 ---
 

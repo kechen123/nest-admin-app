@@ -1,8 +1,6 @@
 # 环境变量文件（重要：不要提交）
-.env
 .env.local
 .env.*.local
-backend/.env
 backend/.env.local
 backend/.env.*.local
 web/.env.local
@@ -11,6 +9,7 @@ web/.env.development.local
 
 # 导出的镜像文件
 *.tar
+*.zip
 *.tar.gz
 *.tar.zip
 yl-*.tar
@@ -43,6 +42,7 @@ desktop.ini
 # IDE
 .vscode/
 .idea/
+.shared/
 *.swp
 *.swo
 *.sublime-workspace
