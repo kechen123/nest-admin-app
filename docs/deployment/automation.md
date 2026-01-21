@@ -7,6 +7,7 @@
 - [概述](#概述)
 - [GitHub Actions 自动部署](#github-actions-自动部署)
 - [GitLab CI/CD 自动部署](#gitlab-cicd-自动部署)
+- [云效（Flow）自动部署](#云效flow自动部署)
 - [Jenkins 自动部署](#jenkins-自动部署)
 - [Webhook 自动部署](#webhook-自动部署)
 - [部署策略](#部署策略)
@@ -32,6 +33,7 @@
 
 - **GitHub Actions** - GitHub 官方 CI/CD 平台
 - **GitLab CI/CD** - GitLab 内置 CI/CD
+- **云效（Flow）** - 阿里云 DevOps（支持构建镜像推送 ACR、主机部署等）
 - **Jenkins** - 开源自动化服务器
 - **自定义 Webhook** - 基于 Webhook 的简单部署
 
@@ -319,6 +321,90 @@ deploy_production:
 - `SERVER_HOST` - 服务器地址
 - `SERVER_USER` - SSH 用户名
 - `SERVER_DEPLOY_PATH` - 部署路径
+
+---
+
+## 云效（Flow）自动部署
+
+本章节适用于你使用 **Docker 镜像部署**（构建镜像 → 推送镜像仓库 → 服务器拉取镜像并重启）的场景，尤其是：
+
+- 你希望“本地改代码后，推送到仓库即可自动更新服务器”
+- 你使用阿里云镜像仓库 **ACR**（或其它 Registry）
+- 你希望在服务器上继续使用 `docker compose -f docker-compose.prod.yml up -d` 完成发布
+
+> 参考官方文档：  
+> - `https://help.aliyun.com/zh/yunxiao/user-guide/build-image-and-push-to-acr`  
+> - `https://help.aliyun.com/zh/yunxiao/user-guide/host-docker-deployment`  
+> - `https://help.aliyun.com/zh/yunxiao/user-guide/yaml-preliminary-experience/`
+
+### 前置要求
+
+1. 云效已接入你的代码仓库（Codeup/GitHub/GitLab 均可）
+2. 已开通 ACR（或其它镜像仓库），并创建仓库（例如 `yl-backend`、`yl-web`）
+3. 服务器已安装 Docker + Docker Compose v2，并能 `docker login` 访问你的镜像仓库
+4. 你的 `docker-compose.prod.yml` 使用 **image 模式**（而不是 `build`）：
+   - CI/CD 负责构建镜像
+   - 服务器只负责 `pull` + `up -d`
+
+### 推荐部署流程（构建推送 + 服务器拉取重启）
+
+- **CI（云效流水线）**：
+  - 构建 `yl-backend` 镜像并推送到 ACR
+  - 构建 `yl-web` 镜像并推送到 ACR
+  - 镜像 tag 推荐使用 `${GIT_COMMIT}`（或 `${PIPELINE_ID}`），便于追溯/回滚
+- **CD（云效主机部署 / SSH 脚本）**：
+  - 服务器 `docker login`
+  - 服务器 `docker pull` 新镜像
+  - 服务器用同一个 tag 启动：`docker compose ... up -d`
+  - 可选：清理旧镜像 `docker image prune -f`
+
+### 需要配置的变量（建议统一在云效变量/凭据里）
+
+- **服务器相关**
+  - `SERVER_HOST`：服务器 IP/域名
+  - `SERVER_USER`：SSH 用户
+  - `SERVER_DEPLOY_PATH`：部署目录（如 `/opt/app/yl`）
+- **镜像仓库相关（以 ACR 为例）**
+  - `ACR_REGISTRY`：例如 `registry.cn-hangzhou.aliyuncs.com`
+  - `ACR_NAMESPACE`：你的命名空间
+  - `ACR_USERNAME` / `ACR_PASSWORD`：ACR 账号/密码（或 RAM 用户）
+  - `IMAGE_TAG`：建议 `${GIT_COMMIT}`（由云效内置变量注入/映射）
+
+### 服务器侧发布脚本（云效“主机部署”里直接粘贴即可）
+
+下面脚本假设你在服务器的 `docker-compose.prod.yml` 中写的是：
+
+- `image: ${ACR_REGISTRY}/${ACR_NAMESPACE}/yl-backend:${IMAGE_TAG}`
+- `image: ${ACR_REGISTRY}/${ACR_NAMESPACE}/yl-web:${IMAGE_TAG}`
+
+并且服务器部署目录下有一个 `.env`（供 compose 变量替换）包含 `ACR_REGISTRY/ACR_NAMESPACE/IMAGE_TAG`。
+
+```bash
+set -e
+
+cd "${SERVER_DEPLOY_PATH}"
+
+echo "${ACR_PASSWORD}" | docker login "${ACR_REGISTRY}" -u "${ACR_USERNAME}" --password-stdin
+
+# 拉取最新镜像（同一个 tag）
+docker pull "${ACR_REGISTRY}/${ACR_NAMESPACE}/yl-backend:${IMAGE_TAG}"
+docker pull "${ACR_REGISTRY}/${ACR_NAMESPACE}/yl-web:${IMAGE_TAG}"
+
+# 启动/更新
+docker compose -f docker-compose.prod.yml up -d
+
+# 可选：清理无用镜像
+docker image prune -f
+```
+
+### 云效流水线怎么配（思路）
+
+云效流水线通常分两段：
+
+- **Build**：使用“构建镜像并推送 ACR”的组件（选择 Dockerfile 路径、镜像名、tag）
+- **Deploy**：使用“主机部署（Docker 部署/执行脚本）”组件，在目标机器组上执行上面的发布脚本
+
+> 由于云效控制台组件名称/字段会随产品迭代变化，最稳妥的方式是按官方文档选择对应组件，并把关键变量（仓库地址、镜像名、tag、服务器信息）对齐到上面的变量表。
 
 ---
 
