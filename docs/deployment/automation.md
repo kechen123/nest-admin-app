@@ -643,12 +643,20 @@ sudo vim /etc/webhook/hooks.json
 [
   {
     "id": "deploy-yl",
-    "execute-command": "/opt/scripts/deploy.sh",
+    "execute-command": "/opt/app/yl/scripts/pm2/webhook-deploy.sh",
     "command-working-directory": "/opt/app/yl",
-    "response-message": "Deployment triggered"
+    "response-message": "Deployment triggered",
+    "pass-arguments-to-command": [
+      {
+        "source": "payload",
+        "name": "ref"
+      }
+    ]
   }
 ]
 ```
+
+> **提示：** 如果使用 Docker 部署，将 `execute-command` 改为 `/opt/scripts/deploy.sh`
 
 #### 3. 创建部署脚本
 
@@ -656,7 +664,7 @@ sudo vim /etc/webhook/hooks.json
 sudo vim /opt/scripts/deploy.sh
 ```
 
-**脚本内容：**
+**脚本内容（Docker 部署）：**
 
 ```bash
 #!/bin/bash
@@ -672,16 +680,28 @@ cd $DEPLOY_PATH
 # 拉取最新代码
 git pull origin main
 
-# 使用 docker compose 构建并滚动更新（适配本项目的 Docker 部署）
+# 使用 docker compose 构建并滚动更新
 docker compose -f docker-compose.prod.yml up -d --build
 
 echo "$(date): Deployment completed" >> $LOG_FILE
 ```
 
+**脚本内容（PM2 部署，推荐）：**
+
+```bash
+#!/bin/bash
+# 直接使用项目提供的 Webhook 部署脚本
+/opt/app/yl/scripts/pm2/webhook-deploy.sh
+```
+
 **设置执行权限：**
 
 ```bash
+# Docker 部署
 sudo chmod +x /opt/scripts/deploy.sh
+
+# PM2 部署（使用项目脚本）
+sudo chmod +x /opt/app/yl/scripts/pm2/webhook-deploy.sh
 ```
 
 #### 4. 启动 Webhook 服务
