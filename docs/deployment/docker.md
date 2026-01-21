@@ -25,6 +25,7 @@
 ## 新服务器初始化（从 0 开始）
 
 本章节**假设您拿到的是一台全新服务器**（除 SSH 以外几乎什么都没有）。完成后，服务器将具备：
+
 - **解压/下载工具**（`tar`/`unzip`/`curl`）
 - **Git**（用于方式二：服务器构建）
 - **Docker + Docker Compose（v2 插件）**
@@ -66,6 +67,7 @@ timedatectl status
 #### 3) 放行防火墙端口（必做）
 
 需要对外开放：
+
 - **80**：HTTP（必需）
 - **443**：HTTPS（推荐）
 - **22**：SSH（通常云厂商默认已放行）
@@ -100,29 +102,92 @@ curl -I https://www.baidu.com || true
 
 ### Ubuntu/Debian：安装 Docker 与 Compose
 
+> **国内服务器推荐（方案 A）**：先把 Ubuntu 的 apt 源切换为国内镜像（下载更稳定），再使用 Docker 官方仓库安装 Docker Engine，最后配置 Docker 镜像加速（拉镜像走国内）。
+
+#### 0)（可选但推荐）切换 apt 源为国内镜像
+
+Ubuntu 22.04/24.04 可能使用两种 apt 源配置方式：
+
+- 传统：`/etc/apt/sources.list`
+- 新版：`/etc/apt/sources.list.d/ubuntu.sources`
+
+**如果存在 `sources.list`（传统方式）：**
+
 ```bash
-# 1) 安装依赖
+# 以清华镜像为例：将 archive/security 替换为国内镜像
+sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|https://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g; s|http://security.ubuntu.com/ubuntu/|https://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g' /etc/apt/sources.list
+```
+
+**如果存在 `ubuntu.sources`（Ubuntu 24.04 常见）：**
+
+```bash
+# 以清华镜像为例：替换 ubuntu.sources 内的 URIs
+sudo sed -i 's|http://archive.ubuntu.com/ubuntu|https://mirrors.tuna.tsinghua.edu.cn/ubuntu|g; s|http://security.ubuntu.com/ubuntu|https://mirrors.tuna.tsinghua.edu.cn/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
+```
+
+更新索引并安装基础工具：
+
+```bash
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg lsb-release
+```
 
-# 2) 添加 Docker 官方 GPG 密钥
-sudo mkdir -p /etc/apt/keyrings
+#### 1) 添加 Docker 官方仓库并安装 Docker Engine（含 Compose v2）
+
+```bash
+# 1) 添加 Docker 官方 GPG 密钥
+sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-# 3) 添加 Docker 官方仓库
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+# 2) 添加 Docker 官方仓库（使用系统 VERSION_CODENAME，比如 jammy/noble）
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo ${VERSION_CODENAME}) stable" \
   | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-# 4) 安装 Docker Engine + Compose v2
+# 3) 安装 Docker Engine + Compose v2
 sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# 5) 启动并设置开机自启
+# 4) 启动并设置开机自启
 sudo systemctl enable --now docker
 
-# 6) 验证
+# 5) 验证
 docker --version
 docker compose version
+```
+
+#### 如果你在 Ubuntu 执行 `systemctl enable --now docker` 报错
+
+报错：
+
+- `Failed to enable unit: Unit file docker.service does not exist.`
+
+通常意味着 **Docker Engine 没有成功安装**，或你当前环境 **不是 systemd**（例如容器内、WSL 默认环境）。
+
+**先确认是不是 systemd：**
+
+```bash
+ps -p 1 -o comm=
+```
+
+- 如果输出不是 `systemd`，请不要用 `systemctl`（需要改用宿主机安装 Docker，或在 WSL 启用 systemd）。
+
+**如果确实是 systemd（输出为 `systemd`），用下面命令快速定位：**
+
+```bash
+# 1) 看 docker-ce 是否装上
+dpkg -l | grep -E 'docker-ce|docker-ce-cli|containerd|docker-compose-plugin|docker-buildx-plugin' || true
+
+# 2) 看 systemd 里有没有 docker.service
+systemctl list-unit-files | grep -E '^docker\.service' || true
+
+# 3) 如果 docker.service 不存在，通常是安装步骤失败：重新 apt update 并安装
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 4) 再启动
+sudo systemctl enable --now docker
+systemctl status docker --no-pager
 ```
 
 ### CentOS/Rocky：安装 Docker 与 Compose
@@ -150,6 +215,7 @@ docker compose version
 Windows Server 的 Docker 安装与 Linux 差异很大（容器模式、内核、网络、镜像兼容性都不同），**生产环境强烈建议使用 Linux 服务器**。
 
 如果您确实只能使用 Windows Server：
+
 - **优先方案**：使用 Linux 虚拟机（Hyper-V/VMware）在 VM 内按本文 Linux 步骤部署
 - **次选方案**：使用 Windows 容器与对应的 Docker Engine（需要严格匹配 Windows 版本与镜像生态；不建议新手直接走这条路）
 
@@ -160,11 +226,13 @@ Windows Server 的 Docker 安装与 Linux 差异很大（容器模式、内核�
 ### 1. 服务器环境要求
 
 **操作系统：**
+
 - Linux（推荐 Ubuntu 20.04+ 或 CentOS 7+）
 - Windows Server（不推荐；如必须，请优先使用 Linux 虚拟机方案）
 - macOS（开发测试环境）
 
 **硬件要求：**
+
 - CPU: 2 核及以上
 - 内存: 4GB 及以上（推荐 8GB）
 - 磁盘: 20GB 及以上可用空间
@@ -172,6 +240,7 @@ Windows Server 的 Docker 安装与 Linux 差异很大（容器模式、内核�
 ### 2. 软件安装
 
 如果您是**新服务器（从 0 开始）**，请先完整执行：
+
 - [新服务器初始化（从 0 开始）](#新服务器初始化从-0-开始)
 
 如果您的服务器已经安装好了 Docker 与 Docker Compose（v2），请确保以下命令可用：
@@ -184,6 +253,7 @@ docker compose version
 #### 配置 Docker（可选）
 
 **将当前用户添加到 docker 组（Linux）：**
+
 ```bash
 # 避免每次使用 sudo
 sudo usermod -aG docker $USER
@@ -191,6 +261,7 @@ sudo usermod -aG docker $USER
 ```
 
 **配置 Docker 镜像加速（国内服务器推荐）：**
+
 ```bash
 # 创建或编辑 daemon.json
 sudo mkdir -p /etc/docker
@@ -212,12 +283,14 @@ sudo systemctl restart docker
 ### 3. 网络要求
 
 确保服务器/安全组对外开放以下端口：
+
 - **80**：HTTP 访问（必需）
 - **443**：HTTPS 访问（推荐）
 - **22**：SSH（通常云厂商默认已放行）
 - **3000**：后端 API（可选；如果使用 Nginx 反向代理则通常不需要对外开放）
 
 防火墙放行步骤请参考上面的：
+
 - [Linux 通用初始化（必做）](#linux-通用初始化必做)
 
 ---
@@ -229,6 +302,7 @@ sudo systemctl restart docker
 ### 方式一：镜像打包部署
 
 **适用场景：**
+
 - ✅ 首次部署
 - ✅ 离线环境部署
 - ✅ 网络受限环境
@@ -239,6 +313,7 @@ sudo systemctl restart docker
 ### 方式二：Git + 服务器构建
 
 **适用场景：**
+
 - ✅ 有 Git 仓库访问权限
 - ✅ 服务器可以访问互联网
 - ✅ 需要频繁更新部署
@@ -295,6 +370,7 @@ CORS_ORIGIN=*
 ```
 
 **⚠️ 重要提示：**
+
 - `DB_PASSWORD` 和 `JWT_SECRET` 必须修改为强密码
 - 密码建议包含大小写字母、数字和特殊字符，长度至少 16 位
 
@@ -315,6 +391,7 @@ docker images | grep yl
 ```
 
 应该看到类似输出：
+
 ```
 yl-backend   latest   xxxxx   5 minutes ago   500MB
 yl-web       latest   xxxxx   5 minutes ago   200MB
@@ -323,6 +400,7 @@ yl-web       latest   xxxxx   5 minutes ago   200MB
 #### 1.4 导出镜像文件
 
 **Windows PowerShell：**
+
 ```powershell
 # 使用项目提供的脚本（推荐）
 npm run export:images:win
@@ -333,6 +411,7 @@ docker save yl-web:latest -o yl-web.tar
 ```
 
 **Linux/Mac：**
+
 ```bash
 # 使用项目提供的脚本（推荐）
 npm run export:images
@@ -343,10 +422,12 @@ docker save yl-web:latest -o yl-web.tar
 ```
 
 导出完成后，您会得到两个 `.tar` 文件：
+
 - `yl-backend.tar` - 后端镜像（约 500MB-1GB）
 - `yl-web.tar` - 前端镜像（约 200MB-500MB）
 
 **压缩镜像文件（可选，节省传输时间）：**
+
 ```bash
 # Windows PowerShell
 Compress-Archive -Path yl-*.tar -DestinationPath docker-images.zip
@@ -360,6 +441,7 @@ tar -czf docker-images.tar.gz yl-*.tar
 使用以下工具之一上传镜像文件到服务器：
 
 **方法 1：使用 SCP（命令行）**
+
 ```bash
 # Linux/Mac
 scp yl-*.tar user@your-server:/opt/app/
@@ -369,11 +451,13 @@ scp yl-*.tar user@your-server:/opt/app/
 ```
 
 **方法 2：使用 SFTP 客户端**
+
 - WinSCP（Windows）
 - FileZilla（跨平台）
 - Cyberduck（Mac）
 
 **方法 3：使用云存储**
+
 1. 上传到阿里云 OSS / 腾讯云 COS / AWS S3
 2. 在服务器上下载
 
@@ -410,6 +494,7 @@ docker images | grep yl
 您需要准备以下文件：
 
 **方法 A：从 Git 仓库克隆（推荐）**
+
 ```bash
 cd /opt/app
 git clone <your-repo-url> yl
@@ -418,6 +503,7 @@ cd yl
 
 **方法 B：手动上传项目文件**
 需要上传以下文件/目录：
+
 - `docker-compose.prod.yml` - Docker Compose 配置文件
 - `docker/nginx/nginx.conf` - Nginx 配置文件
 - `backend/.env` - 后端环境变量（从本地复制并修改）
@@ -426,6 +512,7 @@ cd yl
 #### 3.4 配置环境变量
 
 **创建后端环境变量文件：**
+
 ```bash
 cd /opt/app/yl
 mkdir -p backend
@@ -435,6 +522,7 @@ vim backend/.env
 将本地配置好的 `backend/.env` 内容复制过来，**并修改数据库密码等敏感信息**。
 
 **创建根目录环境变量文件：**
+
 ```bash
 cd /opt/app/yl
 cat > .env << EOF
@@ -445,6 +533,7 @@ EOF
 ```
 
 **为什么需要两个 .env 文件？**
+
 - `backend/.env` - 后端应用运行时读取的环境变量
 - 根目录 `.env` - docker-compose 在解析配置文件时使用的变量（用于 `${DB_PASSWORD}` 等变量替换）
 
@@ -545,6 +634,7 @@ git checkout main  # 或 master
 #### 1.2 配置环境变量
 
 **创建后端环境变量文件：**
+
 ```bash
 cd /opt/app/yl
 cp backend/.env.example backend/.env
@@ -554,6 +644,7 @@ vim backend/.env
 配置内容参考 [方式一的环境变量配置](#13-配置环境变量)。
 
 **创建根目录环境变量文件：**
+
 ```bash
 cd /opt/app/yl
 cat > .env << EOF
@@ -606,6 +697,7 @@ docker-compose -f docker-compose.prod.yml run --rm backend npm run db:init
 当代码更新后，可以使用以下方式更新部署：
 
 **方法 1：使用部署脚本（推荐）**
+
 ```bash
 cd /opt/app/yl
 
@@ -620,6 +712,7 @@ npm run deploy:web
 ```
 
 **方法 2：手动更新**
+
 ```bash
 cd /opt/app/yl
 
@@ -640,11 +733,13 @@ docker-compose -f docker-compose.prod.yml logs -f
 ### 数据库配置
 
 **MySQL 配置要求：**
+
 - 版本：MySQL 8.0 或更高
 - 字符集：utf8mb4
 - 排序规则：utf8mb4_unicode_ci
 
 **环境变量配置：**
+
 ```env
 DB_HOST=mysql          # Docker 环境使用容器名
 DB_PORT=3306
@@ -656,6 +751,7 @@ DB_DATABASE=your_database
 ### 应用配置
 
 **后端环境变量（backend/.env）：**
+
 ```env
 NODE_ENV=production
 PORT=3000
@@ -666,6 +762,7 @@ CORS_ORIGIN=*
 ### Nginx 配置
 
 默认配置已包含在 `docker/nginx/nginx.conf` 中：
+
 - 前端访问：`http://your-domain/`
 - 后端 API：`http://your-domain/api`
 - 文件上传：`http://your-domain/uploads`
@@ -736,6 +833,7 @@ docker-compose -f docker-compose.prod.yml ps
 ### 3. 访问前端页面
 
 在浏览器中访问：
+
 - `http://your-server-ip`
 - `http://your-domain`（如果配置了域名）
 
@@ -769,11 +867,13 @@ docker-compose -f docker-compose.prod.yml logs -f
 ### Q1: 镜像构建失败
 
 **可能原因：**
+
 - 网络连接问题
 - Docker 镜像源访问慢
 - 磁盘空间不足
 
 **解决方法：**
+
 ```bash
 # 检查磁盘空间
 df -h
@@ -787,11 +887,13 @@ docker system prune -a
 ### Q2: 服务启动失败
 
 **可能原因：**
+
 - 端口被占用
 - 环境变量配置错误
 - 镜像不存在
 
 **解决方法：**
+
 ```bash
 # 检查端口占用
 sudo netstat -tlnp | grep :80
@@ -810,11 +912,13 @@ docker-compose -f docker-compose.prod.yml logs
 ### Q3: 数据库连接失败
 
 **可能原因：**
+
 - MySQL 容器未完全启动
 - 数据库密码配置错误
 - 网络配置问题
 
 **解决方法：**
+
 ```bash
 # 等待 MySQL 完全启动
 docker-compose -f docker-compose.prod.yml ps mysql
@@ -829,11 +933,13 @@ docker-compose -f docker-compose.prod.yml exec mysql mysql -uroot -p
 ### Q4: 前端页面无法访问
 
 **可能原因：**
+
 - Nginx 容器未启动
 - 防火墙未开放 80 端口
 - Nginx 配置错误
 
 **解决方法：**
+
 ```bash
 # 检查 Nginx 容器状态
 docker-compose -f docker-compose.prod.yml ps nginx
@@ -908,20 +1014,25 @@ docker-compose -f docker-compose.prod.yml exec backend npm run db:init
 ### 常见错误及解决
 
 **错误 1：`DB_PASSWORD variable is not set`**
+
 - **原因**：缺少根目录 `.env` 文件
 - **解决**：在项目根目录创建 `.env` 文件，包含 `DB_PASSWORD`、`DB_DATABASE`、`JWT_SECRET`
 
 **错误 2：`MySQL container is unhealthy`**
+
 - **原因**：MySQL 启动失败，通常是密码配置问题
 - **解决**：检查根目录 `.env` 文件中的 `DB_PASSWORD` 是否正确
 
 **错误 3：`Cannot find module`**
+
 - **原因**：构建时依赖安装不完整
 - **解决**：重新构建镜像 `npm run build` 或 `docker-compose -f docker-compose.prod.yml build --no-cache`
 
 **错误 4：`Port 80 is already allocated`**
+
 - **原因**：80 端口被占用
 - **解决**：
+
   ```bash
   # 查找占用端口的进程
   sudo lsof -i :80
@@ -932,8 +1043,10 @@ docker-compose -f docker-compose.prod.yml exec backend npm run db:init
   ```
 
 **错误 5：`Permission denied`**
+
 - **原因**：文件权限问题
 - **解决**：
+
   ```bash
   # 修复上传目录权限
   sudo chmod -R 755 backend/uploads
@@ -949,4 +1062,3 @@ docker-compose -f docker-compose.prod.yml exec backend npm run db:init
 - [部署方式对比](../deployment/index.md) - 了解不同部署方式的特点
 - [pnpm 打包部署](./pnpm.md) - 不使用 Docker 的部署方式
 - [自动部署指南](./automation.md) - 配置 CI/CD 自动部署
-
