@@ -9,6 +9,11 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # 复制 package 文件和锁文件
 COPY web/package.json web/pnpm-lock.yaml ./
 
+# 国内网络构建：使用 npm 镜像源（避免 registry.npmjs.org 超时/重置）
+RUN pnpm config set registry https://registry.npmmirror.com \
+  && pnpm config set fetch-retries 5 \
+  && pnpm config set network-concurrency 1
+
 # 安装依赖
 RUN pnpm install --frozen-lockfile
 

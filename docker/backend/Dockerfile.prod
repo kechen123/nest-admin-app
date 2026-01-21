@@ -9,6 +9,11 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # 复制 package 文件和锁文件
 COPY package.json pnpm-lock.yaml ./
 
+# 国内网络构建：使用 npm 镜像源（避免 registry.npmjs.org 超时/重置）
+RUN pnpm config set registry https://registry.npmmirror.com \
+  && pnpm config set fetch-retries 5 \
+  && pnpm config set network-concurrency 1
+
 # 安装所有依赖（包括 devDependencies，用于构建）
 RUN pnpm install --frozen-lockfile
 
@@ -28,6 +33,11 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # 复制 package 文件和锁文件
 COPY package.json pnpm-lock.yaml ./
+
+# 国内网络构建：使用 npm 镜像源（避免 registry.npmjs.org 超时/重置）
+RUN pnpm config set registry https://registry.npmmirror.com \
+  && pnpm config set fetch-retries 5 \
+  && pnpm config set network-concurrency 1
 
 # 只安装生产依赖
 RUN pnpm install --frozen-lockfile --prod && pnpm store prune
