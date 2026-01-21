@@ -197,8 +197,9 @@ sudo mkdir -p /etc/docker
 sudo tee /etc/docker/daemon.json <<-'EOF'
 {
   "registry-mirrors": [
-    "https://docker.mirrors.ustc.edu.cn",
-    "https://hub-mirror.c.163.com"
+    "https://docker.1ms.run",
+    "https://dockerproxy.com",
+    "https://hub.rat.dev"
   ]
 }
 EOF
