@@ -68,10 +68,10 @@ timedatectl status
 
 需要对外开放：
 
-- **80**：HTTP（必需）
-- **443**：HTTPS（推荐）
+- **80**：HTTP（可选；如果你还有别的网站/服务要占用 80，可不放行本项目的 80）
+- **443**：HTTPS（可选；如需 HTTPS 才放行）
 - **22**：SSH（通常云厂商默认已放行）
-- **3000**：后端 API（可选；若用 Nginx 反代通常不需对外开放）
+- **3000**：Web 访问入口（可选；如果你希望像开发环境一样通过 `ip:3000` 访问，可放行；也可仅用 80/443）
 
 **Ubuntu/Debian（UFW）：**
 
@@ -611,7 +611,7 @@ docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs -f
 ```
 
-在浏览器访问：`http://your-server-ip`，应该能看到前端页面。
+在浏览器访问：`http://your-server-ip:3000`，应该能看到前端页面（做法 A：只占用 3000，不占用 80）。
 
 ---
 
@@ -751,6 +751,28 @@ DB_PASSWORD=your_password
 DB_DATABASE=your_database
 ```
 
+### 本地访问生产 MySQL（开发/测试用，推荐 SSH 隧道）
+
+如果你希望在自己电脑上通过 **本地 3306** 访问服务器上的 MySQL（用于前期开发/测试），建议：
+
+- **docker-compose**：将 MySQL 端口仅绑定到服务器本机（避免公网暴露）
+  - `mysql.ports: ["127.0.0.1:3306:3306"]`
+- **本地连接方式**：使用 SSH 隧道把你电脑的 3306 转发到服务器的 3306
+
+示例（在你电脑执行，替换 `user@server`）：
+
+```bash
+ssh -L 3306:127.0.0.1:3306 user@server
+```
+
+然后你的数据库客户端连接：
+
+- Host：`127.0.0.1`
+- Port：`3306`
+- Username/Password：使用生产 MySQL 的账号密码
+
+> 后期如果你要“关掉 3306”，只要保持该端口仅绑定 `127.0.0.1`（或直接移除 `ports` 映射），并确保服务器防火墙不放行 3306，即可避免对外暴露。
+
 ### 应用配置
 
 **后端环境变量（backend/.env）：**
@@ -771,6 +793,21 @@ CORS_ORIGIN=*
 - 文件上传：`http://your-domain/uploads`
 
 如需修改，编辑 `docker/nginx/nginx.conf` 后重启 Nginx 容器。
+
+### 访问方式：ip:3000 与二级域名（开发/测试友好）
+
+为了让生产环境访问方式更接近开发环境（统一走同域的 `/api`），可以让 **Nginx 作为唯一入口**，并把它映射到对外 **3000 端口**：
+
+- **访问方式**：`http://<服务器IP>:3000`
+- **接口方式**：前端请求保持 `baseURL=/api`，由 Nginx 将 `/api` 反代到后端容器（无需 CORS）
+- **对应配置**：`docker-compose.prod.yml` 的 `nginx.ports` 使用 `3000:80`（不再映射 `80:80`）
+
+后续你要配置二级域名（例如 `admin.your-domain.com`）时：
+
+- **DNS**：将二级域名 A 记录指向服务器 IP
+- **访问**：
+  - 临时阶段可直接用 `http://admin.your-domain.com:3000`
+  - 正式上线建议使用 80/443（不带端口），并配合 HTTPS（证书与 443 配置按你的运维方案补齐）
 
 ---
 
@@ -837,7 +874,7 @@ docker compose -f docker-compose.prod.yml ps
 
 在浏览器中访问：
 
-- `http://your-server-ip`
+- `http://your-server-ip:3000`（如果你将 Nginx 对外映射到 3000）
 - `http://your-domain`（如果配置了域名）
 
 ### 4. 测试后端 API
