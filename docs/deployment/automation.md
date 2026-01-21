@@ -335,6 +335,92 @@ deploy_production:
 - 拉取：服务器通过 SSH 从 Codeup 仓库 `git pull`
 - 部署：执行你自己的部署脚本（例如 `docker compose up -d --build` 或其它）
 
+### 新服务器（从 0）除开“服务器初始化”之后要做什么
+
+下面步骤假设你已经完成了文档里的**新服务器初始化**（Docker / Docker Compose 已安装成功），并且你希望达到的效果是：
+
+- 你在本地 push 到 Codeup
+- 服务器自动执行：`git pull` + `docker compose up -d --build`（完成更新）
+
+#### 1) 配置服务器 SSH（用于拉取 Codeup）
+
+推荐使用专用 deploy key（只读即可）：
+
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+
+ssh-keygen -t ed25519 -C "yl-deploy" -f ~/.ssh/yl_deploy -N ""
+chmod 600 ~/.ssh/yl_deploy
+cat ~/.ssh/yl_deploy.pub
+```
+
+把输出的公钥添加到 Codeup 仓库（部署 key / deploy key，建议只读）。
+
+如果 `~/.ssh/config` 不存在，直接新建即可：
+
+```bash
+touch ~/.ssh/config
+chmod 600 ~/.ssh/config
+```
+
+写入（你的仓库 SSH 地址为：`git@codeup.aliyun.com:66f367c65d0a63a08ebe097b/nest-admin-app.git`）：
+
+```sshconfig
+Host codeup
+  HostName codeup.aliyun.com
+  User git
+  IdentityFile ~/.ssh/yl_deploy
+  IdentitiesOnly yes
+```
+
+连通性测试：
+
+```bash
+ssh -T git@codeup.aliyun.com || true
+```
+
+#### 2) 首次部署（先确保不用 Webhook 也能跑起来）
+
+准备目录并克隆代码（从 Codeup）：
+
+```bash
+sudo mkdir -p /opt/app
+sudo chown -R $USER:$USER /opt/app
+cd /opt/app
+git clone git@codeup.aliyun.com:66f367c65d0a63a08ebe097b/nest-admin-app.git yl
+cd /opt/app/yl
+git checkout main || true
+```
+
+准备环境变量并启动服务：
+
+```bash
+cd /opt/app/yl
+
+# 1) 后端运行时环境变量
+cp backend/.env.example backend/.env
+vim backend/.env
+
+# 2) docker compose 变量（用于 ${DB_PASSWORD} 这类替换）
+cat > .env <<'EOF'
+DB_PASSWORD=your_strong_password_here
+DB_DATABASE=your_database_name
+JWT_SECRET=your_jwt_secret_key_here
+EOF
+
+# 3) 启动
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 4) 初始化数据库（首次需要）
+docker compose -f docker-compose.prod.yml run --rm backend npm run db:init
+
+# 5) 验证
+docker compose -f docker-compose.prod.yml ps
+```
+
+> 先让“手动部署”成功一次，再做 webhook 自动化；这样出问题更容易定位。
+
 ### 为什么推荐 Codeup Webhook
 
 - **国内网络更稳定**：服务器拉取代码更顺畅
@@ -586,22 +672,8 @@ cd $DEPLOY_PATH
 # 拉取最新代码
 git pull origin main
 
-# 构建后端
-cd backend
-pnpm install --frozen-lockfile
-pnpm run build
-
-# 构建前端
-cd ../web
-pnpm install --frozen-lockfile
-pnpm run build
-
-# 重启服务
-cd ../backend
-pm2 restart yl-backend || pm2 start ecosystem.config.js
-
-# 重启 Nginx
-sudo systemctl reload nginx
+# 使用 docker compose 构建并滚动更新（适配本项目的 Docker 部署）
+docker compose -f docker-compose.prod.yml up -d --build
 
 echo "$(date): Deployment completed" >> $LOG_FILE
 ```
@@ -645,12 +717,17 @@ sudo systemctl enable webhook
 
 #### 5. 配置 Git 仓库 Webhook
 
-在 GitHub/GitLab 中，进入项目 **Settings** → **Webhooks**，添加：
+在云效 Codeup 中，进入项目 **Webhooks**，添加：
 
 - **Payload URL**: `http://your-server:9000/hooks/deploy-yl`
 - **Content type**: `application/json`
 - **Secret**: （可选）添加密钥验证
-- **Events**: 选择 `Push events`
+- **Events**: 选择 `Push` / `代码推送`
+
+> 端口说明：
+>
+> - 最简单：直接对外开放 `9000` 给 webhook 服务使用。
+> - 如果你不想额外开放端口：可以把 webhook 服务仅监听本机（127.0.0.1），再用你自己的入口 Nginx（80/443 或其它）做反向代理转发到本机 9000。
 
 ---
 

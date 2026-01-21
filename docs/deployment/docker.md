@@ -156,6 +156,41 @@ docker --version
 docker compose version
 ```
 
+#### 如果 `apt-get update` 拉取 Docker 源时 TLS 握手失败（国内服务器常见）
+
+有些国内网络环境下，`curl` 能访问 `download.docker.com`，但 `apt-get update` 会报类似错误：
+
+- `Could not handshake: The TLS connection was non-properly terminated`
+
+这会导致 `docker-ce` 一直显示 `Candidate: (none)`，从而无法安装。
+
+推荐做法：把 Docker CE 的 apt 源切换为国内镜像（例如阿里云 docker-ce 镜像）。
+
+以 Ubuntu 24.04（`noble`）为例（其它 Ubuntu 版本同样适用，会自动取 `VERSION_CODENAME`）：
+
+```bash
+# 1) 基础依赖
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
+
+# 2) 使用阿里云 docker-ce 镜像源的 gpg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# 3) 将 download.docker.com 替换为 mirrors.aliyun.com
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(. /etc/os-release && echo ${VERSION_CODENAME}) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 4) 更新索引并安装
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 5) 验证
+docker --version
+docker compose version
+```
+
 #### 如果你在 Ubuntu 执行 `systemctl enable --now docker` 报错
 
 报错：
