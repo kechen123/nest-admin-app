@@ -380,8 +380,8 @@ CORS_ORIGIN=*
 # 构建所有生产镜像
 npm run build
 
-# 或者使用 docker-compose 直接构建
-docker-compose -f docker-compose.prod.yml build
+# 或者使用 docker compose 直接构建
+docker compose -f docker-compose.prod.yml build
 ```
 
 构建过程可能需要几分钟，请耐心等待。构建完成后，可以使用以下命令查看镜像：
@@ -541,6 +541,9 @@ EOF
 
 由于使用镜像部署，需要修改 `docker-compose.prod.yml`，将 `build` 改为 `image`：
 
+> 你在服务器上用的是 `docker compose`（Compose v2）。**本步骤的关键是：`backend` 和 `web` 至少要有 `image:`**，否则会报：
+> `service "backend" has neither an image nor a build context specified`
+
 ```yaml
 services:
   backend:
@@ -574,10 +577,10 @@ chmod 755 backend/uploads
 cd /opt/app/yl
 
 # 启动所有服务
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 
 # 查看服务状态
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 ```
 
 等待 30-60 秒，让 MySQL 完全启动。
@@ -586,17 +589,17 @@ docker-compose -f docker-compose.prod.yml ps
 
 ```bash
 # 等待 MySQL 健康检查通过
-docker-compose -f docker-compose.prod.yml ps mysql
+docker compose -f docker-compose.prod.yml ps mysql
 
 # 初始化数据库
-docker-compose -f docker-compose.prod.yml run --rm backend npm run db:init
+docker compose -f docker-compose.prod.yml run --rm backend npm run db:init
 ```
 
 #### 3.9 验证部署
 
 ```bash
 # 查看所有服务状态
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 
 # 应该看到所有服务状态为 "Up" 或 "healthy"
 # - yl-mysql-prod: Up (healthy)
@@ -605,7 +608,7 @@ docker-compose -f docker-compose.prod.yml ps
 # - yl-nginx-prod: Up
 
 # 查看日志
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml logs -f
 ```
 
 在浏览器访问：`http://your-server-ip`，应该能看到前端页面。
@@ -662,8 +665,8 @@ cd /opt/app/yl
 # 构建所有生产镜像
 npm run build
 
-# 或使用 docker-compose
-docker-compose -f docker-compose.prod.yml build
+# 或使用 docker compose
+docker compose -f docker-compose.prod.yml build
 ```
 
 构建过程可能需要 5-15 分钟，取决于服务器性能和网络速度。
@@ -672,10 +675,10 @@ docker-compose -f docker-compose.prod.yml build
 
 ```bash
 # 启动所有服务
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 
 # 查看服务状态
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 ```
 
 #### 1.5 初始化数据库
@@ -685,7 +688,7 @@ docker-compose -f docker-compose.prod.yml ps
 sleep 30
 
 # 初始化数据库
-docker-compose -f docker-compose.prod.yml run --rm backend npm run db:init
+docker compose -f docker-compose.prod.yml run --rm backend npm run db:init
 ```
 
 #### 1.6 验证部署
@@ -720,10 +723,10 @@ cd /opt/app/yl
 git pull origin main  # 或 master
 
 # 重新构建并启动
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 # 查看日志
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml logs -f
 ```
 
 ---
@@ -777,33 +780,33 @@ CORS_ORIGIN=*
 
 ```bash
 # 启动所有服务
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 
 # 查看服务状态
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 
 # 查看日志
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml logs -f
 ```
 
 ### 常用管理命令
 
 ```bash
 # 停止所有服务
-docker-compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml down
 
 # 重启所有服务
-docker-compose -f docker-compose.prod.yml restart
+docker compose -f docker-compose.prod.yml restart
 
 # 重启单个服务
-docker-compose -f docker-compose.prod.yml restart backend
+docker compose -f docker-compose.prod.yml restart backend
 
 # 查看单个服务日志
-docker-compose -f docker-compose.prod.yml logs -f backend
+docker compose -f docker-compose.prod.yml logs -f backend
 
 # 进入容器
-docker-compose -f docker-compose.prod.yml exec backend sh
-docker-compose -f docker-compose.prod.yml exec mysql bash
+docker compose -f docker-compose.prod.yml exec backend sh
+docker compose -f docker-compose.prod.yml exec mysql bash
 ```
 
 ---
@@ -813,7 +816,7 @@ docker-compose -f docker-compose.prod.yml exec mysql bash
 ### 1. 检查服务状态
 
 ```bash
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 ```
 
 所有服务应该显示为 `Up` 状态，MySQL 应该显示 `(healthy)`。
@@ -827,7 +830,7 @@ sudo netstat -tlnp | grep :80
 sudo ss -tlnp | grep :80
 
 # 检查容器端口
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 ```
 
 ### 3. 访问前端页面
@@ -851,13 +854,13 @@ curl http://your-server-ip/api/health
 
 ```bash
 # 查看所有服务日志
-docker-compose -f docker-compose.prod.yml logs --tail=100
+docker compose -f docker-compose.prod.yml logs --tail=100
 
 # 查看后端日志
-docker-compose -f docker-compose.prod.yml logs --tail=100 backend
+docker compose -f docker-compose.prod.yml logs --tail=100 backend
 
 # 实时查看日志
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.prod.yml logs -f
 ```
 
 ---
@@ -906,7 +909,7 @@ cat .env
 docker images | grep yl
 
 # 查看详细错误日志
-docker-compose -f docker-compose.prod.yml logs
+docker compose -f docker-compose.prod.yml logs
 ```
 
 ### Q3: 数据库连接失败
@@ -921,13 +924,13 @@ docker-compose -f docker-compose.prod.yml logs
 
 ```bash
 # 等待 MySQL 完全启动
-docker-compose -f docker-compose.prod.yml ps mysql
+docker compose -f docker-compose.prod.yml ps mysql
 
 # 检查数据库日志
-docker-compose -f docker-compose.prod.yml logs mysql
+docker compose -f docker-compose.prod.yml logs mysql
 
 # 测试数据库连接
-docker-compose -f docker-compose.prod.yml exec mysql mysql -uroot -p
+docker compose -f docker-compose.prod.yml exec mysql mysql -uroot -p
 ```
 
 ### Q4: 前端页面无法访问
@@ -942,10 +945,10 @@ docker-compose -f docker-compose.prod.yml exec mysql mysql -uroot -p
 
 ```bash
 # 检查 Nginx 容器状态
-docker-compose -f docker-compose.prod.yml ps nginx
+docker compose -f docker-compose.prod.yml ps nginx
 
 # 检查 Nginx 日志
-docker-compose -f docker-compose.prod.yml logs nginx
+docker compose -f docker-compose.prod.yml logs nginx
 
 # 检查防火墙
 sudo ufw status
@@ -958,57 +961,57 @@ sudo ufw status
 ### 查看服务状态
 
 ```bash
-docker-compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 ```
 
 ### 查看日志
 
 ```bash
 # 所有服务日志
-docker-compose -f docker-compose.prod.yml logs --tail=100
+docker compose -f docker-compose.prod.yml logs --tail=100
 
 # 单个服务日志
-docker-compose -f docker-compose.prod.yml logs -f backend
-docker-compose -f docker-compose.prod.yml logs -f web
-docker-compose -f docker-compose.prod.yml logs -f mysql
-docker-compose -f docker-compose.prod.yml logs -f nginx
+docker compose -f docker-compose.prod.yml logs -f backend
+docker compose -f docker-compose.prod.yml logs -f web
+docker compose -f docker-compose.prod.yml logs -f mysql
+docker compose -f docker-compose.prod.yml logs -f nginx
 ```
 
 ### 重启服务
 
 ```bash
 # 重启所有服务
-docker-compose -f docker-compose.prod.yml restart
+docker compose -f docker-compose.prod.yml restart
 
 # 重启单个服务
-docker-compose -f docker-compose.prod.yml restart backend
+docker compose -f docker-compose.prod.yml restart backend
 ```
 
 ### 重新构建
 
 ```bash
 # 重新构建并启动
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 # 强制重新构建（不使用缓存）
-docker-compose -f docker-compose.prod.yml build --no-cache
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml build --no-cache
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ### 进入容器调试
 
 ```bash
 # 进入后端容器
-docker-compose -f docker-compose.prod.yml exec backend sh
+docker compose -f docker-compose.prod.yml exec backend sh
 
 # 进入前端容器
-docker-compose -f docker-compose.prod.yml exec web sh
+docker compose -f docker-compose.prod.yml exec web sh
 
 # 进入数据库容器
-docker-compose -f docker-compose.prod.yml exec mysql bash
+docker compose -f docker-compose.prod.yml exec mysql bash
 
 # 在容器内执行命令
-docker-compose -f docker-compose.prod.yml exec backend npm run db:init
+docker compose -f docker-compose.prod.yml exec backend npm run db:init
 ```
 
 ### 常见错误及解决
@@ -1026,7 +1029,7 @@ docker-compose -f docker-compose.prod.yml exec backend npm run db:init
 **错误 3：`Cannot find module`**
 
 - **原因**：构建时依赖安装不完整
-- **解决**：重新构建镜像 `npm run build` 或 `docker-compose -f docker-compose.prod.yml build --no-cache`
+- **解决**：重新构建镜像 `npm run build` 或 `docker compose -f docker-compose.prod.yml build --no-cache`
 
 **错误 4：`Port 80 is already allocated`**
 
