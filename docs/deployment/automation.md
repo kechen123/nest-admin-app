@@ -7,7 +7,7 @@
 - [概述](#概述)
 - [GitHub Actions 自动部署](#github-actions-自动部署)
 - [GitLab CI/CD 自动部署](#gitlab-cicd-自动部署)
-- [云效（Flow）自动部署](#云效flow自动部署)
+- [云效 Codeup Webhook（推荐）](#云效-codeup-webhook推荐)
 - [Jenkins 自动部署](#jenkins-自动部署)
 - [Webhook 自动部署](#webhook-自动部署)
 - [部署策略](#部署策略)
@@ -33,7 +33,7 @@
 
 - **GitHub Actions** - GitHub 官方 CI/CD 平台
 - **GitLab CI/CD** - GitLab 内置 CI/CD
-- **云效（Flow）** - 阿里云 DevOps（支持构建镜像推送 ACR、主机部署等）
+- **云效 Codeup** - 阿里云效代码仓库（可通过 Webhook 在 push 时触发服务器部署）
 - **Jenkins** - 开源自动化服务器
 - **自定义 Webhook** - 基于 Webhook 的简单部署
 
@@ -59,6 +59,7 @@
 - `SERVER_DEPLOY_PATH` - 部署路径（如：`/opt/app/yl`）
 
 **获取 SSH 私钥：**
+
 ```bash
 # 在本地生成 SSH 密钥对（如果还没有）
 ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
@@ -218,6 +219,7 @@ jobs:
 #### 1. 安装 GitLab Runner
 
 **在服务器上安装：**
+
 ```bash
 # 下载安装脚本
 curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh" | sudo bash
@@ -230,6 +232,7 @@ sudo gitlab-runner register
 ```
 
 **注册时需要的信息：**
+
 - GitLab URL: `https://gitlab.com`（或您的 GitLab 实例地址）
 - Registration token: 在 GitLab 项目的 **Settings** → **CI/CD** → **Runners** 中获取
 - Executor: `shell`（或 `docker`）
@@ -324,87 +327,78 @@ deploy_production:
 
 ---
 
-## 云效（Flow）自动部署
+## 云效 Codeup Webhook（推荐）
 
-本章节适用于你使用 **Docker 镜像部署**（构建镜像 → 推送镜像仓库 → 服务器拉取镜像并重启）的场景，尤其是：
+如果你的服务器在国内、或服务器侧访问 GitHub 不稳定（无法稳定 `git pull`），推荐把**云效 Codeup** 作为部署触发与拉取源：
 
-- 你希望“本地改代码后，推送到仓库即可自动更新服务器”
-- 你使用阿里云镜像仓库 **ACR**（或其它 Registry）
-- 你希望在服务器上继续使用 `docker compose -f docker-compose.prod.yml up -d` 完成发布
+- 触发：Codeup 在 push 时发送 Webhook
+- 拉取：服务器通过 SSH 从 Codeup 仓库 `git pull`
+- 部署：执行你自己的部署脚本（例如 `docker compose up -d --build` 或其它）
 
-> 参考官方文档：  
-> - `https://help.aliyun.com/zh/yunxiao/user-guide/build-image-and-push-to-acr`  
-> - `https://help.aliyun.com/zh/yunxiao/user-guide/host-docker-deployment`  
-> - `https://help.aliyun.com/zh/yunxiao/user-guide/yaml-preliminary-experience/`
+### 为什么推荐 Codeup Webhook
+
+- **国内网络更稳定**：服务器拉取代码更顺畅
+- **实现简单**：不依赖云效流水线/镜像仓库，直接 push → 触发 → 部署
+- **和 GitHub Webhook 原理一致**：只是“谁来发回调”和“从哪里拉代码”变了
 
 ### 前置要求
 
-1. 云效已接入你的代码仓库（Codeup/GitHub/GitLab 均可）
-2. 已开通 ACR（或其它镜像仓库），并创建仓库（例如 `yl-backend`、`yl-web`）
-3. 服务器已安装 Docker + Docker Compose v2，并能 `docker login` 访问你的镜像仓库
-4. 你的 `docker-compose.prod.yml` 使用 **image 模式**（而不是 `build`）：
-   - CI/CD 负责构建镜像
-   - 服务器只负责 `pull` + `up -d`
+1. 你的项目代码已托管在云效 Codeup
+2. 服务器已安装 Git，并能通过 SSH 访问 Codeup（建议用专用 deploy key）
+3. 服务器上已部署 webhook 接收服务（见下文“Webhook 自动部署”）
 
-### 推荐部署流程（构建推送 + 服务器拉取重启）
+### 服务器端：配置 SSH 拉取 Codeup
 
-- **CI（云效流水线）**：
-  - 构建 `yl-backend` 镜像并推送到 ACR
-  - 构建 `yl-web` 镜像并推送到 ACR
-  - 镜像 tag 推荐使用 `${GIT_COMMIT}`（或 `${PIPELINE_ID}`），便于追溯/回滚
-- **CD（云效主机部署 / SSH 脚本）**：
-  - 服务器 `docker login`
-  - 服务器 `docker pull` 新镜像
-  - 服务器用同一个 tag 启动：`docker compose ... up -d`
-  - 可选：清理旧镜像 `docker image prune -f`
+推荐使用专用 deploy key（只读即可）：
 
-### 需要配置的变量（建议统一在云效变量/凭据里）
+- 在服务器生成密钥：
 
-- **服务器相关**
-  - `SERVER_HOST`：服务器 IP/域名
-  - `SERVER_USER`：SSH 用户
-  - `SERVER_DEPLOY_PATH`：部署目录（如 `/opt/app/yl`）
-- **镜像仓库相关（以 ACR 为例）**
-  - `ACR_REGISTRY`：例如 `registry.cn-hangzhou.aliyuncs.com`
-  - `ACR_NAMESPACE`：你的命名空间
-  - `ACR_USERNAME` / `ACR_PASSWORD`：ACR 账号/密码（或 RAM 用户）
-  - `IMAGE_TAG`：建议 `${GIT_COMMIT}`（由云效内置变量注入/映射）
+```bash
+ssh-keygen -t ed25519 -C "yl-deploy" -f ~/.ssh/yl_deploy -N ""
+cat ~/.ssh/yl_deploy.pub
+```
 
-### 服务器侧发布脚本（云效“主机部署”里直接粘贴即可）
+- 将公钥添加到 Codeup 仓库（作为部署 key/只读 key）
+- 在服务器配置 `~/.ssh/config`（示意）：
 
-下面脚本假设你在服务器的 `docker-compose.prod.yml` 中写的是：
+```sshconfig
+Host codeup
+  HostName codeup.aliyun.com
+  User git
+  IdentityFile ~/.ssh/yl_deploy
+  IdentitiesOnly yes
+```
 
-- `image: ${ACR_REGISTRY}/${ACR_NAMESPACE}/yl-backend:${IMAGE_TAG}`
-- `image: ${ACR_REGISTRY}/${ACR_NAMESPACE}/yl-web:${IMAGE_TAG}`
+> 说明：你的仓库 SSH 地址为：`git@codeup.aliyun.com:66f367c65d0a63a08ebe097b/nest-admin-app.git`
 
-并且服务器部署目录下有一个 `.env`（供 compose 变量替换）包含 `ACR_REGISTRY/ACR_NAMESPACE/IMAGE_TAG`。
+然后把服务器上的仓库 remote 指向 Codeup（示意）：
+
+```bash
+git remote -v
+git remote set-url origin git@codeup.aliyun.com:66f367c65d0a63a08ebe097b/nest-admin-app.git
+git pull origin main
+```
+
+### Codeup 侧：配置 Webhook（push 触发）
+
+在 Codeup 仓库的 Webhook 设置里：
+
+- **URL**：填写你的服务器 webhook 地址（例如 `http://<server-ip>:9000/hooks/deploy-yl`）
+- **事件**：选择 Push（或“代码推送”）
+- **Secret/签名**：如果 Codeup 支持，务必开启（用于防伪造请求）
+
+### 部署脚本（示例：push 后自动更新）
+
+你的 webhook 触发脚本里建议至少包含：
 
 ```bash
 set -e
-
-cd "${SERVER_DEPLOY_PATH}"
-
-echo "${ACR_PASSWORD}" | docker login "${ACR_REGISTRY}" -u "${ACR_USERNAME}" --password-stdin
-
-# 拉取最新镜像（同一个 tag）
-docker pull "${ACR_REGISTRY}/${ACR_NAMESPACE}/yl-backend:${IMAGE_TAG}"
-docker pull "${ACR_REGISTRY}/${ACR_NAMESPACE}/yl-web:${IMAGE_TAG}"
-
-# 启动/更新
-docker compose -f docker-compose.prod.yml up -d
-
-# 可选：清理无用镜像
-docker image prune -f
+cd /opt/app/yl
+git pull origin main
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-### 云效流水线怎么配（思路）
-
-云效流水线通常分两段：
-
-- **Build**：使用“构建镜像并推送 ACR”的组件（选择 Dockerfile 路径、镜像名、tag）
-- **Deploy**：使用“主机部署（Docker 部署/执行脚本）”组件，在目标机器组上执行上面的发布脚本
-
-> 由于云效控制台组件名称/字段会随产品迭代变化，最稳妥的方式是按官方文档选择对应组件，并把关键变量（仓库地址、镜像名、tag、服务器信息）对齐到上面的变量表。
+> 如果你当前是“只占用 3000 端口的 Nginx + Docker 部署”，这种方式最直接。
 
 ---
 
@@ -421,6 +415,7 @@ docker image prune -f
 #### 1. 安装 Jenkins 插件
 
 在 Jenkins 中安装以下插件：
+
 - **Git Plugin** - Git 集成
 - **NodeJS Plugin** - Node.js 支持
 - **SSH Pipeline Steps** - SSH 部署
@@ -557,6 +552,7 @@ sudo vim /etc/webhook/hooks.json
 ```
 
 **配置文件内容：**
+
 ```json
 [
   {
@@ -575,6 +571,7 @@ sudo vim /opt/scripts/deploy.sh
 ```
 
 **脚本内容：**
+
 ```bash
 #!/bin/bash
 set -e
@@ -610,6 +607,7 @@ echo "$(date): Deployment completed" >> $LOG_FILE
 ```
 
 **设置执行权限：**
+
 ```bash
 sudo chmod +x /opt/scripts/deploy.sh
 ```
@@ -622,6 +620,7 @@ sudo vim /etc/systemd/system/webhook.service
 ```
 
 **服务文件内容：**
+
 ```ini
 [Unit]
 Description=Webhook Service
@@ -637,6 +636,7 @@ WantedBy=multi-user.target
 ```
 
 **启动服务：**
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl start webhook
@@ -661,11 +661,13 @@ sudo systemctl enable webhook
 **概念：** 维护两套完全相同的生产环境，一套运行当前版本（蓝），一套运行新版本（绿）。切换时只需切换流量。
 
 **优点：**
+
 - 零停机时间
 - 快速回滚
 - 风险较低
 
 **缺点：**
+
 - 需要双倍资源
 - 配置复杂
 
@@ -674,10 +676,12 @@ sudo systemctl enable webhook
 **概念：** 逐步替换旧版本实例，每次只更新部分实例。
 
 **优点：**
+
 - 资源利用率高
 - 逐步验证新版本
 
 **缺点：**
+
 - 可能存在版本不一致
 - 回滚较慢
 
@@ -686,10 +690,12 @@ sudo systemctl enable webhook
 **概念：** 先部署到少量服务器，验证无误后再全量部署。
 
 **优点：**
+
 - 风险可控
 - 可以逐步验证
 
 **缺点：**
+
 - 需要流量分流
 - 配置复杂
 
@@ -698,10 +704,12 @@ sudo systemctl enable webhook
 **概念：** 直接替换旧版本，短暂停机。
 
 **优点：**
+
 - 简单直接
 - 配置容易
 
 **缺点：**
+
 - 有短暂停机
 - 回滚需要时间
 
@@ -744,4 +752,3 @@ sudo systemctl enable webhook
 - [Docker 部署指南](./docker.md) - Docker 容器化部署
 - [pnpm 打包部署指南](./pnpm.md) - 传统方式部署
 - [部署方式对比](./index.md) - 了解不同部署方式的特点
-
