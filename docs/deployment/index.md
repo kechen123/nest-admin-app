@@ -48,7 +48,23 @@
 
 **查看详细文档：** [自动部署指南](./automation.md)
 
-> 提示：如果你的代码也托管在 **云效 Codeup**，自动部署文档中提供了“Codeup Webhook + 服务器 SSH 拉取”的推荐方案，适合“push 后服务器自动更新”的场景。
+> 提示：如果你的代码也托管在 **云效 Codeup**，推荐使用 **Docker + 云效 Webhook 自动部署** 方案，适合"push 后服务器自动更新"的场景。
+
+### 🚀 Docker + 云效 Webhook 自动部署（推荐）
+
+**适合场景：**
+- 使用 Docker 部署
+- 代码托管在云效 Codeup
+- 希望实现代码推送后自动部署
+- 国内服务器，网络稳定
+
+**优点：**
+- 国内网络稳定，拉取代码速度快
+- 实现简单，无需复杂 CI/CD 流水线
+- 自动化程度高，推送即部署
+- 详细的步骤说明，新手友好
+
+**查看详细文档：** [Docker + 云效 Webhook 自动部署教程](./codeup-webhook-docker.md)
 
 ---
 
@@ -137,4 +153,3 @@ pnpm run db:init
 - [快速开始](../guide/getting-started.md) - 本地开发环境搭建
 - [后端配置](../backend/configuration.md) - 后端环境配置详解
 - [前端配置](../frontend/configuration.md) - 前端环境配置详解
-
