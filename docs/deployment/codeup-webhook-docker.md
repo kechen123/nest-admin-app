@@ -430,10 +430,14 @@ mysql:
 docker exec -it yl-mysql-prod mysql -uroot -p
 
 # 在 MySQL 中执行（替换 your_password 为实际密码）
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'your_password' WITH GRANT OPTION;
+# MySQL 8.0+ 语法：先创建用户，再授权
+CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EXIT;
 ```
+
+> 📝 **说明**：MySQL 8.0+ 版本中，`GRANT` 语句不能直接使用 `IDENTIFIED BY`。需要先使用 `CREATE USER` 创建用户，然后再使用 `GRANT` 授权。如果用户已存在，可以使用 `ALTER USER 'root'@'%' IDENTIFIED BY 'your_password';` 来修改密码。
 
 > ⚠️ **注意**：生产环境建议使用专用数据库用户，而不是 root 用户。
 
