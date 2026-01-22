@@ -78,14 +78,25 @@ services:
     container_name: yl-nginx-prod
     restart: always
     ports:
-      # 标准 HTTP 端口（用于重定向到 HTTPS）
+      # 标准 HTTP 端口
       - "80:80"
-      # HTTPS 端口
-      - "443:443"
+      # HTTPS 端口（暂时注释，需要 HTTPS 时取消注释）
+      # - "443:443"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # SSL 证书目录（需要将证书放在此目录下）
-      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      # SSL 证书目录（暂时注释，需要 HTTPS 时取消注释并配置证书）
+      # 证书目录结构示例：
+      # docker/nginx/ssl/
+      # ├── admin.你的域名.com/
+      # │   ├── fullchain.pem
+      # │   └── privkey.pem
+      # ├── api.你的域名.com/
+      # │   ├── fullchain.pem
+      # │   └── privkey.pem
+      # └── www.你的域名.com/
+      #     ├── fullchain.pem
+      #     └── privkey.pem
+      # - ./docker/nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
       - web
