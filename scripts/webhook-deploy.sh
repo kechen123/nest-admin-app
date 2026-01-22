@@ -10,6 +10,17 @@ set -e  # 遇到错误立即退出
 DEPLOY_PATH="/opt/app/yl"
 LOG_FILE="/var/log/yl-deploy.log"
 COMPOSE_FILE="docker-compose.prod.yml"
+BRANCH="main"
+
+# 排除的文件/目录模式（这些文件的修改不会触发部署）
+EXCLUDE_PATTERNS=(
+    "docs/"
+    "uniapp-mobile/"
+    "test/"
+    ".gitignore"
+    "README.md"
+    "*.md"
+)
 
 # 日志函数
 log() {
@@ -33,14 +44,14 @@ fi
 
 # 拉取最新代码
 log "正在拉取最新代码..."
-git fetch origin main || {
+git fetch origin "$BRANCH" || {
     log "错误: git fetch 失败"
     exit 1
 }
 
 # 获取当前分支和最新提交信息
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-LATEST_COMMIT=$(git rev-parse origin/main)
+LATEST_COMMIT=$(git rev-parse "origin/$BRANCH")
 CURRENT_COMMIT=$(git rev-parse HEAD)
 
 log "当前分支: $CURRENT_BRANCH"
@@ -53,18 +64,71 @@ if [ "$CURRENT_COMMIT" = "$LATEST_COMMIT" ]; then
     exit 0
 fi
 
-# 切换到 main 分支（如果不在）
-if [ "$CURRENT_BRANCH" != "main" ]; then
-    log "切换到 main 分支..."
-    git checkout main || {
-        log "错误: 无法切换到 main 分支"
+# 检查最新提交修改的文件
+log "检查最新提交修改的文件..."
+# 获取两个提交之间的所有修改文件
+CHANGED_FILES=$(git diff --name-only "$CURRENT_COMMIT" "$LATEST_COMMIT" 2>/dev/null)
+
+if [ -z "$CHANGED_FILES" ]; then
+    log "无法获取修改文件列表，继续部署..."
+else
+    log "修改的文件列表:"
+    echo "$CHANGED_FILES" | while IFS= read -r file; do
+        [ -n "$file" ] && log "  - $file"
+    done
+    
+    # 检查是否所有修改的文件都在排除列表中
+    SKIP_DEPLOY=true
+    NEED_DEPLOY_FILES=""
+    
+    while IFS= read -r file; do
+        if [ -z "$file" ]; then
+            continue
+        fi
+        
+        # 检查文件是否匹配排除模式
+        MATCHED=false
+        for pattern in "${EXCLUDE_PATTERNS[@]}"; do
+            # 支持前缀匹配（如 docs/）和完整匹配（如 .gitignore）
+            if [[ "$file" == "$pattern" ]] || [[ "$file" == "$pattern"* ]] || [[ "$file" == *"/$pattern" ]] || [[ "$file" == *"/$pattern"* ]]; then
+                MATCHED=true
+                break
+            fi
+        done
+        
+        # 如果文件不匹配任何排除模式，则需要部署
+        if [ "$MATCHED" = false ]; then
+            SKIP_DEPLOY=false
+            if [ -z "$NEED_DEPLOY_FILES" ]; then
+                NEED_DEPLOY_FILES="$file"
+            else
+                NEED_DEPLOY_FILES="$NEED_DEPLOY_FILES, $file"
+            fi
+        fi
+    done <<< "$CHANGED_FILES"
+    
+    # 如果所有文件都在排除列表中，跳过部署
+    if [ "$SKIP_DEPLOY" = true ]; then
+        log "所有修改的文件都在排除列表中，跳过部署"
+        log "排除的文件: $(echo "$CHANGED_FILES" | tr '\n' ', ')"
+        exit 0
+    else
+        log "需要部署的文件: $NEED_DEPLOY_FILES"
+    fi
+fi
+
+# 切换到目标分支（如果不在）
+if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
+    log "切换到 $BRANCH 分支..."
+    git checkout "$BRANCH" || {
+        log "错误: 无法切换到 $BRANCH 分支"
         exit 1
     }
 fi
 
 # 拉取代码
 log "正在合并最新代码..."
-git pull origin main || {
+git pull origin "$BRANCH" || {
     log "错误: git pull 失败"
     exit 1
 }
