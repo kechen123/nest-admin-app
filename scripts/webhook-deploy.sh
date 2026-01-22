@@ -10,7 +10,7 @@ set -e  # 遇到错误立即退出
 DEPLOY_PATH="/opt/app/yl"
 LOG_FILE="/var/log/yl-deploy.log"
 COMPOSE_FILE="docker-compose.prod.yml"
-BRANCH="main"
+BRANCH="love-map"
 
 # 排除的文件/目录模式（这些文件的修改不会触发部署）
 EXCLUDE_PATTERNS=(
