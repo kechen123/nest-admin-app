@@ -119,6 +119,9 @@ async function uploadSingleImage(tempFilePath: string, index: number) {
   }
 }
 
+// 检查文件大小（10MB = 10 * 1024 * 1024 字节）
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024
+
 // 选择并上传图片
 function chooseImage() {
   // #ifdef MP-WEIXIN
@@ -127,16 +130,36 @@ function chooseImage() {
     mediaType: ['image'],
     success: async (res) => {
       const tempFiles = res.tempFiles
+      const validFiles: any[] = []
+      const invalidFiles: string[] = []
+
+      // 检查文件大小
+      for (const file of tempFiles) {
+        if (file.size && file.size > MAX_IMAGE_SIZE) {
+          invalidFiles.push(file.tempFilePath)
+          uni.showToast({
+            title: `图片大小不能超过10MB`,
+            icon: 'none',
+            duration: 2000,
+          })
+        } else {
+          validFiles.push(file)
+        }
+      }
+
+      if (validFiles.length === 0) {
+        return
+      }
 
       // 先添加占位符（使用临时路径用于预览）
       const startIndex = images.value.length
-      tempFiles.forEach((file: any) => {
+      validFiles.forEach((file: any) => {
         images.value.push(file.tempFilePath)
       })
 
       // 逐个上传图片
-      for (let i = 0; i < tempFiles.length; i++) {
-        const file = tempFiles[i]
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i]
         const currentIndex = startIndex + i
         await uploadSingleImage(file.tempFilePath, currentIndex)
       }
@@ -155,16 +178,48 @@ function chooseImage() {
     count: 9 - images.value.length,
     success: async (res) => {
       const tempFilePaths = Array.isArray(res.tempFilePaths) ? res.tempFilePaths : [res.tempFilePaths]
+      const validPaths: string[] = []
+
+      // 检查每个文件的大小
+      for (const path of tempFilePaths) {
+        try {
+          const fileInfo = await new Promise<{ size: number }>((resolve, reject) => {
+            uni.getFileInfo({
+              filePath: path,
+              success: (res) => resolve(res),
+              fail: (err) => reject(err),
+            })
+          })
+
+          if (fileInfo.size > MAX_IMAGE_SIZE) {
+            uni.showToast({
+              title: `图片大小不能超过10MB`,
+              icon: 'none',
+              duration: 2000,
+            })
+          } else {
+            validPaths.push(path)
+          }
+        } catch (error) {
+          console.error('获取文件信息失败:', error)
+          // 如果获取文件信息失败，仍然允许上传（由后端验证）
+          validPaths.push(path)
+        }
+      }
+
+      if (validPaths.length === 0) {
+        return
+      }
 
       // 先添加占位符（使用临时路径用于预览）
       const startIndex = images.value.length
-      tempFilePaths.forEach((path: string) => {
+      validPaths.forEach((path: string) => {
         images.value.push(path)
       })
 
       // 逐个上传图片
-      for (let i = 0; i < tempFilePaths.length; i++) {
-        const tempFilePath = tempFilePaths[i]
+      for (let i = 0; i < validPaths.length; i++) {
+        const tempFilePath = validPaths[i]
         const currentIndex = startIndex + i
         await uploadSingleImage(tempFilePath, currentIndex)
       }
