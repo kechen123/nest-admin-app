@@ -3,13 +3,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# 配置国内镜像源并安装 pnpm
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm install -g pnpm && \
-    pnpm config set registry https://registry.npmmirror.com
+# 安装 pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # 复制 package 文件和锁文件
 COPY package.json pnpm-lock.yaml ./
+
+# 国内网络构建：使用 npm 镜像源（避免 registry.npmjs.org 超时/重置）
+RUN pnpm config set registry https://registry.npmmirror.com \
+  && pnpm config set fetch-retries 5 \
+  && pnpm config set network-concurrency 1
 
 # 安装所有依赖（包括 devDependencies，用于构建）
 RUN pnpm install --frozen-lockfile
@@ -25,13 +28,19 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# 配置国内镜像源并安装 pnpm
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm install -g pnpm && \
-    pnpm config set registry https://registry.npmmirror.com
+# 数据库初始化脚本需要 mysql 命令（Alpine 下由 mariadb-client 提供）
+RUN apk add --no-cache mariadb-client
+
+# 安装 pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # 复制 package 文件和锁文件
 COPY package.json pnpm-lock.yaml ./
+
+# 国内网络构建：使用 npm 镜像源（避免 registry.npmjs.org 超时/重置）
+RUN pnpm config set registry https://registry.npmmirror.com \
+  && pnpm config set fetch-retries 5 \
+  && pnpm config set network-concurrency 1
 
 # 只安装生产依赖
 RUN pnpm install --frozen-lockfile --prod && pnpm store prune

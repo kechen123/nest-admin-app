@@ -4,6 +4,7 @@
 
 ## 📋 目录
 
+- [🚀 一键部署（推荐）](#一键部署推荐)
 - [前置要求](#前置要求)
 - [部署架构](#部署架构)
 - [服务器准备](#服务器准备)
@@ -17,16 +18,65 @@
 
 ---
 
+## 🚀 一键部署（推荐）
+
+**不想在服务器上一个一个手动配置？使用自动化脚本！**
+
+### 快速开始（3 步完成）
+
+```bash
+# 1. 在服务器上克隆项目
+cd /opt/app
+git clone <your-repo-url> yl
+cd yl
+
+# 2. 初始化服务器环境（自动安装 Node.js, pnpm, PM2, MySQL, Nginx）
+sudo bash scripts/pm2/setup-server.sh
+
+# 3. 配置环境变量后一键部署
+cd backend
+cp .env.example .env
+vim .env  # 编辑数据库密码、JWT_SECRET 等
+cd ..
+
+bash scripts/pm2/deploy.sh
+```
+
+### 日常更新（1 条命令）
+
+```bash
+# 在服务器上执行
+cd /opt/app/yl
+bash scripts/pm2/update.sh
+```
+
+就这么简单！无需手动配置。
+
+### 脚本说明
+
+| 脚本 | 功能 | 使用场景 |
+|-----|------|---------|
+| `setup-server.sh` | 初始化服务器环境 | 首次部署前执行 |
+| `deploy.sh` | 一键完整部署 | 首次部署或重新部署 |
+| `update.sh` | 快速更新代码 | 日常更新部署 |
+| `setup-nginx.sh` | 自动配置 Nginx | 需要配置 Nginx 时 |
+
+**详细说明：** 查看 [scripts/pm2/README.md](../../scripts/pm2/README.md)
+
+---
+
 ## 前置要求
 
 ### 1. 服务器环境要求
 
 **操作系统：**
+
 - Linux（推荐 Ubuntu 20.04+ 或 CentOS 7+）
 - Windows Server（需要额外配置）
 - macOS（开发测试环境）
 
 **硬件要求：**
+
 - CPU: 2 核及以上
 - 内存: 4GB 及以上（推荐 8GB）
 - 磁盘: 20GB 及以上可用空间
@@ -36,6 +86,7 @@
 #### 安装 Node.js
 
 **使用 NodeSource 安装（推荐）：**
+
 ```bash
 # Ubuntu/Debian
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -51,6 +102,7 @@ npm --version
 ```
 
 **或使用 nvm（Node Version Manager）：**
+
 ```bash
 # 安装 nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
@@ -83,6 +135,7 @@ pnpm --version
 #### 安装 MySQL
 
 **Ubuntu/Debian：**
+
 ```bash
 # 更新软件包索引
 sudo apt-get update
@@ -99,6 +152,7 @@ sudo mysql_secure_installation
 ```
 
 **CentOS/RHEL：**
+
 ```bash
 # 安装 MySQL
 sudo yum install -y mysql-server
@@ -115,6 +169,7 @@ sudo mysql_secure_installation
 ```
 
 **验证 MySQL 安装：**
+
 ```bash
 mysql --version
 sudo systemctl status mysql  # 或 mysqld
@@ -123,6 +178,7 @@ sudo systemctl status mysql  # 或 mysqld
 #### 安装 Nginx
 
 **Ubuntu/Debian：**
+
 ```bash
 sudo apt-get update
 sudo apt-get install -y nginx
@@ -133,6 +189,7 @@ sudo systemctl enable nginx
 ```
 
 **CentOS/RHEL：**
+
 ```bash
 sudo yum install -y nginx
 
@@ -142,6 +199,7 @@ sudo systemctl enable nginx
 ```
 
 **验证 Nginx 安装：**
+
 ```bash
 nginx -v
 sudo systemctl status nginx
@@ -165,11 +223,13 @@ pm2 save
 ### 3. 网络要求
 
 确保服务器开放以下端口：
+
 - **80** - HTTP 访问（必需）
 - **443** - HTTPS 访问（推荐）
 - **3000** - 后端 API（可选，如果使用 Nginx 反向代理则不需要对外开放）
 
 **配置防火墙：**
+
 ```bash
 # Ubuntu/Debian
 sudo ufw allow 80/tcp
@@ -254,6 +314,7 @@ EXIT;
 ```
 
 **⚠️ 重要提示：**
+
 - 将 `your_database_name`、`your_db_user`、`your_strong_password` 替换为实际值
 - 密码建议包含大小写字母、数字和特殊字符，长度至少 16 位
 
@@ -307,6 +368,7 @@ vim .env  # 或使用 nano、vi 等编辑器
 ```
 
 **后端环境变量配置示例（backend/.env）：**
+
 ```env
 # 数据库配置
 DB_HOST=localhost
@@ -341,6 +403,7 @@ EOF
 ```
 
 **前端环境变量说明：**
+
 - `VITE_API_BASE_URL`: 后端 API 地址（使用域名，不要使用 localhost）
 - `VITE_APP_TITLE`: 应用标题
 
@@ -382,6 +445,7 @@ pnpm run db:init
 ```
 
 **如果初始化失败，可以手动执行 SQL：**
+
 ```bash
 # 登录 MySQL
 mysql -u your_db_user -p your_database_name
@@ -499,6 +563,7 @@ sudo vim /etc/systemd/system/yl-backend.service
 ```
 
 **服务文件内容：**
+
 ```ini
 [Unit]
 Description=YL Backend Service
@@ -521,6 +586,7 @@ WantedBy=multi-user.target
 ```
 
 **启动服务：**
+
 ```bash
 # 重新加载 systemd
 sudo systemctl daemon-reload
@@ -549,6 +615,7 @@ sudo vim /etc/nginx/sites-available/yl
 ```
 
 **配置文件内容：**
+
 ```nginx
 # 上游服务器配置
 upstream backend {
@@ -663,6 +730,7 @@ sudo vim /etc/my.cnf                          # CentOS/RHEL
 ```
 
 **推荐配置：**
+
 ```ini
 [mysqld]
 # 字符集配置
@@ -683,6 +751,7 @@ long_query_time=2
 ```
 
 **重启 MySQL：**
+
 ```bash
 sudo systemctl restart mysql  # 或 mysqld
 ```
@@ -690,11 +759,13 @@ sudo systemctl restart mysql  # 或 mysqld
 ### 数据库备份
 
 **创建备份脚本：**
+
 ```bash
 sudo vim /opt/scripts/backup-db.sh
 ```
 
 **脚本内容：**
+
 ```bash
 #!/bin/bash
 BACKUP_DIR="/opt/backups/mysql"
@@ -714,11 +785,13 @@ echo "Backup completed: backup_$DATE.sql.gz"
 ```
 
 **设置执行权限：**
+
 ```bash
 sudo chmod +x /opt/scripts/backup-db.sh
 ```
 
 **设置定时任务（每天凌晨 2 点备份）：**
+
 ```bash
 sudo crontab -e
 
@@ -770,6 +843,7 @@ curl http://your-domain.com/api/health
 ### 4. 访问前端页面
 
 在浏览器中访问：
+
 - `http://your-domain.com`
 - `http://your-server-ip`
 
@@ -796,12 +870,14 @@ sudo tail -f /var/log/nginx/yl-error.log
 ### Q1: 后端服务启动失败
 
 **可能原因：**
+
 - 端口被占用
 - 环境变量配置错误
 - 数据库连接失败
 - 依赖未正确安装
 
 **解决方法：**
+
 ```bash
 # 检查端口占用
 netstat -tlnp | grep :3000
@@ -819,11 +895,13 @@ pm2 logs yl-backend --lines 100
 ### Q2: 前端页面无法访问
 
 **可能原因：**
+
 - Nginx 配置错误
 - 前端文件路径不正确
 - 权限问题
 
 **解决方法：**
+
 ```bash
 # 检查 Nginx 配置
 sudo nginx -t
@@ -838,11 +916,13 @@ sudo tail -f /var/log/nginx/yl-error.log
 ### Q3: API 请求失败
 
 **可能原因：**
+
 - 后端服务未启动
 - Nginx 代理配置错误
 - CORS 配置问题
 
 **解决方法：**
+
 ```bash
 # 检查后端服务
 pm2 status
@@ -857,11 +937,13 @@ cat /opt/app/yl/backend/.env | grep CORS
 ### Q4: 数据库连接失败
 
 **可能原因：**
+
 - MySQL 服务未启动
 - 数据库用户权限不足
 - 密码配置错误
 
 **解决方法：**
+
 ```bash
 # 检查 MySQL 服务
 sudo systemctl status mysql
@@ -925,16 +1007,19 @@ ps aux | grep node
 ### 性能优化
 
 **后端优化：**
+
 - 使用 PM2 集群模式（多进程）
 - 启用 Node.js 性能监控
 - 配置适当的日志级别
 
 **数据库优化：**
+
 - 定期优化表
 - 添加必要的索引
 - 配置查询缓存
 
 **Nginx 优化：**
+
 - 启用 Gzip 压缩
 - 配置静态资源缓存
 - 调整 worker 进程数
@@ -946,4 +1031,3 @@ ps aux | grep node
 - [部署方式对比](./index.md) - 了解不同部署方式的特点
 - [Docker 部署指南](./docker.md) - Docker 容器化部署方式
 - [自动部署指南](./automation.md) - 配置 CI/CD 自动部署
-
