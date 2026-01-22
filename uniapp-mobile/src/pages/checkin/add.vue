@@ -76,8 +76,8 @@ async function uploadSingleImage(tempFilePath: string, index: number) {
             // 后端返回格式: { code: 200, data: { url: '...', path: '...', ... }, msg: '...' }
             const result = responseData?.data || responseData
             // TODO: 修改为后端返回的URL
-            let imageUrl = result?.url || result?.path || result
-            // const imageUrl = `http://192.168.0.101:3000${result?.path}`
+            // let imageUrl = result?.url || result?.path || result
+            let imageUrl = `http://116.196.101.204${result?.path}`
 
             // 确保 imageUrl 是字符串类型
             if (typeof imageUrl !== 'string') {
