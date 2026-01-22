@@ -61,6 +61,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
     networks:
       - app-network
 
@@ -70,6 +71,13 @@ services:
       dockerfile: ./docker/web/Dockerfile.prod
     container_name: yl-web-prod
     restart: always
+    healthcheck:
+      # nginx:alpine 镜像有 wget，使用它来检查服务是否就绪
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - app-network
 
@@ -98,8 +106,10 @@ services:
       #     └── privkey.pem
       # - ./docker/nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
-      - backend
-      - web
+      backend:
+        condition: service_healthy
+      web:
+        condition: service_healthy
     networks:
       - app-network
 
