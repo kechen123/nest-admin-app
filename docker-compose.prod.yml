@@ -73,7 +73,8 @@ services:
     restart: always
     healthcheck:
       # 使用 curl 检查服务是否就绪（nginx:alpine 镜像有 curl）
-      test: ["CMD", "curl", "-f", "http://localhost:80", "||", "exit", "1"]
+      # curl -f 会在 HTTP 错误时返回非零退出码，符合健康检查要求
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 10s
       timeout: 5s
       retries: 5
