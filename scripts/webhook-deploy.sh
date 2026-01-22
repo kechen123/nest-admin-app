@@ -29,7 +29,7 @@ cd "$DEPLOY_PATH" || {
 if [ ! -d ".git" ]; then
     log "错误: 当前目录不是 Git 仓库"
     exit 1
-}
+fi
 
 # 拉取最新代码
 log "正在拉取最新代码..."
