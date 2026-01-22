@@ -102,9 +102,75 @@ curl -I https://www.baidu.com || true
 
 ### Ubuntu/Debian：安装 Docker 与 Compose
 
-> **国内服务器推荐（方案 A）**：先把 Ubuntu 的 apt 源切换为国内镜像（下载更稳定），再使用 Docker 官方仓库安装 Docker Engine，最后配置 Docker 镜像加速（拉镜像走国内）。
+#### 方案 A：国内服务器推荐（阿里云镜像源）
 
-#### 0)（可选但推荐）切换 apt 源为国内镜像
+> ⚠️ **如果你在国内服务器（如阿里云、腾讯云、京东云等）上安装，遇到 `curl: (35) Recv failure: Connection reset by peer` 或 `gpg: no valid OpenPGP data found` 错误，请直接使用此方案。**
+
+此方案使用阿里云 Docker CE 镜像源，解决国内网络访问 Docker 官方源不稳定的问题：
+
+```bash
+# 1) 更新系统并安装基础工具
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg lsb-release
+
+# 2) 创建密钥目录
+sudo install -m 0755 -d /etc/apt/keyrings
+
+# 3) 使用阿里云镜像源下载 GPG 密钥（关键步骤）
+curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# 4) 添加阿里云 Docker 仓库（自动识别 Ubuntu 版本）
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(. /etc/os-release && echo ${VERSION_CODENAME}) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 5) 更新索引并安装 Docker Engine + Compose v2
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 6) 启动并设置开机自启
+sudo systemctl enable --now docker
+
+# 7) 验证安装
+docker --version
+docker compose version
+```
+
+#### 方案 B：使用 Docker 官方源（海外服务器或网络良好时使用）
+
+如果您的服务器在海外，或网络可以稳定访问 Docker 官方源，可以使用官方源：
+
+```bash
+# 1) 更新系统并安装基础工具
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg lsb-release
+
+# 2) 创建密钥目录
+sudo install -m 0755 -d /etc/apt/keyrings
+
+# 3) 添加 Docker 官方 GPG 密钥
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# 4) 添加 Docker 官方仓库（使用系统 VERSION_CODENAME，比如 jammy/noble）
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo ${VERSION_CODENAME}) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 5) 安装 Docker Engine + Compose v2
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 6) 启动并设置开机自启
+sudo systemctl enable --now docker
+
+# 7) 验证
+docker --version
+docker compose version
+```
+
+#### （可选）切换 Ubuntu apt 源为国内镜像
+
+如果下载 Ubuntu 软件包较慢，可以切换 apt 源为国内镜像（如清华、阿里云等）：
 
 Ubuntu 22.04/24.04 可能使用两种 apt 源配置方式：
 
@@ -116,6 +182,7 @@ Ubuntu 22.04/24.04 可能使用两种 apt 源配置方式：
 ```bash
 # 以清华镜像为例：将 archive/security 替换为国内镜像
 sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|https://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g; s|http://security.ubuntu.com/ubuntu/|https://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g' /etc/apt/sources.list
+sudo apt-get update
 ```
 
 **如果存在 `ubuntu.sources`（Ubuntu 24.04 常见）：**
@@ -123,72 +190,7 @@ sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|https://mirrors.tuna.tsinghua.e
 ```bash
 # 以清华镜像为例：替换 ubuntu.sources 内的 URIs
 sudo sed -i 's|http://archive.ubuntu.com/ubuntu|https://mirrors.tuna.tsinghua.edu.cn/ubuntu|g; s|http://security.ubuntu.com/ubuntu|https://mirrors.tuna.tsinghua.edu.cn/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
-```
-
-更新索引并安装基础工具：
-
-```bash
 sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg lsb-release
-```
-
-#### 1) 添加 Docker 官方仓库并安装 Docker Engine（含 Compose v2）
-
-```bash
-# 1) 添加 Docker 官方 GPG 密钥
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-# 2) 添加 Docker 官方仓库（使用系统 VERSION_CODENAME，比如 jammy/noble）
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo ${VERSION_CODENAME}) stable" \
-  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# 3) 安装 Docker Engine + Compose v2
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# 4) 启动并设置开机自启
-sudo systemctl enable --now docker
-
-# 5) 验证
-docker --version
-docker compose version
-```
-
-#### 如果 `apt-get update` 拉取 Docker 源时 TLS 握手失败（国内服务器常见）
-
-有些国内网络环境下，`curl` 能访问 `download.docker.com`，但 `apt-get update` 会报类似错误：
-
-- `Could not handshake: The TLS connection was non-properly terminated`
-
-这会导致 `docker-ce` 一直显示 `Candidate: (none)`，从而无法安装。
-
-推荐做法：把 Docker CE 的 apt 源切换为国内镜像（例如阿里云 docker-ce 镜像）。
-
-以 Ubuntu 24.04（`noble`）为例（其它 Ubuntu 版本同样适用，会自动取 `VERSION_CODENAME`）：
-
-```bash
-# 1) 基础依赖
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg
-
-# 2) 使用阿里云 docker-ce 镜像源的 gpg
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-# 3) 将 download.docker.com 替换为 mirrors.aliyun.com
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(. /etc/os-release && echo ${VERSION_CODENAME}) stable" \
-  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# 4) 更新索引并安装
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# 5) 验证
-docker --version
-docker compose version
 ```
 
 #### 如果你在 Ubuntu 执行 `systemctl enable --now docker` 报错
