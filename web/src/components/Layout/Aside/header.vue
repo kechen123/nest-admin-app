@@ -1,8 +1,8 @@
 <template>
   <div class="aside-header" :class="{ 'is-collapse': isCollapse }">
     <!-- <Logo /> -->
-    <div class="title" v-show="!isCollapse">YL1 Admin</div>
-    <div class="title-collapse" v-show="isCollapse">YL</div>
+    <div class="title" v-show="!isCollapse">Vue3 Admin</div>
+    <div class="title-collapse" v-show="isCollapse">V</div>
   </div>
 </template>
 
