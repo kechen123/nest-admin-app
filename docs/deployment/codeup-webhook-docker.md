@@ -351,7 +351,98 @@ cd /opt/app/yl
 docker compose -f docker-compose.prod.yml run --rm backend npm run db:init
 ```
 
-### 4.8 验证部署
+### 4.8 配置数据库本地访问（可选）
+
+在首次手动部署时，如果需要从本地电脑访问服务器上的 MySQL 数据库（用于调试、数据查看等），需要配置数据库本地访问。
+
+#### 4.8.1 确认端口映射配置
+
+检查 `docker-compose.prod.yml` 中的 MySQL 端口配置：
+
+```yaml
+mysql:
+  ports:
+    - "127.0.0.1:3306:3306"  # 仅绑定到服务器本机，安全
+```
+
+> ✅ **说明**：此配置已经将 MySQL 端口映射到服务器本机的 3306 端口，但只绑定到 `127.0.0.1`，不会直接暴露到公网，更安全。
+
+#### 4.8.2 配置 MySQL 允许外部连接（如果需要）
+
+默认情况下，MySQL 容器已经配置了允许外部连接的权限。如果需要手动配置，可以执行：
+
+```bash
+# 进入 MySQL 容器
+docker exec -it yl-mysql-prod mysql -uroot -p
+
+# 在 MySQL 中执行（替换 your_password 为实际密码）
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'your_password' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+> ⚠️ **注意**：生产环境建议使用专用数据库用户，而不是 root 用户。
+
+#### 4.8.3 从本地电脑访问数据库（推荐使用 SSH 隧道）
+
+由于 MySQL 端口只绑定到服务器本机（`127.0.0.1:3306`），从本地电脑访问需要使用 SSH 隧道：
+
+**在本地电脑执行**（替换 `user@server-ip` 为实际信息）：
+
+```bash
+# 建立 SSH 隧道，将本地 3306 端口转发到服务器的 3306 端口
+ssh -L 3306:127.0.0.1:3306 user@your-server-ip
+
+# 保持这个 SSH 连接打开，然后在另一个终端窗口中使用数据库客户端连接
+```
+
+**数据库客户端连接配置**：
+
+- **Host**: `127.0.0.1` 或 `localhost`
+- **Port**: `3306`
+- **Username**: `root`（或您在 `.env` 中配置的用户名）
+- **Password**: 您在 `backend/.env` 中配置的 `DB_PASSWORD`
+
+**使用图形化工具（如 Navicat、DBeaver、MySQL Workbench）**：
+
+1. 创建新的数据库连接
+2. 连接类型选择：`Standard (TCP/IP)`
+3. Host: `127.0.0.1`
+4. Port: `3306`
+5. Username: `root`
+6. Password: 输入您的数据库密码
+7. 测试连接
+
+#### 4.8.4 验证数据库连接
+
+**在服务器上测试**：
+
+```bash
+# 测试本地连接
+docker exec -it yl-mysql-prod mysql -uroot -p -e "SHOW DATABASES;"
+
+# 或者使用 MySQL 客户端（如果已安装）
+mysql -h 127.0.0.1 -P 3306 -uroot -p
+```
+
+**从本地电脑测试**（需要先建立 SSH 隧道）：
+
+```bash
+# 在本地电脑执行（需要先建立 SSH 隧道）
+mysql -h 127.0.0.1 -P 3306 -uroot -p
+```
+
+#### 4.8.5 安全建议
+
+1. ✅ **使用 SSH 隧道**：推荐方式，不需要开放 MySQL 端口到公网
+2. ✅ **仅绑定到 127.0.0.1**：`docker-compose.prod.yml` 已配置，MySQL 不会直接暴露到公网
+3. ✅ **使用强密码**：确保 `DB_PASSWORD` 是强密码
+4. ✅ **创建专用数据库用户**：生产环境建议创建专用用户，而不是使用 root
+5. ⚠️ **防火墙配置**：确保服务器防火墙不放行 3306 端口到公网
+
+> 📝 **提示**：如果不需要从本地访问数据库，可以跳过此步骤。容器内的应用仍然可以通过容器网络正常访问数据库。
+
+### 4.9 验证部署
 
 ```bash
 # 查看所有容器状态
