@@ -33,14 +33,14 @@ fi
 
 # 拉取最新代码
 log "正在拉取最新代码..."
-git fetch origin main || {
+git fetch origin love-map || {
     log "错误: git fetch 失败"
     exit 1
 }
 
 # 获取当前分支和最新提交信息
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-LATEST_COMMIT=$(git rev-parse origin/main)
+LATEST_COMMIT=$(git rev-parse origin/love-map)
 CURRENT_COMMIT=$(git rev-parse HEAD)
 
 log "当前分支: $CURRENT_BRANCH"
@@ -53,18 +53,18 @@ if [ "$CURRENT_COMMIT" = "$LATEST_COMMIT" ]; then
     exit 0
 fi
 
-# 切换到 main 分支（如果不在）
-if [ "$CURRENT_BRANCH" != "main" ]; then
-    log "切换到 main 分支..."
-    git checkout main || {
-        log "错误: 无法切换到 main 分支"
+# 切换到 love-map 分支（如果不在）
+if [ "$CURRENT_BRANCH" != "love-map" ]; then
+    log "切换到 love-map 分支..."
+    git checkout love-map || {
+        log "错误: 无法切换到 love-map 分支"
         exit 1
     }
 fi
 
 # 拉取代码
 log "正在合并最新代码..."
-git pull origin main || {
+git pull origin love-map || {
     log "错误: git pull 失败"
     exit 1
 }
