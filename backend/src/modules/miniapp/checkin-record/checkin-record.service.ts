@@ -117,23 +117,38 @@ export class CheckinRecordService {
   /**
    * 获取地图标记点（用于地图展示）
    */
-  async getMapMarkers(userId: number, includePublic: boolean = false): Promise<CheckinRecord[]> {
+  async getMapMarkers(userId?: number, includePublic: boolean = true): Promise<CheckinRecord[]> {
     const queryBuilder = this.recordRepository.createQueryBuilder('record')
       .leftJoinAndSelect('record.user', 'user')
       .where('record.status = :status', { status: 1 })
       .andWhere('record.deletedAt IS NULL');
 
-    // 获取用户的另一半ID
-    const couple = await this.coupleService.getCoupleInfo(userId);
-    const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
-
+    // includePublic 默认为 true，查询全部公开打卡记录
     if (includePublic) {
-      // 查询用户、另一半和公开的打卡
-      queryBuilder.andWhere(
-        '(record.userId = :userId OR record.userId = :partnerId OR record.isPublic = 1)',
-        { userId, partnerId: partnerId || -1 }
-      );
+      if (userId) {
+        // 如果用户已登录，获取用户的另一半ID
+        const couple = await this.coupleService.getCoupleInfo(userId);
+        const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
+        
+        // 查询用户、另一半和公开的打卡
+        queryBuilder.andWhere(
+          '(record.userId = :userId OR record.userId = :partnerId OR record.isPublic = 1)',
+          { userId, partnerId: partnerId || -1 }
+        );
+      } else {
+        // 未登录用户，只查询公开的打卡
+        queryBuilder.andWhere('record.isPublic = 1');
+      }
     } else {
+      // includePublic 为 false，需要 userId，查询我和绑定用户的打卡记录
+      if (!userId) {
+        throw new BadRequestException('includePublic 为 false 时需要用户登录');
+      }
+      
+      // 获取用户的另一半ID
+      const couple = await this.coupleService.getCoupleInfo(userId);
+      const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
+      
       // 只查询用户和另一半的打卡
       queryBuilder.andWhere(
         '(record.userId = :userId OR record.userId = :partnerId)',
