@@ -60,13 +60,13 @@ export class CheckinRecordController {
   }
 
   @Get('map/markers')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '获取地图标记点' })
   @ApiResponse({ status: 200, type: [CheckinRecord] })
   async getMapMarkers(@Req() req: any, @Query('includePublic') includePublic?: string) {
+    // 不强制要求登录，如果有登录信息则使用
     const userId = req.user?.userId || req.user?.id;
-    const includePublicBool = includePublic === 'true';
+    // 默认 includePublic 为 true，如果传入了 'false' 字符串则为 false
+    const includePublicBool = includePublic === undefined || includePublic === 'true';
     return await this.recordService.getMapMarkers(userId, includePublicBool);
   }
 
