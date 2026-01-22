@@ -89,20 +89,8 @@ services:
     ports:
       # 标准 HTTP 端口
       - "80:80"
-      # HTTPS 端口
-      - "443:443"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # SSL 证书目录
-      # 证书目录结构（在服务器上）：
-      # /etc/nginx/ssl/
-      # ├── admin.kcyl916.cn/
-      # │   ├── kcyl916.cn.pem
-      # │   └── kcyl916.cn.key
-      # └── api.kcyl916.cn/
-      #     ├── kcyl916.cn.pem
-      #     └── kcyl916.cn.key
-      - /etc/nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       backend:
         condition: service_healthy
