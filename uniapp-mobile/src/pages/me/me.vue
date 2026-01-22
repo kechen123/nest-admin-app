@@ -34,24 +34,28 @@ async function loadStatistics() {
 
 // 页面挂载时加载统计数据
 onMounted(() => {
-  loadStatistics()
-  console.log('onMounted>>>>>>>>>>>>>>>>')
-  console.log(userInfo.value)
-  if (userInfo.value.userId === -1) {
-    userStore.fetchUserInfo()
+  if (tokenStore.hasLogin) {
+    loadStatistics()
+    console.log('onMounted>>>>>>>>>>>>>>>>')
+    console.log(userInfo.value)
+    if (userInfo.value.userId === -1) {
+      userStore.fetchUserInfo()
+    }
   }
 })
 
 onShow(() => {
-  console.log('onShow>>>>>>>>>>>>', userInfo.value)
-  if (userInfo.value.userId !== -1 && !userInfo.value.hasPartner) {
-    // generateInviteCode()
+  if (tokenStore.hasLogin) {
+    console.log('onShow>>>>>>>>>>>>', userInfo.value)
+    if (userInfo.value.userId !== -1 && !userInfo.value.hasPartner) {
+      // generateInviteCode()
+    }
   }
 })
 
 // 微信小程序下登录
 async function handleLogin() {
-  await tokenStore.wxLogin()
+  await tokenStore.miniappWxLogin()
 }
 
 function handleLogout() {

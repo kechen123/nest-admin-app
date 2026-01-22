@@ -24,6 +24,7 @@ import { QueryCheckinDto } from './dto/query-checkin.dto';
 import { CheckinRecord } from './checkin-record.entity';
 import { PaginationResponseDto } from '../../../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../../auth/guards/optional-jwt-auth.guard';
 
 @ApiTags('打卡记录')
 @Controller('miniapp/checkin')
@@ -41,6 +42,7 @@ export class CheckinRecordController {
   }
 
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: '分页查询打卡记录' })
   @ApiResponse({ status: 200, type: PaginationResponseDto })
   async findAll(@Req() req: any, @Query() queryDto: QueryCheckinDto) {
@@ -60,6 +62,7 @@ export class CheckinRecordController {
   }
 
   @Get('map/markers')
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: '获取地图标记点' })
   @ApiResponse({ status: 200, type: [CheckinRecord] })
   async getMapMarkers(@Req() req: any, @Query('includePublic') includePublic?: string) {

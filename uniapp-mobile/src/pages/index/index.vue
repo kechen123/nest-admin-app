@@ -6,6 +6,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { getMapMarkers } from '@/api/checkin'
 import { useCheckinStore } from '@/store/checkin'
 import { mergeMarkerImage } from '@/utils/imageMerge'
+import { useTokenStore } from '@/store/token'
 
 defineOptions({
   name: 'Home',
@@ -20,6 +21,7 @@ definePage({
   },
 })
 
+const tokenStore = useTokenStore()
 const checkinStore = useCheckinStore()
 const { records } = storeToRefs(checkinStore)
 const lastRefreshTime = ref(0) // 上次刷新时间
@@ -154,7 +156,7 @@ function getCurrentLocation() {
 async function loadMapMarkers() {
   try {
     // 只加载公开打卡数据
-    const apiMarkers = await getMapMarkers(true)
+    const apiMarkers = await getMapMarkers(showPublicCheckins.value)
     const promises = apiMarkers.map(async (record: any) => {
       const iconPath = await mergeMarkerImage({
         canvasId: 'canvas-marker',
@@ -324,19 +326,15 @@ function goToDetail(id: string | number) {
 
 <template>
   <view class="home-container">
-    <canvas
-      id="canvas-marker" canvas-id="canvas-marker"
-      style="width: 200px; height: 200px;position: absolute; top: -500rpx; left: -500rpx; z-index: -1;"
-    />
+    <canvas id="canvas-marker" canvas-id="canvas-marker"
+      style="width: 200px; height: 200px;position: absolute; top: -500rpx; left: -500rpx; z-index: -1;" />
     <!-- 地图区域 - 全屏背景 -->
     <view class="map-section">
       <view class="map-container">
-        <map
-          :latitude="mapLatitude" :longitude="mapLongitude" :scale="mapScale" :markers="mapMarkers"
-          :show-location="true" class="map" @markertap="onMarkerTap"
-        />
+        <map :latitude="mapLatitude" :longitude="mapLongitude" :scale="mapScale" :markers="mapMarkers"
+          :show-location="true" class="map" @markertap="onMarkerTap" />
         <!-- 悬浮开关 -->
-        <view class="map-switch-float">
+        <view class="map-switch-float" v-if="tokenStore.hasLogin">
           <text class="switch-text">{{ showPublicCheckins ? '隐藏' : '显示' }}公开打卡</text>
           <switch color="#ff6b9d" :checked="showPublicCheckins" @change="togglePublicCheckins" />
         </view>
@@ -367,12 +365,10 @@ function goToDetail(id: string | number) {
   left: 0;
   right: 0;
   z-index: 10;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 107, 157, 0.95) 0%,
-    rgba(255, 143, 171, 0.9) 50%,
-    rgba(255, 143, 171, 0) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 107, 157, 0.95) 0%,
+      rgba(255, 143, 171, 0.9) 50%,
+      rgba(255, 143, 171, 0) 100%);
   padding: 60rpx 30rpx 80rpx;
   padding-top: calc(60rpx + env(safe-area-inset-top));
   color: #fff;
@@ -604,7 +600,7 @@ function goToDetail(id: string | number) {
 
 .map-switch-float {
   position: absolute;
-  top: 20rpx;
+  bottom: 200rpx;
   right: 20rpx;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 50rpx;
