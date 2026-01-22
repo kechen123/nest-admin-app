@@ -1,13 +1,10 @@
-# 镜像导出脚本 (Windows PowerShell)
-# 使用方法: .\scripts\export-images.ps1
-
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "开始导出 Docker 镜像" -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
 # 检查镜像是否存在
-$backendExists = docker images | Select-String "yl-backend.*latest"
-$webExists = docker images | Select-String "yl-web.*latest"
+$backendExists = docker images | findstr yl-backend
+$webExists = docker images | findstr yl-web
 
 if (-not $backendExists) {
     Write-Host "错误: yl-backend:latest 镜像不存在，请先运行 npm run build" -ForegroundColor Red
@@ -30,16 +27,6 @@ docker save yl-web:latest -o yl-web.tar
 Write-Host "3. 导出完成！文件信息：" -ForegroundColor Green
 Get-ChildItem yl-*.tar | Format-Table Name, @{Label="Size(MB)";Expression={[math]::Round($_.Length/1MB,2)}}, FullName
 
-# 询问是否压缩
-$compress = Read-Host "是否要压缩文件？(Y/N)"
-if ($compress -eq "Y" -or $compress -eq "y") {
-    Write-Host "4. 正在压缩..." -ForegroundColor Yellow
-    Compress-Archive -Path yl-backend.tar -DestinationPath yl-backend.tar.zip -Force
-    Compress-Archive -Path yl-web.tar -DestinationPath yl-web.tar.zip -Force
-    Write-Host "压缩完成！" -ForegroundColor Green
-    Get-ChildItem yl-*.zip | Format-Table Name, @{Label="Size(MB)";Expression={[math]::Round($_.Length/1MB,2)}}
-}
-
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "镜像导出完成！" -ForegroundColor Green
 Write-Host "文件位置: $(Get-Location)" -ForegroundColor Cyan
@@ -47,4 +34,3 @@ Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "上传到服务器后，使用以下命令加载：" -ForegroundColor Yellow
 Write-Host "  docker load -i yl-backend.tar" -ForegroundColor White
 Write-Host "  docker load -i yl-web.tar" -ForegroundColor White
-

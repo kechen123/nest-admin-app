@@ -7,6 +7,7 @@
 - [概述](#概述)
 - [GitHub Actions 自动部署](#github-actions-自动部署)
 - [GitLab CI/CD 自动部署](#gitlab-cicd-自动部署)
+- [云效 Codeup Webhook（推荐）](#云效-codeup-webhook推荐)
 - [Jenkins 自动部署](#jenkins-自动部署)
 - [Webhook 自动部署](#webhook-自动部署)
 - [部署策略](#部署策略)
@@ -32,6 +33,7 @@
 
 - **GitHub Actions** - GitHub 官方 CI/CD 平台
 - **GitLab CI/CD** - GitLab 内置 CI/CD
+- **云效 Codeup** - 阿里云效代码仓库（可通过 Webhook 在 push 时触发服务器部署）
 - **Jenkins** - 开源自动化服务器
 - **自定义 Webhook** - 基于 Webhook 的简单部署
 
@@ -57,6 +59,7 @@
 - `SERVER_DEPLOY_PATH` - 部署路径（如：`/opt/app/yl`）
 
 **获取 SSH 私钥：**
+
 ```bash
 # 在本地生成 SSH 密钥对（如果还没有）
 ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
@@ -216,6 +219,7 @@ jobs:
 #### 1. 安装 GitLab Runner
 
 **在服务器上安装：**
+
 ```bash
 # 下载安装脚本
 curl -L "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh" | sudo bash
@@ -228,6 +232,7 @@ sudo gitlab-runner register
 ```
 
 **注册时需要的信息：**
+
 - GitLab URL: `https://gitlab.com`（或您的 GitLab 实例地址）
 - Registration token: 在 GitLab 项目的 **Settings** → **CI/CD** → **Runners** 中获取
 - Executor: `shell`（或 `docker`）
@@ -322,6 +327,167 @@ deploy_production:
 
 ---
 
+## 云效 Codeup Webhook（推荐）
+
+如果你的服务器在国内、或服务器侧访问 GitHub 不稳定（无法稳定 `git pull`），推荐把**云效 Codeup** 作为部署触发与拉取源：
+
+- 触发：Codeup 在 push 时发送 Webhook
+- 拉取：服务器通过 SSH 从 Codeup 仓库 `git pull`
+- 部署：执行你自己的部署脚本（例如 `docker compose up -d --build` 或其它）
+
+### 新服务器（从 0）除开“服务器初始化”之后要做什么
+
+下面步骤假设你已经完成了文档里的**新服务器初始化**（Docker / Docker Compose 已安装成功），并且你希望达到的效果是：
+
+- 你在本地 push 到 Codeup
+- 服务器自动执行：`git pull` + `docker compose up -d --build`（完成更新）
+
+#### 1) 配置服务器 SSH（用于拉取 Codeup）
+
+推荐使用专用 deploy key（只读即可）：
+
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+
+ssh-keygen -t ed25519 -C "yl-deploy" -f ~/.ssh/yl_deploy -N ""
+chmod 600 ~/.ssh/yl_deploy
+cat ~/.ssh/yl_deploy.pub
+```
+
+把输出的公钥添加到 Codeup 仓库（部署 key / deploy key，建议只读）。
+
+如果 `~/.ssh/config` 不存在，直接新建即可：
+
+```bash
+touch ~/.ssh/config
+chmod 600 ~/.ssh/config
+```
+
+写入（你的仓库 SSH 地址为：`git@codeup.aliyun.com:66f367c65d0a63a08ebe097b/nest-admin-app.git`）：
+
+```sshconfig
+Host codeup
+  HostName codeup.aliyun.com
+  User git
+  IdentityFile ~/.ssh/yl_deploy
+  IdentitiesOnly yes
+```
+
+连通性测试：
+
+```bash
+ssh -T git@codeup.aliyun.com || true
+```
+
+#### 2) 首次部署（先确保不用 Webhook 也能跑起来）
+
+准备目录并克隆代码（从 Codeup）：
+
+```bash
+sudo mkdir -p /opt/app
+sudo chown -R $USER:$USER /opt/app
+cd /opt/app
+git clone git@codeup.aliyun.com:66f367c65d0a63a08ebe097b/nest-admin-app.git yl
+cd /opt/app/yl
+git checkout main || true
+```
+
+准备环境变量并启动服务：
+
+```bash
+cd /opt/app/yl
+
+# 1) 后端运行时环境变量
+cp backend/.env.example backend/.env
+vim backend/.env
+
+# 2) docker compose 变量（用于 ${DB_PASSWORD} 这类替换）
+cat > .env <<'EOF'
+DB_PASSWORD=your_strong_password_here
+DB_DATABASE=your_database_name
+JWT_SECRET=your_jwt_secret_key_here
+EOF
+
+# 3) 启动
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 4) 初始化数据库（首次需要）
+docker compose -f docker-compose.prod.yml run --rm backend npm run db:init
+
+# 5) 验证
+docker compose -f docker-compose.prod.yml ps
+```
+
+> 先让“手动部署”成功一次，再做 webhook 自动化；这样出问题更容易定位。
+
+### 为什么推荐 Codeup Webhook
+
+- **国内网络更稳定**：服务器拉取代码更顺畅
+- **实现简单**：不依赖云效流水线/镜像仓库，直接 push → 触发 → 部署
+- **和 GitHub Webhook 原理一致**：只是“谁来发回调”和“从哪里拉代码”变了
+
+### 前置要求
+
+1. 你的项目代码已托管在云效 Codeup
+2. 服务器已安装 Git，并能通过 SSH 访问 Codeup（建议用专用 deploy key）
+3. 服务器上已部署 webhook 接收服务（见下文“Webhook 自动部署”）
+
+### 服务器端：配置 SSH 拉取 Codeup
+
+推荐使用专用 deploy key（只读即可）：
+
+- 在服务器生成密钥：
+
+```bash
+ssh-keygen -t ed25519 -C "yl-deploy" -f ~/.ssh/yl_deploy -N ""
+cat ~/.ssh/yl_deploy.pub
+```
+
+- 将公钥添加到 Codeup 仓库（作为部署 key/只读 key）
+- 在服务器配置 `~/.ssh/config`（示意）：
+
+```sshconfig
+Host codeup
+  HostName codeup.aliyun.com
+  User git
+  IdentityFile ~/.ssh/yl_deploy
+  IdentitiesOnly yes
+```
+
+> 说明：你的仓库 SSH 地址为：`git@codeup.aliyun.com:66f367c65d0a63a08ebe097b/nest-admin-app.git`
+
+然后把服务器上的仓库 remote 指向 Codeup（示意）：
+
+```bash
+git remote -v
+git remote set-url origin git@codeup.aliyun.com:66f367c65d0a63a08ebe097b/nest-admin-app.git
+git pull origin main
+```
+
+### Codeup 侧：配置 Webhook（push 触发）
+
+在 Codeup 仓库的 Webhook 设置里：
+
+- **URL**：填写你的服务器 webhook 地址（例如 `http://<server-ip>:9000/hooks/deploy-yl`）
+- **事件**：选择 Push（或“代码推送”）
+- **Secret/签名**：如果 Codeup 支持，务必开启（用于防伪造请求）
+
+### 部署脚本（示例：push 后自动更新）
+
+你的 webhook 触发脚本里建议至少包含：
+
+```bash
+set -e
+cd /opt/app/yl
+git pull origin main
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+> 如果你当前是“只占用 3000 端口的 Nginx + Docker 部署”，这种方式最直接。
+
+---
+
 ## Jenkins 自动部署
 
 ### 前置要求
@@ -335,6 +501,7 @@ deploy_production:
 #### 1. 安装 Jenkins 插件
 
 在 Jenkins 中安装以下插件：
+
 - **Git Plugin** - Git 集成
 - **NodeJS Plugin** - Node.js 支持
 - **SSH Pipeline Steps** - SSH 部署
@@ -471,16 +638,25 @@ sudo vim /etc/webhook/hooks.json
 ```
 
 **配置文件内容：**
+
 ```json
 [
   {
     "id": "deploy-yl",
-    "execute-command": "/opt/scripts/deploy.sh",
+    "execute-command": "/opt/app/yl/scripts/pm2/webhook-deploy.sh",
     "command-working-directory": "/opt/app/yl",
-    "response-message": "Deployment triggered"
+    "response-message": "Deployment triggered",
+    "pass-arguments-to-command": [
+      {
+        "source": "payload",
+        "name": "ref"
+      }
+    ]
   }
 ]
 ```
+
+> **提示：** 如果使用 Docker 部署，将 `execute-command` 改为 `/opt/scripts/deploy.sh`
 
 #### 3. 创建部署脚本
 
@@ -488,7 +664,8 @@ sudo vim /etc/webhook/hooks.json
 sudo vim /opt/scripts/deploy.sh
 ```
 
-**脚本内容：**
+**脚本内容（Docker 部署）：**
+
 ```bash
 #!/bin/bash
 set -e
@@ -503,29 +680,28 @@ cd $DEPLOY_PATH
 # 拉取最新代码
 git pull origin main
 
-# 构建后端
-cd backend
-pnpm install --frozen-lockfile
-pnpm run build
-
-# 构建前端
-cd ../web
-pnpm install --frozen-lockfile
-pnpm run build
-
-# 重启服务
-cd ../backend
-pm2 restart yl-backend || pm2 start ecosystem.config.js
-
-# 重启 Nginx
-sudo systemctl reload nginx
+# 使用 docker compose 构建并滚动更新
+docker compose -f docker-compose.prod.yml up -d --build
 
 echo "$(date): Deployment completed" >> $LOG_FILE
 ```
 
-**设置执行权限：**
+**脚本内容（PM2 部署，推荐）：**
+
 ```bash
+#!/bin/bash
+# 直接使用项目提供的 Webhook 部署脚本
+/opt/app/yl/scripts/pm2/webhook-deploy.sh
+```
+
+**设置执行权限：**
+
+```bash
+# Docker 部署
 sudo chmod +x /opt/scripts/deploy.sh
+
+# PM2 部署（使用项目脚本）
+sudo chmod +x /opt/app/yl/scripts/pm2/webhook-deploy.sh
 ```
 
 #### 4. 启动 Webhook 服务
@@ -536,6 +712,7 @@ sudo vim /etc/systemd/system/webhook.service
 ```
 
 **服务文件内容：**
+
 ```ini
 [Unit]
 Description=Webhook Service
@@ -551,6 +728,7 @@ WantedBy=multi-user.target
 ```
 
 **启动服务：**
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl start webhook
@@ -559,12 +737,17 @@ sudo systemctl enable webhook
 
 #### 5. 配置 Git 仓库 Webhook
 
-在 GitHub/GitLab 中，进入项目 **Settings** → **Webhooks**，添加：
+在云效 Codeup 中，进入项目 **Webhooks**，添加：
 
 - **Payload URL**: `http://your-server:9000/hooks/deploy-yl`
 - **Content type**: `application/json`
 - **Secret**: （可选）添加密钥验证
-- **Events**: 选择 `Push events`
+- **Events**: 选择 `Push` / `代码推送`
+
+> 端口说明：
+>
+> - 最简单：直接对外开放 `9000` 给 webhook 服务使用。
+> - 如果你不想额外开放端口：可以把 webhook 服务仅监听本机（127.0.0.1），再用你自己的入口 Nginx（80/443 或其它）做反向代理转发到本机 9000。
 
 ---
 
@@ -575,11 +758,13 @@ sudo systemctl enable webhook
 **概念：** 维护两套完全相同的生产环境，一套运行当前版本（蓝），一套运行新版本（绿）。切换时只需切换流量。
 
 **优点：**
+
 - 零停机时间
 - 快速回滚
 - 风险较低
 
 **缺点：**
+
 - 需要双倍资源
 - 配置复杂
 
@@ -588,10 +773,12 @@ sudo systemctl enable webhook
 **概念：** 逐步替换旧版本实例，每次只更新部分实例。
 
 **优点：**
+
 - 资源利用率高
 - 逐步验证新版本
 
 **缺点：**
+
 - 可能存在版本不一致
 - 回滚较慢
 
@@ -600,10 +787,12 @@ sudo systemctl enable webhook
 **概念：** 先部署到少量服务器，验证无误后再全量部署。
 
 **优点：**
+
 - 风险可控
 - 可以逐步验证
 
 **缺点：**
+
 - 需要流量分流
 - 配置复杂
 
@@ -612,10 +801,12 @@ sudo systemctl enable webhook
 **概念：** 直接替换旧版本，短暂停机。
 
 **优点：**
+
 - 简单直接
 - 配置容易
 
 **缺点：**
+
 - 有短暂停机
 - 回滚需要时间
 
@@ -658,4 +849,3 @@ sudo systemctl enable webhook
 - [Docker 部署指南](./docker.md) - Docker 容器化部署
 - [pnpm 打包部署指南](./pnpm.md) - 传统方式部署
 - [部署方式对比](./index.md) - 了解不同部署方式的特点
-

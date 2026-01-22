@@ -64,7 +64,8 @@ export default defineConfig({
             { text: '概述', link: '/deployment/' },
             { text: 'Docker 部署', link: '/deployment/docker' },
             { text: 'pnpm 打包部署', link: '/deployment/pnpm' },
-            { text: '自动部署', link: '/deployment/automation' }
+            { text: '自动部署', link: '/deployment/automation' },
+            { text: 'Docker + 云效 Webhook 自动部署', link: '/deployment/codeup-webhook-docker' }
           ]
         }
       ]
