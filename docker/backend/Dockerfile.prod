@@ -29,7 +29,8 @@ FROM node:20-alpine
 WORKDIR /app
 
 # 数据库初始化脚本需要 mysql 命令（Alpine 下由 mariadb-client 提供）
-RUN apk add --no-cache mariadb-client
+# wget 用于健康检查
+RUN apk add --no-cache mariadb-client wget
 
 # 安装 pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
