@@ -565,7 +565,7 @@ sudo vim /etc/webhook/hooks.json
 [
   {
     "id": "deploy-yl",
-    "execute-command": "/opt/app/yl/scripts/deploy.sh",
+    "execute-command": "/opt/app/yl/scripts/webhook-deploy.sh",
     "command-working-directory": "/opt/app/yl",
     "response-message": "Deployment triggered successfully",
     "pass-arguments-to-command": [
@@ -658,159 +658,69 @@ curl http://localhost:9000/hooks/deploy-yl
 
 ---
 
-## 第六步：编写部署脚本
+## 第六步：配置部署脚本
 
 部署脚本是自动部署的核心，负责拉取代码、重新构建和启动服务。
 
-### 6.1 创建部署脚本目录
+> ✅ **重要提示**：部署脚本 `scripts/webhook-deploy.sh` 已经存在于代码仓库中，首次部署时会自动包含。您只需要在首次部署后设置执行权限即可，无需手动创建脚本。这样可以避免在服务器上手动创建脚本时可能出现的格式错误或路径问题。
+
+### 6.1 确认脚本已存在
+
+在首次手动部署（第四步）完成后，确认部署脚本已存在：
 
 ```bash
-mkdir -p /opt/app/yl/scripts
+cd /opt/app/yl
+ls -l scripts/webhook-deploy.sh
 ```
 
-### 6.2 创建部署脚本
+如果脚本存在，您应该能看到类似输出：
 
-```bash
-vim /opt/app/yl/scripts/deploy.sh
+```
+-rw-r--r-- 1 user user 1234 date scripts/webhook-deploy.sh
 ```
 
-**部署脚本内容：**
+> 📝 **说明**：如果脚本不存在，请检查代码是否已正确克隆，或确认脚本已提交到代码仓库。
+
+### 6.2 设置脚本执行权限
+
+由于脚本已存在于代码仓库中，只需要设置执行权限：
 
 ```bash
-#!/bin/bash
-
-# 部署脚本 - Docker + Codeup Webhook 自动部署
-# 使用方法：此脚本由 webhook 服务自动调用
-
-set -e  # 遇到错误立即退出
-
-# 配置变量
-DEPLOY_PATH="/opt/app/yl"
-LOG_FILE="/var/log/yl-deploy.log"
-COMPOSE_FILE="docker-compose.prod.yml"
-
-# 日志函数
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
-}
-
-log "=========================================="
-log "开始自动部署..."
-
-# 进入项目目录
-cd "$DEPLOY_PATH" || {
-    log "错误: 无法进入项目目录 $DEPLOY_PATH"
-    exit 1
-}
-
-# 检查 Git 仓库状态
-if [ ! -d ".git" ]; then
-    log "错误: 当前目录不是 Git 仓库"
-    exit 1
-fi
-
-# 拉取最新代码
-log "正在拉取最新代码..."
-git fetch origin main || {
-    log "错误: git fetch 失败"
-    exit 1
-}
-
-# 获取当前分支和最新提交信息
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-LATEST_COMMIT=$(git rev-parse origin/main)
-CURRENT_COMMIT=$(git rev-parse HEAD)
-
-log "当前分支: $CURRENT_BRANCH"
-log "当前提交: $CURRENT_COMMIT"
-log "最新提交: $LATEST_COMMIT"
-
-# 检查是否有更新
-if [ "$CURRENT_COMMIT" = "$LATEST_COMMIT" ]; then
-    log "代码已是最新，无需部署"
-    exit 0
-fi
-
-# 切换到 main 分支（如果不在）
-if [ "$CURRENT_BRANCH" != "main" ]; then
-    log "切换到 main 分支..."
-    git checkout main || {
-        log "错误: 无法切换到 main 分支"
-        exit 1
-    }
-fi
-
-# 拉取代码
-log "正在合并最新代码..."
-git pull origin main || {
-    log "错误: git pull 失败"
-    exit 1
-}
-
-# 检查 docker-compose 文件是否存在
-if [ ! -f "$COMPOSE_FILE" ]; then
-    log "错误: 找不到 $COMPOSE_FILE 文件"
-    exit 1
-fi
-
-# 停止旧容器（优雅停止）
-log "正在停止旧容器..."
-docker compose -f "$COMPOSE_FILE" down || {
-    log "警告: 停止旧容器时出现错误，继续执行..."
-}
-
-# 重新构建并启动服务
-log "正在重新构建和启动服务..."
-docker compose -f "$COMPOSE_FILE" up -d --build || {
-    log "错误: Docker Compose 启动失败"
-    exit 1
-}
-
-# 等待服务启动
-log "等待服务启动..."
-sleep 10
-
-# 检查服务状态
-log "检查服务状态..."
-docker compose -f "$COMPOSE_FILE" ps
-
-# 验证服务健康
-log "验证服务健康状态..."
-HEALTH_CHECK=$(docker compose -f "$COMPOSE_FILE" ps --format json | jq -r '.[] | select(.Service=="backend") | .Health' 2>/dev/null || echo "unknown")
-
-if [ "$HEALTH_CHECK" = "healthy" ] || [ "$HEALTH_CHECK" = "unknown" ]; then
-    log "✅ 部署成功！"
-    log "最新提交: $(git log -1 --oneline)"
-    log "部署时间: $(date '+%Y-%m-%d %H:%M:%S')"
-else
-    log "⚠️  警告: 服务健康检查未通过，请手动检查"
-fi
-
-log "=========================================="
-log ""
-
-exit 0
+cd /opt/app/yl
+chmod +x scripts/webhook-deploy.sh
 ```
 
-### 6.3 设置脚本执行权限
+### 6.3 创建日志目录
+
+创建部署日志文件（如果不存在）：
 
 ```bash
-chmod +x /opt/app/yl/scripts/deploy.sh
+sudo touch /var/log/yl-deploy.log
+sudo chmod 666 /var/log/yl-deploy.log
 ```
 
 ### 6.4 测试部署脚本（可选）
 
 ```bash
 # 手动执行一次脚本，测试是否正常
-/opt/app/yl/scripts/deploy.sh
+/opt/app/yl/scripts/webhook-deploy.sh
 ```
 
-### 6.5 创建日志目录（如果不存在）
+**预期输出：**
 
-```bash
-sudo touch /var/log/yl-deploy.log
-sudo chmod 666 /var/log/yl-deploy.log
 ```
+[2024-01-01 12:00:00] ==========================================
+[2024-01-01 12:00:00] 开始自动部署...
+[2024-01-01 12:00:00] 正在拉取最新代码...
+...
+```
+
+> 💡 **优势**：
+> 
+> - ✅ 脚本已存在于代码仓库，首次克隆后自动包含
+> - ✅ 无需在服务器上手动创建脚本，避免格式错误
+> - ✅ 脚本版本与代码同步，便于维护和更新
+> - ✅ 减少部署步骤，提高部署效率
 
 ---
 
