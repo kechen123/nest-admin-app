@@ -30,6 +30,7 @@
 ```
 
 **优势：**
+
 - ✅ 国内网络稳定，服务器拉取代码速度快
 - ✅ 实现简单，无需复杂的 CI/CD 流水线
 - ✅ 自动化程度高，推送代码后自动部署
@@ -132,6 +133,7 @@ timedatectl status
 3. 点击 **克隆** → **SSH**，复制 SSH 地址
 
 **示例地址格式：**
+
 ```
 git@codeup.aliyun.com:66f367c65d0a63a08ebe097b/nest-admin-app.git
 ```
@@ -167,6 +169,7 @@ cat ~/.ssh/yl_deploy.pub
 ```
 
 **输出示例：**
+
 ```
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx yl-deploy
 ```
@@ -205,7 +208,7 @@ vim ~/.ssh/config
 **在配置文件中添加以下内容**：
 
 ```sshconfig
-Host codeup
+Host codeup codeup.aliyun.com
   HostName codeup.aliyun.com
   User git
   IdentityFile ~/.ssh/yl_deploy
@@ -214,6 +217,9 @@ Host codeup
 ```
 
 **说明**：
+
+- `Host codeup codeup.aliyun.com` 表示这个配置同时匹配 `codeup` 别名和 `codeup.aliyun.com` 主机名
+- 这样无论使用 `ssh -T codeup` 还是 `ssh -T git@codeup.aliyun.com` 都能正常工作
 - 如果 `~/.ssh/config` 文件已存在，请将上述内容**追加**到文件末尾（不要覆盖原有内容）
 - 如果文件是空的，直接添加即可
 - 保存文件后退出编辑器（vim: 按 `Esc`，然后输入 `:wq` 回车；nano: 按 `Ctrl+X`，然后按 `Y` 确认保存）
@@ -229,6 +235,7 @@ ssh -T codeup
 ```
 
 **成功示例输出：**
+
 ```
 Welcome to Codeup, your-name!
 ```
@@ -289,6 +296,7 @@ git pull origin main
 ```
 
 **如何获取您的仓库 SSH 地址：**
+
 1. 登录 [云效 Codeup](https://codeup.aliyun.com/)
 2. 进入您的项目仓库
 3. 点击 **克隆** → **SSH**，复制 SSH 地址
@@ -343,6 +351,7 @@ EOF
 ```
 
 > 📝 **为什么需要两个 .env 文件？**
+>
 > - `backend/.env` - 后端应用运行时读取的环境变量
 > - 根目录 `.env` - docker-compose 在解析配置文件时使用的变量（用于 `${DB_PASSWORD}` 等变量替换）
 
@@ -369,6 +378,7 @@ docker compose -f docker-compose.prod.yml ps
 ```
 
 **预期输出：**
+
 ```
 NAME                IMAGE                    STATUS
 yl-mysql-prod       mysql:8.0                Up
@@ -579,6 +589,7 @@ sudo vim /etc/webhook/hooks.json
 ```
 
 **配置说明：**
+
 - `id`: Webhook 的唯一标识符
 - `execute-command`: 部署脚本的完整路径
 - `command-working-directory`: 执行脚本的工作目录
@@ -628,6 +639,7 @@ sudo systemctl status webhook
 ```
 
 **预期输出：**
+
 ```
 ● webhook.service - Webhook Service
    Loaded: loaded (/etc/systemd/system/webhook.service; enabled)
@@ -819,11 +831,13 @@ curl ifconfig.me
 ```
 
 **Webhook 地址格式：**
+
 ```
 http://your-server-ip:9000/hooks/deploy-yl
 ```
 
 > ⚠️ **安全提示**：
+>
 > - 如果您的服务器有公网 IP，可以直接使用
 > - 如果服务器在内网，需要配置端口转发或使用内网穿透
 > - 建议配置防火墙，只允许 Codeup 的 IP 访问 9000 端口
@@ -846,7 +860,7 @@ http://your-server-ip:9000/hooks/deploy-yl
 - **分支过滤**（可选）：`main`（仅 main 分支推送时触发）
 - **Secret**（可选但推荐）：设置一个密钥，用于验证请求来源
 
-5. 点击 **保存** 或 **确定**
+1. 点击 **保存** 或 **确定**
 
 ### 7.3 测试 Webhook 连接
 
@@ -862,6 +876,7 @@ curl -X POST http://localhost:9000/hooks/deploy-yl \
 ```
 
 **预期响应：**
+
 ```
 Deployment triggered successfully
 ```
@@ -921,6 +936,7 @@ curl http://localhost:3000
 ### 8.5 验证成功标志
 
 ✅ **部署成功的标志：**
+
 - Webhook 日志显示请求已接收
 - 部署脚本日志显示 "部署成功！"
 - Docker 容器已重新构建并启动
@@ -949,11 +965,13 @@ which webhook
 ```
 
 **常见原因：**
+
 - webhook 命令路径不正确
 - hooks.json 配置文件格式错误
 - 端口 9000 已被占用
 
 **解决方法：**
+
 - 修正 `webhook.service` 中的 `ExecStart` 路径
 - 检查 JSON 格式：`cat /etc/webhook/hooks.json | jq .`
 - 检查端口占用：`sudo netstat -tlnp | grep 9000`
@@ -981,11 +999,13 @@ curl -X POST http://localhost:9000/hooks/deploy-yl \
 ```
 
 **常见原因：**
+
 - 防火墙未放行 9000 端口
 - Codeup Webhook URL 配置错误
 - 服务器 IP 地址变更
 
 **解决方法：**
+
 - 放行防火墙：`sudo ufw allow 9000/tcp`
 - 检查 Codeup Webhook 配置中的 URL 是否正确
 - 确认服务器 IP 地址
@@ -1010,11 +1030,13 @@ git pull origin main
 ```
 
 **常见原因：**
+
 - SSH 密钥未正确配置
 - Git remote URL 不正确
 - 网络连接问题
 
 **解决方法：**
+
 - 重新配置 SSH 密钥（参考第三步）
 - 检查并修正 Git remote URL：`git remote set-url origin git@codeup.aliyun.com:...`
 - 检查网络连接
@@ -1040,12 +1062,14 @@ sudo journalctl -u docker -n 50
 ```
 
 **常见原因：**
+
 - Docker 服务未运行
 - 磁盘空间不足
 - Dockerfile 或配置文件错误
 - 网络问题导致无法拉取镜像
 
 **解决方法：**
+
 - 启动 Docker：`sudo systemctl start docker`
 - 清理磁盘空间：`docker system prune -a`
 - 检查 Dockerfile 和配置文件
@@ -1073,12 +1097,14 @@ curl http://localhost:3000
 ```
 
 **常见原因：**
+
 - 端口映射配置错误
 - Nginx 配置错误
 - 后端服务未正常启动
 - 防火墙未放行端口
 
 **解决方法：**
+
 - 检查 `docker-compose.prod.yml` 中的端口映射
 - 检查 Nginx 配置文件
 - 查看后端服务日志，排查启动错误
@@ -1184,6 +1210,7 @@ sudo vim /etc/logrotate.d/yl-deploy
 ```
 
 **内容：**
+
 ```
 /var/log/yl-deploy.log {
     daily
@@ -1202,6 +1229,7 @@ sudo vim /etc/logrotate.d/yl-deploy
 恭喜！您已经成功配置了 Docker + 云效 Codeup + Webhook 自动部署系统。
 
 **现在的工作流程：**
+
 1. ✅ 本地开发并提交代码
 2. ✅ 推送到 Codeup 仓库
 3. ✅ Codeup 自动触发 Webhook
@@ -1209,11 +1237,13 @@ sudo vim /etc/logrotate.d/yl-deploy
 5. ✅ 服务自动更新，无需手动操作
 
 **后续维护：**
+
 - 定期查看部署日志：`tail -f /var/log/yl-deploy.log`
 - 监控服务状态：`docker compose -f /opt/app/yl/docker-compose.prod.yml ps`
 - 更新代码后自动部署，无需手动操作
 
 **相关文档：**
+
 - [Docker 部署指南](./docker.md) - 详细的 Docker 部署说明
 - [自动部署指南](./automation.md) - 其他自动部署方案
 - [故障排查](./docker.md#故障排查) - 更多故障排查方法
