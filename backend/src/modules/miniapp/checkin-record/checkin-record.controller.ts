@@ -27,12 +27,12 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 
 @ApiTags('打卡记录')
 @Controller('miniapp/checkin')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth('JWT-auth')
 export class CheckinRecordController {
   constructor(private readonly recordService: CheckinRecordService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '创建打卡记录' })
   @ApiResponse({ status: 201, type: CheckinRecord })
   async create(@Req() req: any, @Body() createDto: CreateCheckinDto) {
@@ -44,11 +44,14 @@ export class CheckinRecordController {
   @ApiOperation({ summary: '分页查询打卡记录' })
   @ApiResponse({ status: 200, type: PaginationResponseDto })
   async findAll(@Req() req: any, @Query() queryDto: QueryCheckinDto) {
+    // 不强制要求登录，如果有登录信息则使用
     const userId = req.user?.userId || req.user?.id;
     return await this.recordService.findAll(queryDto, userId);
   }
 
   @Get('statistics')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '获取打卡统计' })
   @ApiResponse({ status: 200 })
   async getStatistics(@Req() req: any) {
@@ -57,6 +60,8 @@ export class CheckinRecordController {
   }
 
   @Get('map/markers')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '获取地图标记点' })
   @ApiResponse({ status: 200, type: [CheckinRecord] })
   async getMapMarkers(@Req() req: any, @Query('includePublic') includePublic?: string) {
@@ -66,6 +71,8 @@ export class CheckinRecordController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '获取打卡记录详情' })
   @ApiResponse({ status: 200, type: CheckinRecord })
   async findOne(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
@@ -74,6 +81,8 @@ export class CheckinRecordController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '更新打卡记录' })
   @ApiResponse({ status: 200, type: CheckinRecord })
   async update(
@@ -86,6 +95,8 @@ export class CheckinRecordController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '删除打卡记录' })
   @ApiResponse({ status: 200 })
   async remove(@Req() req: any, @Param('id', ParseIntPipe) id: number) {

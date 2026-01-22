@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { CheckinRecord } from './checkin-record.entity';
@@ -50,7 +50,7 @@ export class CheckinRecordService {
    * 分页查询打卡记录
    */
   async findAll(queryDto: QueryCheckinDto, userId?: number): Promise<IPaginationResponse<CheckinRecord>> {
-    const { page = 1, pageSize = 10, startDate, endDate, includePublic } = queryDto;
+    const { page = 1, pageSize = 10, startDate, endDate, includePublic = true } = queryDto;
     const skip = (page - 1) * pageSize;
 
     const queryBuilder = this.recordRepository.createQueryBuilder('record')
@@ -58,28 +58,37 @@ export class CheckinRecordService {
       .where('record.status = :status', { status: 1 })
       .andWhere('record.deletedAt IS NULL');
 
-    // 如果指定了userId
-    if (userId) {
-      // 获取用户的另一半ID
-      const couple = await this.coupleService.getCoupleInfo(userId);
-      const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
-
-      if (includePublic) {
+    // includePublic 默认为 true，查询全部公开打卡记录
+    if (includePublic) {
+      if (userId) {
+        // 如果用户已登录，获取用户的另一半ID
+        const couple = await this.coupleService.getCoupleInfo(userId);
+        const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
+        
         // 查询用户、另一半和公开的打卡
         queryBuilder.andWhere(
           '(record.userId = :userId OR record.userId = :partnerId OR record.isPublic = 1)',
           { userId, partnerId: partnerId || -1 }
         );
       } else {
-        // 只查询用户和另一半的打卡
-        queryBuilder.andWhere(
-          '(record.userId = :userId OR record.userId = :partnerId)',
-          { userId, partnerId: partnerId || -1 }
-        );
+        // 未登录用户，只查询公开的打卡
+        queryBuilder.andWhere('record.isPublic = 1');
       }
-    } else if (includePublic) {
-      // 没有userId但需要公开的，只查询公开的
-      queryBuilder.andWhere('record.isPublic = 1');
+    } else {
+      // includePublic 为 false，需要 userId，查询我和绑定用户的打卡记录
+      if (!userId) {
+        throw new BadRequestException('includePublic 为 false 时需要用户登录');
+      }
+      
+      // 获取用户的另一半ID
+      const couple = await this.coupleService.getCoupleInfo(userId);
+      const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
+      
+      // 只查询用户和另一半的打卡
+      queryBuilder.andWhere(
+        '(record.userId = :userId OR record.userId = :partnerId)',
+        { userId, partnerId: partnerId || -1 }
+      );
     }
 
     // 日期范围查询
