@@ -32,8 +32,8 @@ export class QueryCheckinDto {
   @IsOptional()
   endDate?: string;
 
-  @ApiProperty({ description: '是否包含公开的打卡', example: false, default: false, required: false })
+  @ApiProperty({ description: '是否包含公开的打卡', example: true, default: true, required: false })
   @Type(() => Boolean)
   @IsOptional()
-  includePublic?: boolean;
+  includePublic?: boolean = true;
 }
