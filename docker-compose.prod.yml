@@ -72,8 +72,8 @@ services:
     container_name: yl-web-prod
     restart: always
     healthcheck:
-      # nginx:alpine 镜像有 wget，使用它来检查服务是否就绪
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      # 使用 curl 检查服务是否就绪（nginx:alpine 镜像有 curl）
+      test: ["CMD", "curl", "-f", "http://localhost:80", "||", "exit", "1"]
       interval: 10s
       timeout: 5s
       retries: 5
