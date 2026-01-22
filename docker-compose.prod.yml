@@ -94,18 +94,18 @@ services:
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       # SSL 证书目录（暂时注释，需要 HTTPS 时取消注释并配置证书）
-      # 证书目录结构示例：
-      # docker/nginx/ssl/
-      # ├── admin.你的域名.com/
+      # 证书目录结构（在服务器上）：
+      # /etc/nginx/ssl/
+      # ├── admin.kcyl916.cn/
       # │   ├── fullchain.pem
       # │   └── privkey.pem
-      # ├── api.你的域名.com/
+      # ├── api.kcyl916.cn/
       # │   ├── fullchain.pem
       # │   └── privkey.pem
-      # └── www.你的域名.com/
+      # └── www.kcyl916.cn/
       #     ├── fullchain.pem
       #     └── privkey.pem
-      # - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      # - /etc/nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       backend:
         condition: service_healthy
