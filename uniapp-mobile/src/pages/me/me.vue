@@ -171,7 +171,7 @@ export default {
       <!-- 用户信息卡片 -->
       <view class="user-card">
         <view class="user-avatar">
-          <image v-if="userInfo.userInfo?.avatar" :src="userInfo.userInfo?.avatar" mode="aspectFill" />
+          <wd-img v-if="userInfo.userInfo?.avatar" :src="userInfo.userInfo?.avatar" mode="aspectFill" />
           <text v-else class="default-avatar">👤</text>
         </view>
         <view class="user-info">

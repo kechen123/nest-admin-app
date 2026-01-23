@@ -147,7 +147,7 @@ onLoad((options: any) => {
         <!-- 邀请人信息 -->
         <view class="inviter-info">
           <view class="inviter-avatar">
-            <image v-if="inviteInfo?.inviter.avatar" :src="inviteInfo.inviter.avatar" mode="aspectFill" />
+            <wd-img v-if="inviteInfo?.inviter.avatar" :src="inviteInfo.inviter.avatar" mode="aspectFill" />
             <text v-else class="default-avatar">👤</text>
           </view>
           <view class="inviter-details">
@@ -157,12 +157,8 @@ onLoad((options: any) => {
         </view>
 
         <!-- 同意按钮 -->
-        <button
-          class="accept-btn"
-          :disabled="isBinding || !inviteInfo?.canAccept"
-          :loading="isBinding"
-          @click="handleAcceptInvite"
-        >
+        <button class="accept-btn" :disabled="isBinding || !inviteInfo?.canAccept" :loading="isBinding"
+          @click="handleAcceptInvite">
           <text v-if="!isBinding && inviteInfo?.canAccept">❤️ 同意邀请</text>
           <text v-else-if="!isBinding && inviteInfo?.isExpired">邀请码已过期</text>
           <text v-else-if="!isBinding">邀请码不可用</text>
@@ -183,7 +179,7 @@ onLoad((options: any) => {
         <view class="couple-info">
           <view class="partner-item">
             <view class="partner-avatar">
-              <image v-if="inviteInfo?.inviter.avatar" :src="inviteInfo.inviter.avatar" mode="aspectFill" />
+              <wd-img v-if="inviteInfo?.inviter.avatar" :src="inviteInfo.inviter.avatar" mode="aspectFill" />
               <text v-else class="default-avatar">👤</text>
             </view>
             <text class="partner-name">{{ inviteInfo?.inviter.nickname }}</text>
@@ -195,7 +191,7 @@ onLoad((options: any) => {
 
           <view class="partner-item">
             <view class="partner-avatar">
-              <image v-if="userInfo.avatar" :src="userInfo.avatar" mode="aspectFill" />
+              <wd-img v-if="userInfo.avatar" :src="userInfo.avatar" mode="aspectFill" />
               <text v-else class="default-avatar">👤</text>
             </view>
             <text class="partner-name">{{ userInfo.nickname }}</text>
@@ -461,18 +457,43 @@ onLoad((options: any) => {
 
 // 动画
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes heartbeat {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-10rpx); }
-  60% { transform: translateY(-5rpx); }
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-10rpx);
+  }
+
+  60% {
+    transform: translateY(-5rpx);
+  }
 }
 </style>

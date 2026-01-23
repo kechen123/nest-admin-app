@@ -87,7 +87,7 @@ async function chooseAvatar(data: any) {
         <text class="form-label">头像</text>
         <view class="avatar-section">
           <button class="avatar-preview" open-type="chooseAvatar" @chooseavatar="chooseAvatar">
-            <image v-if="formData.avatar" :src="formData.avatar" mode="aspectFill" />
+            <wd-img v-if="formData.avatar" :src="formData.avatar" mode="aspectFill" />
             <text v-else class="default-avatar">👤</text>
           </button>
         </view>
