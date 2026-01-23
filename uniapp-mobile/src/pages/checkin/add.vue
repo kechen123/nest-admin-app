@@ -10,7 +10,6 @@ definePage({
     navigationBarTitleText: '发布打卡',
   },
 })
-
 const checkinStore = useCheckinStore()
 
 // 位置信息
@@ -77,7 +76,7 @@ async function uploadSingleImage(tempFilePath: string, index: number) {
             const result = responseData?.data || responseData
             // TODO: 修改为后端返回的URL
             // let imageUrl = result?.url || result?.path || result
-            let imageUrl = `http://116.196.101.204${result?.path}`
+            let imageUrl = `http://81.69.16.236${result?.path}`
 
             // 确保 imageUrl 是字符串类型
             if (typeof imageUrl !== 'string') {
