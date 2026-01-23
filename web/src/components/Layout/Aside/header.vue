@@ -1,7 +1,7 @@
 <template>
   <div class="aside-header" :class="{ 'is-collapse': isCollapse }">
     <!-- <Logo /> -->
-    <div class="title" v-show="!isCollapse">123Love Map</div>
+    <div class="title" v-show="!isCollapse">1234Love Map</div>
     <div class="title-collapse" v-show="isCollapse">L</div>
   </div>
 </template>
