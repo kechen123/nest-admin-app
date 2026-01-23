@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:init": "node database/init-db.js",
     "db:fix-external-access": "node database/fix-external-access.js",
-    "db:generate-password": "node database/generate-password.js"
+    "db:generate-password": "node database/generate-password.js",
+    "db:check": "node scripts/check-db-config.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -35,6 +36,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "cos-nodejs-sdk-v5": "^2.15.4",
     "dotenv": "^16.4.5",
     "multer": "^2.0.2",
     "mysql2": "^3.6.5",

@@ -33,8 +33,15 @@ JWT_SECRET=your-secret-key    # JWT 密钥（生产环境请使用强密钥）
 JWT_EXPIRES_IN=7d            # Token 过期时间
 
 # 文件上传配置
-UPLOAD_DEST=./uploads        # 上传文件存储目录
+UPLOAD_DEST=./uploads        # 上传文件存储目录（本地存储接口使用）
 MAX_FILE_SIZE=10485760       # 最大文件大小（字节）
+
+# 腾讯云COS配置（可选，用于COS上传接口）
+COS_SECRET_ID=您的SecretId           # 腾讯云SecretId
+COS_SECRET_KEY=您的SecretKey         # 腾讯云SecretKey
+COS_BUCKET=examplebucket-1250000000  # 存储桶名称
+COS_REGION=ap-beijing                # 地域（如：ap-beijing、ap-shanghai等）
+COS_DOMAIN=https://your-domain.com   # 可选：自定义域名（如果不配置则使用COS默认域名）
 ```
 
 ### 配置加载
@@ -293,24 +300,126 @@ export class UserController {
 
 ## 文件上传配置
 
-### Multer 配置
+### 腾讯云COS配置
+
+项目使用腾讯云对象存储（COS）来存储上传的图片文件。
+
+#### 环境变量配置
+
+在 `.env` 文件中配置以下变量：
+
+```env
+# 腾讯云COS配置
+COS_SECRET_ID=您的SecretId           # 腾讯云SecretId
+COS_SECRET_KEY=您的SecretKey         # 腾讯云SecretKey
+COS_BUCKET=examplebucket-1250000000  # 存储桶名称
+COS_REGION=ap-beijing                # 地域（如：ap-beijing、ap-shanghai等）
+COS_DOMAIN=https://your-domain.com   # 可选：自定义域名（如果不配置则使用COS默认域名）
+```
+
+#### 获取配置信息
+
+1. **SecretId 和 SecretKey**：
+   - 登录 [腾讯云控制台](https://console.cloud.tencent.com/)
+   - 进入 [访问管理](https://console.cloud.tencent.com/cam) → API密钥管理
+   - 创建或查看密钥，获取 SecretId 和 SecretKey
+
+2. **Bucket 和 Region**：
+   - 进入 [对象存储控制台](https://console.cloud.tencent.com/cos)
+   - 创建或选择存储桶
+   - 在存储桶详情中查看存储桶名称（Bucket）和所属地域（Region）
+
+3. **自定义域名（可选）**：
+   - 在存储桶的"域名管理"中配置自定义域名
+   - 配置后可以使用自定义域名访问文件
+
+#### 上传接口
+
+项目提供两个上传接口：
+
+**1. 本地存储接口：`POST /api/upload/image`**
+- 文件存储在服务器本地 `./uploads/images` 目录
+- 不需要额外配置，开箱即用
+- 适用于开发环境或小规模应用
+
+**2. COS上传接口：`POST /api/upload/image/cos`**
+- 文件上传到腾讯云对象存储
+- 需要配置COS相关环境变量
+- 适用于生产环境，支持CDN加速
+
+**请求参数：**
+- `file`: 图片文件（multipart/form-data）
+
+**响应示例：**
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "url": "https://examplebucket-1250000000.cos.ap-beijing.myqcloud.com/images/xxx.jpg",
+    "path": "images/xxx.jpg",
+    "filename": "xxx.jpg",
+    "originalname": "photo.jpg",
+    "mimetype": "image/jpeg",
+    "size": 102400
+  }
+}
+```
+
+#### Multer 配置
+
+**本地存储接口**使用磁盘存储：
 
 ```typescript
-import { MulterModule } from '@nestjs/platform-express'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
 
-MulterModule.register({
-  storage: diskStorage({
-    destination: './uploads',
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
-      cb(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`)
+@UseInterceptors(
+  FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads/images',
+      filename: (req, file, cb) => {
+        const uniqueName = `${crypto.randomUUID()}${extname(file.originalname)}`
+        cb(null, uniqueName)
+      },
+    }),
+    limits: {
+      fileSize: 20 * 1024 * 1024, // 20MB
     },
-  }),
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB
-  },
-})
+    fileFilter: (req, file, cb) => {
+      const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true)
+      } else {
+        cb(new BadRequestException('只允许上传图片文件'), false)
+      }
+    },
+  })
+)
+```
+
+**COS上传接口**使用内存存储以便获取文件流：
+
+```typescript
+import { FileInterceptor } from '@nestjs/platform-express'
+import { memoryStorage } from 'multer'
+
+@UseInterceptors(
+  FileInterceptor('file', {
+    storage: memoryStorage(), // 使用内存存储
+    limits: {
+      fileSize: 20 * 1024 * 1024, // 20MB
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true)
+      } else {
+        cb(new BadRequestException('只允许上传图片文件'), false)
+      }
+    },
+  })
+)
 ```
 
 ## 日志配置

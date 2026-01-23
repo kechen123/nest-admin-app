@@ -1,9 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { extname } from 'path';
+import * as crypto from 'crypto';
+
+// 使用 require 导入 COS SDK（避免类型错误）
+const COS = require('cos-nodejs-sdk-v5');
 
 @Injectable()
 export class UploadService {
-  constructor(private readonly configService: ConfigService) {}
+  private cosClient: any;
+
+  constructor(private readonly configService: ConfigService) {
+    // 初始化COS客户端
+    const secretId = this.configService.get<string>('COS_SECRET_ID');
+    const secretKey = this.configService.get<string>('COS_SECRET_KEY');
+    
+    if (secretId && secretKey) {
+      this.cosClient = new COS({
+        SecretId: secretId,
+        SecretKey: secretKey,
+      });
+    }
+  }
 
   /**
    * 修复文件名编码问题
@@ -54,7 +72,7 @@ export class UploadService {
   }
 
   /**
-   * 上传图片
+   * 上传图片（本地存储）
    */
   uploadImage(file: any, req?: any) {
     const filePath = `/uploads/images/${file.filename}`;
@@ -122,6 +140,77 @@ export class UploadService {
       mimetype: file.mimetype,
       size: file.size,
     };
+  }
+
+  /**
+   * 上传图片到腾讯云COS
+   */
+  async uploadImageToCos(file: any, req?: any): Promise<any> {
+    // 修复文件名编码
+    const originalname = this.fixFilenameEncoding(file.originalname);
+    
+    // 检查是否配置了COS
+    const bucket = this.configService.get<string>('COS_BUCKET');
+    const region = this.configService.get<string>('COS_REGION');
+    const cosDomain = this.configService.get<string>('COS_DOMAIN'); // 可选：自定义域名
+    
+    if (!this.cosClient || !bucket || !region) {
+      throw new InternalServerErrorException('COS配置未完成，请检查环境变量配置（COS_SECRET_ID、COS_SECRET_KEY、COS_BUCKET、COS_REGION）');
+    }
+
+    // 生成唯一文件名
+    const fileExt = extname(originalname);
+    const uniqueName = `${crypto.randomUUID()}${fileExt}`;
+    
+    // COS对象键（文件路径）
+    const key = `images/${uniqueName}`;
+
+    try {
+      // 上传到COS
+      const result = await new Promise<any>((resolve, reject) => {
+        this.cosClient.putObject(
+          {
+            Bucket: bucket,
+            Region: region,
+            Key: key,
+            Body: file.buffer, // 使用内存中的文件buffer
+            onProgress: function(progressData) {
+              // 可以在这里处理上传进度
+              console.log('上传进度:', JSON.stringify(progressData));
+            },
+          },
+          function(err, data) {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(data);
+            }
+          }
+        );
+      });
+
+      // 构建文件URL
+      let fileUrl: string;
+      if (cosDomain) {
+        // 使用自定义域名
+        fileUrl = `${cosDomain.replace(/\/$/, '')}/${key}`;
+      } else {
+        // 使用COS默认域名
+        fileUrl = `https://${result.Location}`;
+      }
+
+      return {
+        url: fileUrl,
+        path: key,
+        filename: uniqueName,
+        originalname: originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      };
+    } catch (error) {
+      console.error('COS上传失败:', error);
+      throw new InternalServerErrorException(`图片上传失败: ${error.message || '未知错误'}`);
+    }
   }
 }
 
