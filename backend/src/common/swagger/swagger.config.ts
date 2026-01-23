@@ -19,7 +19,7 @@ export class SwaggerConfig {
     '登录日志',
     '操作日志',
     '服务监控',
-    '文件上传',
+    '文件上传', // 包含：/upload/image, /upload/avatar, /upload/image/cos, /upload/avatar/cos
   ];
 
   /**
@@ -31,7 +31,7 @@ export class SwaggerConfig {
     '用户绑定',
     '邀请码管理',
     '打卡记录',
-    '文件上传',
+    '文件上传', // 包含：/upload/image, /upload/avatar, /upload/image/cos, /upload/avatar/cos
   ];
 
   /**
