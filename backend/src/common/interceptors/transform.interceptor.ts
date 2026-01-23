@@ -14,6 +14,14 @@ export class TransformInterceptor<T> implements NestInterceptor<T, IResponse<T>>
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<IResponse<T>> {
+    const request = context.switchToHttp().getRequest();
+    const url = request.url;
+
+    // 跳过静态文件请求（uploads 目录下的文件）
+    // 静态文件应该直接返回原始内容，不应该被包装成 JSON 格式
+    if (url && url.startsWith('/uploads')) {
+      return next.handle();
+    }
     return next.handle().pipe(
       map((data) => ({
         code: 200,
