@@ -4,6 +4,7 @@ import { reactive, ref } from 'vue'
 import { updateProfile } from '@/api/login'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
+import { getEnvBaseUrl } from '@/utils/index'
 
 definePage({
   style: {
@@ -26,6 +27,7 @@ const formData = reactive({
 })
 
 const isLoading = ref(false)
+const isUploadingAvatar = ref(false)
 
 // 保存资料
 async function handleSave() {
@@ -75,7 +77,102 @@ async function handleSave() {
 
 // 选择头像
 async function chooseAvatar(data: any) {
-  formData.avatar = data.detail.avatarUrl
+  const tempFilePath = data.detail.avatarUrl
+
+  // 如果是临时路径（微信小程序返回的临时路径），需要上传到服务器
+  if (tempFilePath && tempFilePath.startsWith('http://tmp/')) {
+    try {
+      isUploadingAvatar.value = true
+
+      // 获取 token
+      const tokenStore = useTokenStore()
+      let token = (tokenStore.validToken as any).value || ''
+
+      if (!token && tokenStore.tryGetValidToken) {
+        try {
+          token = await tokenStore.tryGetValidToken()
+        }
+        catch (error) {
+          console.error('获取token失败:', error)
+          uni.showToast({
+            title: '获取token失败',
+            icon: 'error',
+          })
+          return
+        }
+      }
+
+      // 构建请求头
+      const header: Record<string, string> = {}
+      if (token) {
+        header.Authorization = `Bearer ${token}`
+      }
+
+      // 上传头像
+      const baseUrl = getEnvBaseUrl()
+      const uploadUrl = `${baseUrl}/upload/avatar/cos`
+
+      await new Promise<void>((resolve, reject) => {
+        uni.uploadFile({
+          url: uploadUrl,
+          filePath: tempFilePath,
+          name: 'file',
+          header,
+          success: (uploadRes) => {
+            try {
+              let responseData = uploadRes.data
+              if (typeof responseData === 'string') {
+                try {
+                  responseData = JSON.parse(responseData)
+                }
+                catch (e) {
+                  console.log('Response is not JSON, using raw data:', responseData)
+                }
+              }
+
+              // 后端返回格式: { code: 200, data: { url: '...', path: '...', ... }, msg: '...' }
+              const result = (responseData as any)?.data || responseData
+              const avatarUrl = result?.url
+
+              if (avatarUrl && typeof avatarUrl === 'string') {
+                formData.avatar = avatarUrl
+                uni.showToast({
+                  title: '头像上传成功',
+                  icon: 'success',
+                })
+                resolve()
+              }
+              else {
+                reject(new Error('上传响应中未找到头像URL'))
+              }
+            }
+            catch (err) {
+              console.error('解析上传响应失败:', err)
+              reject(err)
+            }
+          },
+          fail: (err) => {
+            console.error('上传失败:', err)
+            reject(err)
+          },
+        })
+      })
+    }
+    catch (error: any) {
+      console.error('上传头像失败:', error)
+      uni.showToast({
+        title: error?.message || '上传失败，请重试',
+        icon: 'error',
+      })
+    }
+    finally {
+      isUploadingAvatar.value = false
+    }
+  }
+  else {
+    // 如果不是临时路径，直接使用（可能是已经上传过的URL）
+    formData.avatar = tempFilePath
+  }
 }
 </script>
 
@@ -86,9 +183,13 @@ async function chooseAvatar(data: any) {
       <view class="form-item">
         <text class="form-label">头像</text>
         <view class="avatar-section">
-          <button class="avatar-preview" open-type="chooseAvatar" @chooseavatar="chooseAvatar">
+          <button class="avatar-preview" :disabled="isUploadingAvatar" open-type="chooseAvatar"
+            @chooseavatar="chooseAvatar">
             <image v-if="formData.avatar" :src="formData.avatar" mode="aspectFill" />
             <text v-else class="default-avatar">👤</text>
+            <view v-if="isUploadingAvatar" class="uploading-overlay">
+              <text class="uploading-text">上传中...</text>
+            </view>
           </button>
         </view>
       </view>
@@ -149,6 +250,7 @@ async function chooseAvatar(data: any) {
   cursor: pointer;
 
   .avatar-preview {
+    position: relative;
     width: 100rpx;
     height: 100rpx;
     border-radius: 50rpx;
@@ -174,6 +276,24 @@ async function chooseAvatar(data: any) {
   .avatar-tip {
     font-size: 26rpx;
     color: #666;
+  }
+
+  .uploading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50rpx;
+
+    .uploading-text {
+      color: #fff;
+      font-size: 24rpx;
+    }
   }
 }
 

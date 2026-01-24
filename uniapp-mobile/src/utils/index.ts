@@ -83,19 +83,19 @@ export function getAllPages(key?: string) {
 
   // 这里处理分包
   const subPages: PageMetaDatum[] = []
-  ;(subPackages as SubPackages).forEach((subPageObj) => {
-    // console.log(subPageObj)
-    const { root } = subPageObj
+    ; (subPackages as SubPackages).forEach((subPageObj) => {
+      // console.log(subPageObj)
+      const { root } = subPageObj
 
-    subPageObj.pages
-      .filter(page => !key || page[key])
-      .forEach((page) => {
-        subPages.push({
-          ...page,
-          path: `/${root}/${page.path}`,
+      subPageObj.pages
+        .filter(page => !key || page[key])
+        .forEach((page) => {
+          subPages.push({
+            ...page,
+            path: `/${root}/${page.path}`,
+          })
         })
-      })
-  })
+    })
   const result = [...mainPages, ...subPages]
   // console.log(`getAllPages by ${key} result: `, result)
   return result
@@ -121,9 +121,9 @@ export function getEnvBaseUrl() {
   let baseUrl = import.meta.env.VITE_SERVER_BASEURL
 
   // # 有些同学可能需要在微信小程序里面根据 develop、trial、release 分别设置上传地址，参考代码如下。
-  const VITE_SERVER_BASEURL__WEIXIN_DEVELOP = 'https://ukw0y1.laf.run'
-  const VITE_SERVER_BASEURL__WEIXIN_TRIAL = 'https://ukw0y1.laf.run'
-  const VITE_SERVER_BASEURL__WEIXIN_RELEASE = 'https://ukw0y1.laf.run'
+  const VITE_SERVER_BASEURL__WEIXIN_DEVELOP = baseUrl
+  const VITE_SERVER_BASEURL__WEIXIN_TRIAL = baseUrl
+  const VITE_SERVER_BASEURL__WEIXIN_RELEASE = baseUrl
 
   // 微信小程序端环境区分
   if (isMpWeixin) {
@@ -133,7 +133,7 @@ export function getEnvBaseUrl() {
 
     switch (envVersion) {
       case 'develop':
-        baseUrl =  baseUrl
+        baseUrl = baseUrl
         break
       case 'trial':
         baseUrl = VITE_SERVER_BASEURL__WEIXIN_TRIAL || baseUrl

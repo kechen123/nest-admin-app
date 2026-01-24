@@ -103,11 +103,7 @@ function goToAdd() {
 
     <!-- 打卡记录列表 -->
     <scroll-view v-else class="scroll-view" scroll-y>
-      <view
-        v-for="group in groupedRecords"
-        :key="group.date"
-        class="date-group"
-      >
+      <view v-for="group in groupedRecords" :key="group.date" class="date-group">
         <!-- 日期标题 -->
         <view class="date-header">
           <view class="date-line" />
@@ -116,12 +112,7 @@ function goToAdd() {
         </view>
 
         <!-- 打卡记录 -->
-        <view
-          v-for="record in group.items"
-          :key="record.id"
-          class="record-item"
-          @click="goToDetail(record.id)"
-        >
+        <view v-for="record in group.items" :key="record.id" class="record-item" @click="goToDetail(record.id)">
           <!-- 时间轴 -->
           <view class="timeline">
             <view class="timeline-dot" />
@@ -148,13 +139,8 @@ function goToAdd() {
 
             <!-- 图片 -->
             <view v-if="record.images.length > 0" class="record-images">
-              <image
-                v-for="(image, index) in record.images.slice(0, 3)"
-                :key="index"
-                :src="image"
-                mode="aspectFill"
-                class="record-image"
-              />
+              <wd-img v-for="(image, index) in record.images.slice(0, 3)" :key="index" :src="image" mode="aspectFill"
+                class="record-image" />
               <view v-if="record.images.length > 3" class="image-more">
                 +{{ record.images.length - 3 }}
               </view>

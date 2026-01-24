@@ -21,7 +21,13 @@ import { MiniappModule } from "./modules/miniapp/miniapp.module";
     // 配置模块
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [join(__dirname, "..", ".env.local"), join(__dirname, "..", ".env")],
+      // 支持从源码目录和编译后的dist目录加载.env文件
+      envFilePath: [
+        join(process.cwd(), ".env.local"),
+        join(process.cwd(), ".env"),
+        join(__dirname, "..", ".env.local"),
+        join(__dirname, "..", ".env"),
+      ],
     }),
     // 数据库模块
     TypeOrmModule.forRootAsync({

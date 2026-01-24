@@ -2,17 +2,21 @@ import { ApiProperty } from '@nestjs/swagger';
 
 /**
  * 上传图片响应 DTO
+ * 
+ * 适用于：
+ * - 本地存储接口：/api/upload/image
+ * - COS上传接口：/api/upload/image/cos
  */
 export class UploadImageResponseDto {
   @ApiProperty({
-    description: '图片完整URL',
-    example: 'http://localhost:3000/uploads/images/abc123.jpg',
+    description: '图片完整URL（本地存储返回服务器URL，COS上传返回COS URL）',
+    example: 'https://examplebucket-1250000000.cos.ap-beijing.myqcloud.com/images/abc123.jpg',
   })
   url: string;
 
   @ApiProperty({
-    description: '图片相对路径',
-    example: '/uploads/images/abc123.jpg',
+    description: '图片路径（本地存储返回相对路径，COS上传返回COS对象键）',
+    example: 'images/abc123.jpg',
   })
   path: string;
 

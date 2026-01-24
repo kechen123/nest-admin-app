@@ -10,7 +10,6 @@ definePage({
     navigationBarTitleText: '发布打卡',
   },
 })
-
 const checkinStore = useCheckinStore()
 
 // 位置信息
@@ -53,7 +52,7 @@ async function uploadSingleImage(tempFilePath: string, index: number) {
     }
 
     const baseUrl = getEnvBaseUrl()
-    const uploadUrl = `${baseUrl}/upload/image`
+    const uploadUrl = `${baseUrl}/upload/image/cos`
 
     await new Promise<void>((resolve, reject) => {
       uni.uploadFile({
@@ -75,9 +74,8 @@ async function uploadSingleImage(tempFilePath: string, index: number) {
 
             // 后端返回格式: { code: 200, data: { url: '...', path: '...', ... }, msg: '...' }
             const result = responseData?.data || responseData
-            // TODO: 修改为后端返回的URL
-            // let imageUrl = result?.url || result?.path || result
-            let imageUrl = `http://116.196.101.204${result?.path}`
+            // 使用后端返回的URL（优先使用url字段，如果没有则使用path）
+            let imageUrl = result?.url || result?.path
 
             // 确保 imageUrl 是字符串类型
             if (typeof imageUrl !== 'string') {

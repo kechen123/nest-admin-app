@@ -126,12 +126,23 @@ if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
     }
 fi
 
-# 拉取代码
-log "正在合并最新代码..."
-git pull origin "$BRANCH" || {
-    log "错误: git pull 失败"
-    exit 1
-}
+# 拉取代码（强制同步，处理分支分歧情况）
+log "正在同步最新代码..."
+# 配置 git pull 策略为 merge（避免分歧错误）
+git config pull.rebase false 2>/dev/null || true
+
+# 先尝试正常 pull
+if git pull origin "$BRANCH" 2>/dev/null; then
+    log "代码同步成功"
+else
+    # 如果 pull 失败（可能是分支分歧），使用强制重置
+    log "检测到分支分歧或冲突，使用强制同步..."
+    git reset --hard "origin/$BRANCH" || {
+        log "错误: git reset 失败"
+        exit 1
+    }
+    log "强制同步完成"
+fi
 
 # 检查 docker-compose 文件是否存在
 if [ ! -f "$COMPOSE_FILE" ]; then
