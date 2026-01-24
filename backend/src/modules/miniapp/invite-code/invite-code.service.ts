@@ -10,6 +10,7 @@ import { CancelInviteDto } from './dto/cancel-invite.dto';
 import { InviteInfoDto } from './dto/invite-info.dto';
 import { UserInviteListDto } from './dto/user-invite-list.dto';
 import { GenerateInviteResponseDto } from './dto/generate-invite-response.dto';
+import { InviteConfigService } from '../invite-config/invite-config.service';
 
 @Injectable()
 export class InviteCodeService {
@@ -19,6 +20,7 @@ export class InviteCodeService {
     @InjectRepository(MiniappUser)
     private readonly userRepository: Repository<MiniappUser>,
     private readonly coupleService: UserCoupleService,
+    private readonly inviteConfigService: InviteConfigService,
   ) {}
 
   /**
@@ -49,11 +51,12 @@ export class InviteCodeService {
    * 生成邀请码
    */
   async generateInviteCode(userId: number, dto: GenerateInviteDto): Promise<GenerateInviteResponseDto> {
-    // 检查用户是否已有有效的邀请码
+    // 检查用户是否已有有效的已分享邀请码（只检查已分享的，未分享的可以重新生成）
     const existingInvite = await this.inviteCodeRepository.findOne({
       where: {
         inviterId: userId,
         status: InviteCodeStatus.PENDING,
+        isShared: true, // 只检查已分享的邀请码
         expireTime: Not(LessThan(new Date())),
       },
     });
@@ -78,16 +81,20 @@ export class InviteCodeService {
       inviterId: userId,
       expireTime,
       status: InviteCodeStatus.PENDING,
+      isShared: false, // 生成时默认为未分享
     });
 
     const savedInvite = await this.inviteCodeRepository.save(inviteCode);
 
+    // 查询启用的邀请配置
+    const enabledConfig = await this.inviteConfigService.findEnabled();
+    
     // 构建邀请链接（小程序路径）
     const inviteUrl = `/pages/invite/invite?code=${code}`;
     const shareParams = {
-      title: '邀请你共同记录美好时光',
+      title: enabledConfig?.title || '邀请你共同记录美好时光',
       path: `pages/invite/invite?code=${code}`,
-      imageUrl: '/static/images/invite-share.png',
+      imageUrl: enabledConfig?.imageUrl || '/static/images/invite-share.png',
     };
 
     return {
@@ -215,6 +222,33 @@ export class InviteCodeService {
   }
 
   /**
+   * 标记邀请码为已分享
+   */
+  async markInviteAsShared(userId: number, code: string): Promise<void> {
+    const inviteCode = await this.inviteCodeRepository.findOne({
+      where: { code },
+    });
+
+    if (!inviteCode) {
+      throw new NotFoundException('邀请码不存在');
+    }
+
+    // 检查是否是邀请者本人
+    if (inviteCode.inviterId !== userId) {
+      throw new BadRequestException('无权操作此邀请码');
+    }
+
+    // 只能标记等待中的邀请码
+    if (inviteCode.status !== InviteCodeStatus.PENDING) {
+      throw new BadRequestException('只能标记等待中的邀请码');
+    }
+
+    // 标记为已分享
+    inviteCode.isShared = true;
+    await this.inviteCodeRepository.save(inviteCode);
+  }
+
+  /**
    * 获取用户的邀请码列表
    */
   async getUserInviteCodes(userId: number): Promise<UserInviteListDto[]> {
@@ -262,13 +296,14 @@ export class InviteCodeService {
   }
 
   /**
-   * 检查用户是否有有效的 pending 邀请码
+   * 检查用户是否有有效的 pending 邀请码（只检查已分享的）
    */
   async hasUserActiveInvite(userId: number): Promise<boolean> {
     const count = await this.inviteCodeRepository.count({
       where: {
         inviterId: userId,
         status: InviteCodeStatus.PENDING,
+        isShared: true, // 只检查已分享的邀请码
         expireTime: Not(LessThan(new Date())),
       },
     });

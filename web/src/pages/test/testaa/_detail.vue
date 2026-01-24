@@ -280,7 +280,7 @@ const onSubmit = async (data: any) => {
     }
 
 
-    close(true) // 关闭面板并刷新列表
+    await close?.(true)// 关闭面板并刷新列表
   } catch (error: any) {
     if (error !== 'validation_failed') {
       ElMessage.error(data.id ? '更新失败' : '创建失败')

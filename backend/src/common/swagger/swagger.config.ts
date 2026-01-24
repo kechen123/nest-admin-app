@@ -20,6 +20,7 @@ export class SwaggerConfig {
     '操作日志',
     '服务监控',
     '文件上传', // 包含：/upload/image, /upload/avatar, /upload/image/cos, /upload/avatar/cos
+    '邀请配置管理', // 邀请配置的增删改查、启用/禁用接口
   ];
 
   /**

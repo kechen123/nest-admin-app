@@ -65,11 +65,11 @@ export function arrayToTree(
 export function getBackendBaseUrl(): string {
   // 开发环境：使用 vite 代理配置的后端地址
   if (import.meta.env.DEV) {
-    return import.meta.env.VITE_APP_BASE_URL || 'http://localhost:3000'
+    return import.meta.env.VITE_APP_IMAEG_BASE_URL || ''
   }
 
   // 生产环境：从环境变量获取，或从 axios baseURL 推断
-  const baseAPI = import.meta.env.VITE_APP_BASE_URL || axios.defaults.baseURL || '/api'
+  const baseAPI = import.meta.env.VITE_APP_IMAEG_BASE_URL
 
   if (baseAPI.startsWith('http://') || baseAPI.startsWith('https://')) {
     // baseAPI 是完整 URL，提取 origin

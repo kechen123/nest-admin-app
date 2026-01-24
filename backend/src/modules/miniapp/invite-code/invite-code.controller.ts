@@ -19,6 +19,7 @@ import { InviteCodeService } from './invite-code.service';
 import { GenerateInviteDto } from './dto/generate-invite.dto';
 import { AcceptInviteDto } from './dto/accept-invite.dto';
 import { CancelInviteDto } from './dto/cancel-invite.dto';
+import { MarkSharedDto } from './dto/mark-shared.dto';
 import { InviteInfoDto } from './dto/invite-info.dto';
 import { UserInviteListDto } from './dto/user-invite-list.dto';
 import { GenerateInviteResponseDto } from './dto/generate-invite-response.dto';
@@ -92,6 +93,18 @@ export class InviteCodeController {
   async getUserInviteCodes(@Req() req: any): Promise<UserInviteListDto[]> {
     const userId = req.user?.userId || req.user?.id;
     return await this.inviteCodeService.getUserInviteCodes(userId);
+  }
+
+  @Post('mark-shared')
+  @ApiOperation({ summary: '标记邀请码为已分享' })
+  @ApiResponse({ status: 200, description: '标记成功' })
+  async markInviteAsShared(
+    @Req() req: any,
+    @Body() dto: MarkSharedDto,
+  ): Promise<{ message: string }> {
+    const userId = req.user?.userId || req.user?.id;
+    await this.inviteCodeService.markInviteAsShared(userId, dto.code);
+    return { message: '标记成功' };
   }
 
 }

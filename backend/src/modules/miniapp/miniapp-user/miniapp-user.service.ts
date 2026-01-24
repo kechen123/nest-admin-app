@@ -21,28 +21,17 @@ export class MiniappUserService {
   ) {}
 
   /**
-   * 生成随机用户名（4-6个字符，中英文混合）
+   * 生成随机用户名（4-6个字符，英文+数字）
    */
   private generateRandomName(): string {
     const length = Math.floor(Math.random() * 3) + 4; // 4-6个字符
     let name = '';
 
-    // 中文字符范围：\u4e00-\u9fff
     // 英文字符：大小写字母 + 数字
-    const englishChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
     for (let i = 0; i < length; i++) {
-      // 随机决定使用中文字符还是英文字符
-      const useChinese = Math.random() > 0.3; // 70%概率使用中文字符
-
-      if (useChinese) {
-        // 生成随机中文字符
-        const code = Math.floor(Math.random() * (0x9fff - 0x4e00 + 1)) + 0x4e00;
-        name += String.fromCharCode(code);
-      } else {
-        // 使用英文字符
-        name += englishChars[Math.floor(Math.random() * englishChars.length)];
-      }
+      name += chars[Math.floor(Math.random() * chars.length)];
     }
 
     return name;

@@ -432,7 +432,12 @@ INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `pat
 (100, '测试目录名称', '测试目录标题', NULL, 'M', '/test', 'Layout', NULL, 1, 0, 1, 1, 'Tools', 0, 33, 'test111'),
 (101, '测试子菜单名称', '测试子菜单标题', NULL, 'C', '/test/testaa', 'test/testaa/index', NULL, 1, 0, 1, 1, 'Document', 100, 1, NULL),
 (102, '字典类型', '字典类型', NULL, 'C', '/system/dict/type', 'system/dict/type/index', NULL, 1, 0, 1, 1, 'Collection', 10, 1, NULL),
-(103, '字典数据', '字典数据', NULL, 'C', '/system/dict/data', 'system/dict/data/index', NULL, 1, 0, 1, 1, 'List', 10, 2, NULL);
+(103, '字典数据', '字典数据', NULL, 'C', '/system/dict/data', 'system/dict/data/index', NULL, 1, 0, 1, 1, 'List', 10, 2, NULL),
+(104, 'Miniapp', '小程序管理', NULL, 'M', '/miniapp', 'Layout', NULL, 1, 0, 1, 1, 'Platform', 0, 3, NULL),
+(105, 'MiniappUser', '用户管理', 'miniapp:user:list', 'C', '/miniapp/user', 'miniapp/user/index', NULL, 1, 0, 1, 1, 'UserFilled', 104, 1, NULL),
+(106, 'MiniappInvite', '邀请管理', 'miniapp:invite:list', 'C', '/miniapp/invite-code', 'miniapp/invite-code/index', NULL, 1, 0, 1, 1, 'Share', 104, 2, NULL),
+(107, 'MiniappInviteInfo', '邀请信息管理', 'miniapp:invite-info:list', 'C', '/miniapp/invite-config', 'miniapp/invite-config/index', NULL, 1, 0, 1, 1, 'Message', 104, 3, NULL),
+(108, 'MiniappCheckin', '用户打卡管理', 'miniapp:checkin:list', 'C', '/miniapp/checkin', 'miniapp/checkin/index', NULL, 1, 0, 1, 1, 'Calendar', 104, 4, NULL);
 
 -- ============================================
 -- 19. 插入字典类型测试数据
@@ -642,7 +647,7 @@ ALTER TABLE `users` AUTO_INCREMENT = 100;
 ALTER TABLE `departments` AUTO_INCREMENT = 100;
 ALTER TABLE `posts` AUTO_INCREMENT = 100;
 ALTER TABLE `roles` AUTO_INCREMENT = 100;
-ALTER TABLE `menus` AUTO_INCREMENT = 104;
+ALTER TABLE `menus` AUTO_INCREMENT = 109;
 ALTER TABLE `permissions` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_types` AUTO_INCREMENT = 100;
 ALTER TABLE `dict_data` AUTO_INCREMENT = 100;

@@ -65,14 +65,18 @@ export class CheckinRecordService {
         const couple = await this.coupleService.getCoupleInfo(userId);
         const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
         
-        // 查询用户、另一半和公开的打卡
+        // 查询逻辑：
+        // 1. 用户自己的打卡：包含所有状态（包括被拒绝的）
+        // 2. 另一半的打卡：过滤掉被拒绝的
+        // 3. 公开的打卡：过滤掉被拒绝的
         queryBuilder.andWhere(
-          '(record.userId = :userId OR record.userId = :partnerId OR record.isPublic = 1)',
-          { userId, partnerId: partnerId || -1 }
+          '(record.userId = :userId OR (record.userId = :partnerId AND (record.auditStatus IS NULL OR record.auditStatus != :rejectedStatus)) OR (record.isPublic = 1 AND (record.auditStatus IS NULL OR record.auditStatus != :rejectedStatus)))',
+          { userId, partnerId: partnerId || -1, rejectedStatus: 2 }
         );
       } else {
-        // 未登录用户，只查询公开的打卡
-        queryBuilder.andWhere('record.isPublic = 1');
+        // 未登录用户，只查询公开的打卡，过滤掉被拒绝的
+        queryBuilder.andWhere('record.isPublic = 1')
+          .andWhere('(record.auditStatus IS NULL OR record.auditStatus != :rejectedStatus)', { rejectedStatus: 2 });
       }
     } else {
       // includePublic 为 false，需要 userId，查询我和绑定用户的打卡记录
@@ -84,10 +88,12 @@ export class CheckinRecordService {
       const couple = await this.coupleService.getCoupleInfo(userId);
       const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
       
-      // 只查询用户和另一半的打卡
+      // 查询逻辑：
+      // 1. 用户自己的打卡：包含所有状态（包括被拒绝的）
+      // 2. 另一半的打卡：过滤掉被拒绝的
       queryBuilder.andWhere(
-        '(record.userId = :userId OR record.userId = :partnerId)',
-        { userId, partnerId: partnerId || -1 }
+        '(record.userId = :userId OR (record.userId = :partnerId AND (record.auditStatus IS NULL OR record.auditStatus != :rejectedStatus)))',
+        { userId, partnerId: partnerId || -1, rejectedStatus: 2 }
       );
     }
 
@@ -121,7 +127,8 @@ export class CheckinRecordService {
     const queryBuilder = this.recordRepository.createQueryBuilder('record')
       .leftJoinAndSelect('record.user', 'user')
       .where('record.status = :status', { status: 1 })
-      .andWhere('record.deletedAt IS NULL');
+      .andWhere('record.deletedAt IS NULL')
+      .andWhere('(record.auditStatus IS NULL OR record.auditStatus != :rejectedStatus)', { rejectedStatus: 2 });
 
     // includePublic 默认为 true，查询全部公开打卡记录
     if (includePublic) {
@@ -176,21 +183,21 @@ export class CheckinRecordService {
 
     // 如果指定了userId，检查权限
     if (userId) {
-      // 如果是公开的打卡，允许访问
-      if (record.isPublic === 1) {
-        return record;
-      }
-      
-      // 检查是否是用户自己的打卡
+      // 检查是否是用户自己的打卡（自己的打卡可以查看所有状态，包括被拒绝的）
       if (record.userId === userId) {
         return record;
       }
       
-      // 检查是否是另一半的打卡
+      // 如果是公开的打卡且未被拒绝，允许访问
+      if (record.isPublic === 1 && (record.auditStatus === null || record.auditStatus !== 2)) {
+        return record;
+      }
+      
+      // 检查是否是另一半的打卡（另一半的打卡需要过滤掉被拒绝的）
       const couple = await this.coupleService.getCoupleInfo(userId);
       if (couple) {
         const partnerId = couple.userId === userId ? couple.partnerId : couple.userId;
-        if (record.userId === partnerId) {
+        if (record.userId === partnerId && (record.auditStatus === null || record.auditStatus !== 2)) {
           return record;
         }
       }
@@ -198,7 +205,12 @@ export class CheckinRecordService {
       throw new ForbiddenException('无权访问该记录');
     }
 
-    return record;
+    // 未登录用户，只能查看公开且未被拒绝的打卡
+    if (record.isPublic === 1 && (record.auditStatus === null || record.auditStatus !== 2)) {
+      return record;
+    }
+
+    throw new ForbiddenException('无权访问该记录');
   }
 
   /**
@@ -229,24 +241,23 @@ export class CheckinRecordService {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
 
+    // 使用 queryBuilder 来过滤掉拒绝状态的记录
+    const baseQuery = () => this.recordRepository.createQueryBuilder('record')
+      .where('record.userId = :userId', { userId })
+      .andWhere('record.status = :status', { status: 1 })
+      .andWhere('record.deletedAt IS NULL')
+      .andWhere('(record.auditStatus IS NULL OR record.auditStatus != :rejectedStatus)', { rejectedStatus: 2 });
+
     const [total, thisMonth, thisWeek] = await Promise.all([
-      this.recordRepository.count({
-        where: { userId, status: 1 },
-      }),
-      this.recordRepository.count({
-        where: {
-          userId,
-          status: 1,
-          createdAt: Between(startOfMonth, now),
-        },
-      }),
-      this.recordRepository.count({
-        where: {
-          userId,
-          status: 1,
-          createdAt: Between(startOfWeek, now),
-        },
-      }),
+      baseQuery().getCount(),
+      baseQuery()
+        .andWhere('record.createdAt >= :startOfMonth', { startOfMonth })
+        .andWhere('record.createdAt <= :now', { now })
+        .getCount(),
+      baseQuery()
+        .andWhere('record.createdAt >= :startOfWeek', { startOfWeek })
+        .andWhere('record.createdAt <= :now', { now })
+        .getCount(),
     ]);
 
     return { total, thisMonth, thisWeek };

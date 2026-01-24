@@ -37,6 +37,22 @@ export class CheckinRecord extends BaseEntity {
   @Column({ type: 'tinyint', default: 1 })
   status: number;
 
+  @ApiProperty({ description: '审核状态: 0-待审核, 1-已通过, 2-已拒绝', example: 0, default: 0 })
+  @Column({ name: 'audit_status', type: 'tinyint', default: 0 })
+  auditStatus: number;
+
+  @ApiProperty({ description: '审核备注', required: false })
+  @Column({ name: 'audit_remark', length: 500, nullable: true })
+  auditRemark?: string;
+
+  @ApiProperty({ description: '审核时间', required: false })
+  @Column({ name: 'audit_time', type: 'datetime', nullable: true })
+  auditTime?: Date;
+
+  @ApiProperty({ description: '审核人ID', required: false })
+  @Column({ name: 'audit_by', nullable: true })
+  auditBy?: number;
+
   // 关联关系
   @ManyToOne(() => MiniappUser, (user) => user.checkinRecords)
   @JoinColumn({ name: 'user_id' })

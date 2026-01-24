@@ -74,6 +74,40 @@ function formatTime(time: string) {
   return dayjs(time).format('HH:mm')
 }
 
+// 获取审核状态文本
+function getAuditStatusText(auditStatus?: number) {
+  if (auditStatus === undefined || auditStatus === null) {
+    return '待审核'
+  }
+  switch (auditStatus) {
+    case 0:
+      return '待审核'
+    case 1:
+      return '已通过'
+    case 2:
+      return '已拒绝'
+    default:
+      return '待审核'
+  }
+}
+
+// 获取审核状态样式类
+function getAuditStatusClass(auditStatus?: number) {
+  if (auditStatus === undefined || auditStatus === null) {
+    return 'status-pending'
+  }
+  switch (auditStatus) {
+    case 0:
+      return 'status-pending'
+    case 1:
+      return 'status-approved'
+    case 2:
+      return 'status-rejected'
+    default:
+      return 'status-pending'
+  }
+}
+
 // 跳转到详情页
 function goToDetail(id: string | number) {
   uni.navigateTo({
@@ -126,6 +160,18 @@ function goToAdd() {
               {{ formatTime(record.createdAt || record.createTime) }}
             </view>
 
+            <!-- 审核状态 -->
+            <view v-if="record.auditStatus !== undefined && record.auditStatus !== null" class="audit-status">
+              <view :class="['status-badge', getAuditStatusClass(record.auditStatus)]">
+                {{ getAuditStatusText(record.auditStatus) }}
+              </view>
+              <!-- 拒绝原因 -->
+              <view v-if="record.auditStatus === 2 && record.auditRemark" class="reject-reason">
+                <text class="reject-label">拒绝原因：</text>
+                <text class="reject-text">{{ record.auditRemark }}</text>
+              </view>
+            </view>
+
             <!-- 位置 -->
             <view class="record-location">
               <text class="location-icon">📍</text>
@@ -139,10 +185,8 @@ function goToAdd() {
 
             <!-- 图片 -->
             <view v-if="record.images.length > 0" class="record-images">
-              <wd-img
-                v-for="(image, index) in record.images.slice(0, 3)" :key="index" :src="image" mode="aspectFill"
-                class="record-image"
-              />
+              <wd-img v-for="(image, index) in record.images.slice(0, 3)" :key="index" :src="image" mode="aspectFill"
+                class="record-image" />
               <view v-if="record.images.length > 3" class="image-more">
                 +{{ record.images.length - 3 }}
               </view>
@@ -270,6 +314,53 @@ function goToAdd() {
   font-size: 24rpx;
   color: #999;
   margin-bottom: 16rpx;
+}
+
+.audit-status {
+  margin-bottom: 16rpx;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-approved {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.reject-reason {
+  margin-top: 12rpx;
+  padding: 16rpx;
+  background: #fff5f5;
+  border-radius: 8rpx;
+  border-left: 4rpx solid #f56565;
+
+  .reject-label {
+    font-size: 24rpx;
+    color: #721c24;
+    font-weight: 500;
+  }
+
+  .reject-text {
+    font-size: 24rpx;
+    color: #721c24;
+    line-height: 1.5;
+  }
 }
 
 .record-location {

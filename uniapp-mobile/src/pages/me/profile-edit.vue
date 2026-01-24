@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted, nextTick } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { updateProfile } from '@/api/login'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
@@ -18,12 +19,45 @@ const { userInfo } = storeToRefs(userStore)
 
 // 表单数据
 const formData = reactive({
-  username: userInfo.value.username || '',
-  nickname: userInfo.value.nickname || '',
-  avatar: userInfo.value.avatar || '',
-  email: userInfo.value.email || '',
-  phone: userInfo.value.phone || '',
-  signature: userInfo.value.signature || '',
+  username: '',
+  nickname: '',
+  avatar: '',
+  email: '',
+  phone: '',
+  signature: '',
+})
+
+// 初始化表单数据
+function initFormData() {
+  if (userInfo.value?.userInfo) {
+    formData.username = userInfo.value.userInfo.username || ''
+    formData.nickname = userInfo.value.userInfo.nickname || ''
+    formData.avatar = userInfo.value.userInfo.avatar || ''
+    formData.email = (userInfo.value as any).email || ''
+    formData.phone = (userInfo.value as any).phone || ''
+    formData.signature = (userInfo.value as any).signature || ''
+  }
+}
+
+// 页面加载时，如果用户信息不存在，尝试获取
+onMounted(async () => {
+  if (!userInfo.value?.userInfo?.userId || userInfo.value.userInfo.userId === -1) {
+    try {
+      await userStore.fetchUserInfo()
+      // 获取完成后初始化表单
+      await nextTick()
+      initFormData()
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
+    }
+  } else {
+    initFormData()
+  }
+})
+
+// 页面显示时，同步用户信息到表单
+onShow(() => {
+  initFormData()
 })
 
 const isLoading = ref(false)
@@ -183,12 +217,10 @@ async function chooseAvatar(data: any) {
       <view class="form-item">
         <text class="form-label">头像</text>
         <view class="avatar-section">
-          <button
-            class="avatar-preview" :disabled="isUploadingAvatar" open-type="chooseAvatar"
-            @chooseavatar="chooseAvatar"
-          >
+          <button class="avatar-preview" :disabled="isUploadingAvatar" open-type="chooseAvatar"
+            @chooseavatar="chooseAvatar">
             <image v-if="formData.avatar" :src="formData.avatar" mode="aspectFill" />
-            <text v-else class="default-avatar">👤</text>
+            <image v-else class="default-avatar" src="/static/images/default-avatar.png" mode="aspectFill" />
             <view v-if="isUploadingAvatar" class="uploading-overlay">
               <text class="uploading-text">上传中...</text>
             </view>
@@ -262,7 +294,10 @@ async function chooseAvatar(data: any) {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2rpx solid #fff;
+
+    &::after {
+      border: none;
+    }
 
     image {
       width: 100rpx;

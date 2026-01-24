@@ -213,11 +213,18 @@ export const useTokenStore = defineStore(
         }
 
         // 3. 调用小程序登录接口（静默登录，不传userInfo）
-        const res = await _miniappWxLogin({
+        const loginData: { code: string, userInfo?: { nickName?: string, avatarUrl?: string, gender?: number }, phone?: string } = {
           code: wxCodeRes.code,
-          userInfo,
-          phone,
-        })
+        }
+        // 只有在有userInfo时才传递
+        if (userInfo) {
+          loginData.userInfo = userInfo
+        }
+        // 只有在有phone时才传递
+        if (phone) {
+          loginData.phone = phone
+        }
+        const res = await _miniappWxLogin(loginData)
         console.log('小程序静默登录-res: ', res)
 
         // 4. 将小程序登录返回格式转换为标准格式（单token模式）
@@ -230,17 +237,26 @@ export const useTokenStore = defineStore(
         setTokenInfo(standardRes)
 
         // 6. 转换并设置用户信息
+        const userStore = useUserStore()
         if (res.userInfo) {
-          const userStore = useUserStore()
           const standardUserInfo: IUserInfoRes = {
-            userId: res.userInfo.id || res.userId,
-            username: res.userInfo.openid || '',
-            nickname: res.userInfo.nickname || '',
-            avatar: res.userInfo.avatar || '',
+            userInfo: {
+              userId: res.userInfo.id || res.userId,
+              username: res.userInfo.openid || '',
+              nickname: res.userInfo.nickname || '用户' + (res.userInfo.id || res.userId), // 确保有默认值
+              avatar: res.userInfo.avatar || '',
+            },
             phone: res.userInfo.phone,
-            ...res.userInfo,
           }
+          console.log('设置用户信息:', standardUserInfo)
           userStore.setUserInfo(standardUserInfo)
+        } else {
+          // 如果后端没有返回userInfo，尝试获取用户信息
+          try {
+            await userStore.fetchUserInfo()
+          } catch (error) {
+            console.error('获取用户信息失败:', error)
+          }
         }
 
         // 7. 如果需要绑定手机号，返回特殊标识

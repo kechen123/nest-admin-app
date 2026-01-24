@@ -49,6 +49,11 @@ export class InviteCode extends BaseEntity {
   @Index()
   acceptedBy?: number;
 
+  @ApiProperty({ description: '是否已分享', example: false, default: false })
+  @Column({ name: 'is_shared', type: 'tinyint', default: false })
+  @Index()
+  isShared: boolean;
+
   // 关联关系
   @ManyToOne(() => MiniappUser)
   @JoinColumn({ name: 'inviter_id' })

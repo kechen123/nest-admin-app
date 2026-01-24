@@ -67,11 +67,16 @@ CREATE TABLE `checkin_record` (
   `images` JSON COMMENT '图片列表（JSON数组）',
   `is_public` TINYINT DEFAULT 0 COMMENT '是否公开: 0-不公开, 1-公开',
   `status` TINYINT DEFAULT 1 COMMENT '状态: 0-已删除, 1-正常',
+  `audit_status` TINYINT DEFAULT 0 COMMENT '审核状态: 0-待审核, 1-已通过, 2-已拒绝',
+  `audit_remark` VARCHAR(500) COMMENT '审核备注',
+  `audit_time` DATETIME COMMENT '审核时间',
+  `audit_by` INT COMMENT '审核人ID',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
   INDEX idx_user_id (`user_id`),
   INDEX idx_status (`status`),
+  INDEX idx_audit_status (`audit_status`),
   INDEX idx_created_at (`created_at`),
   INDEX idx_deleted_at (`deleted_at`),
   INDEX idx_location (`latitude`, `longitude`),
@@ -112,6 +117,7 @@ CREATE TABLE `user_invite_code` (
   `expire_time` DATETIME NOT NULL COMMENT '过期时间',
   `accepted_at` DATETIME NULL COMMENT '接受时间',
   `accepted_by` INT NULL COMMENT '接受者用户ID',
+  `is_shared` TINYINT(1) DEFAULT 0 COMMENT '是否已分享: 0-未分享, 1-已分享',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
@@ -120,11 +126,32 @@ CREATE TABLE `user_invite_code` (
   INDEX idx_status (`status`),
   INDEX idx_expire_time (`expire_time`),
   INDEX idx_accepted_by (`accepted_by`),
+  INDEX idx_is_shared (`is_shared`),
   INDEX idx_created_at (`created_at`),
   INDEX idx_deleted_at (`deleted_at`),
   FOREIGN KEY (`inviter_id`) REFERENCES `miniapp_user`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`accepted_by`) REFERENCES `miniapp_user`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户邀请码表';
+
+-- ============================================
+-- 6. 邀请配置表（用于管理邀请标题和图片）
+-- ============================================
+DROP TABLE IF EXISTS `invite_config`;
+CREATE TABLE `invite_config` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '配置ID',
+  `title` VARCHAR(200) NOT NULL COMMENT '邀请标题',
+  `image_url` VARCHAR(500) NOT NULL COMMENT '邀请图片URL',
+  `is_enabled` TINYINT(1) DEFAULT 0 COMMENT '是否启用: 0-未启用, 1-启用',
+  `sort_order` INT DEFAULT 0 COMMENT '排序',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT '删除时间',
+  INDEX idx_is_enabled (`is_enabled`),
+  INDEX idx_sort_order (`sort_order`),
+  INDEX idx_created_at (`created_at`),
+  INDEX idx_deleted_at (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='邀请配置表';
 
 SET FOREIGN_KEY_CHECKS = 1;
 

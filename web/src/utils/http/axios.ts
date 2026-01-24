@@ -1,3 +1,26 @@
+/**
+ * Axios HTTP 请求配置
+ * 
+ * 环境配置说明：
+ * - 开发环境（DEV）：
+ *   - baseURL 固定为 '/api'，通过 vite 代理转发到后端
+ *   - 代理配置在 vite.config.ts 中设置（默认 target: http://localhost:3000）
+ * 
+ * - 生产环境（PROD）：
+ *   - baseURL 从环境变量 VITE_APP_BASE_URL 读取
+ *   - 如果 VITE_APP_BASE_URL 不包含 '/api'，会自动拼接 '/api'
+ *   - 如果未配置 VITE_APP_BASE_URL，则使用默认值 '/api'（适用于前后端同域部署）
+ *   - 可以配置为：
+ *     * 基础 URL：'https://api.example.com'（会自动拼接为 'https://api.example.com/api'）
+ *     * 完整 API URL：'https://api.example.com/api'（直接使用）
+ *     * 相对路径：'/api'（前后端同域）
+ * 
+ * 环境变量配置（.env.production）：
+ *   VITE_APP_BASE_URL=https://api.example.com  # 生产环境基础 URL（会自动拼接 /api）
+ *   或
+ *   VITE_APP_BASE_URL=https://api.example.com/api  # 生产环境完整 API URL
+ */
+
 import axios, { AxiosError } from 'axios'
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { errorCodeType } from './errorCode'
@@ -99,11 +122,93 @@ const isErrorHandled = (error: ApiError): boolean => {
   return !unhandledErrors.has(error)
 }
 
+// 处理 URL 拼接逻辑
+const processBaseURL = (url: string): string => {
+  const trimmedURL = url.trim()
+  
+  // 如果已经包含 /api，直接返回
+  if (trimmedURL.endsWith('/api')) {
+    return trimmedURL
+  }
+  
+  // 如果是完整 URL（http:// 或 https://），拼接 /api
+  if (trimmedURL.startsWith('http://') || trimmedURL.startsWith('https://')) {
+    // 确保 URL 不以 / 结尾，然后拼接 /api
+    return trimmedURL.replace(/\/+$/, '') + '/api'
+  }
+  
+  // 如果是相对路径
+  if (trimmedURL.startsWith('/')) {
+    // 如果路径已经是 /api 开头，直接返回
+    if (trimmedURL === '/api' || trimmedURL.startsWith('/api/')) {
+      return trimmedURL
+    }
+    // 如果路径以 /api 结尾，直接返回
+    if (trimmedURL.endsWith('/api')) {
+      return trimmedURL
+    }
+    // 否则在路径后拼接 /api
+    return trimmedURL.replace(/\/+$/, '') + '/api'
+  }
+  
+  // 其他情况，直接返回
+  return trimmedURL
+}
+
+// 获取 baseURL 配置
+const getBaseURL = (): string => {
+  // 开发环境：优先使用环境变量 VITE_APP_BASE_URL，如果没有配置则使用相对路径走 vite 代理
+  if (import.meta.env.DEV) {
+    const devBaseURL = import.meta.env.VITE_APP_BASE_URL
+    
+    // 如果配置了环境变量，使用环境变量（支持完整 URL 或相对路径）
+    if (devBaseURL && devBaseURL.trim()) {
+      return processBaseURL(devBaseURL)
+    }
+    
+    // 如果没有配置环境变量，使用相对路径，走 vite 代理
+    // vite 代理会将 /api 转发到后端（配置在 vite.config.ts 中）
+    return '/api'
+  }
+  
+  // 生产环境：使用环境变量 VITE_APP_BASE_URL
+  const baseURL = import.meta.env.VITE_APP_BASE_URL
+  
+  if (baseURL && baseURL.trim()) {
+    return processBaseURL(baseURL)
+  }
+  
+  // 默认使用相对路径
+  return '/api'
+}
+
+// 获取最终的 baseURL
+const finalBaseURL = getBaseURL()
+
+// 开发环境下，在控制台输出配置信息（仅开发环境）
+if (import.meta.env.DEV) {
+  console.log('[Axios Config] 开发环境 - baseURL:', finalBaseURL)
+  console.log('[Axios Config] VITE_APP_BASE_URL:', import.meta.env.VITE_APP_BASE_URL || '未配置（将使用相对路径 /api，走 vite 代理）')
+  if (finalBaseURL === '/api') {
+    console.log('[Axios Config] 使用相对路径，Vite 代理会将 /api 请求转发到:', import.meta.env.VITE_API_TARGET || 'http://localhost:3000')
+    console.log('[Axios Config] 浏览器中显示的请求地址会是: http://localhost:4000/api/xxx（这是正常的，代理会处理）')
+  } else {
+    console.log('[Axios Config] 使用环境变量配置的 URL，直接请求:', finalBaseURL)
+  }
+} else {
+  console.log('[Axios Config] 生产环境 - baseURL:', finalBaseURL)
+  console.log('[Axios Config] VITE_APP_BASE_URL:', import.meta.env.VITE_APP_BASE_URL)
+}
+
 // 创建axios实例
 const service = axios.create({
-  // 服务接口请求，使用相对路径走 vite 代理，避免 CORS 问题
-  // 开发环境强制使用相对路径，生产环境可以通过环境变量配置
-  baseURL: import.meta.env.DEV ? '/api' : import.meta.env.VITE_APP_BASE_API || '/api',
+  // 服务接口请求
+  // 开发环境：使用相对路径 /api，通过 vite 代理转发到后端
+  //   - 浏览器中会显示为 http://localhost:4000/api/xxx
+  //   - 但实际会被 vite 代理转发到 http://localhost:3000/api/xxx
+  // 生产环境：使用环境变量 VITE_APP_BASE_URL（会自动处理 /api 拼接）
+  //   - 如果配置为 http://localhost:5000，会自动拼接为 http://localhost:5000/api
+  baseURL: finalBaseURL,
   // 超时设置
   timeout: 10000,
   headers: {
@@ -179,9 +284,32 @@ service.interceptors.request.use(
       config.headers['Authorization'] = `Bearer ${token}`
     }
 
-    // 确保开发环境使用相对路径
-    if (import.meta.env.DEV && config.baseURL && config.baseURL.startsWith('http')) {
-      config.baseURL = '/api'
+    // 开发环境：如果配置了环境变量，使用环境变量；否则使用相对路径走 vite 代理
+    if (import.meta.env.DEV) {
+      const devBaseURL = import.meta.env.VITE_APP_BASE_URL
+      
+      if (devBaseURL && devBaseURL.trim()) {
+        // 如果配置了环境变量，使用环境变量配置的 baseURL
+        config.baseURL = processBaseURL(devBaseURL)
+      } else {
+        // 如果没有配置环境变量，强制使用相对路径，走 vite 代理
+        config.baseURL = '/api'
+      }
+      
+      // 确保 url 也是相对路径（如果之前被设置为绝对路径且 baseURL 是相对路径）
+      if (config.baseURL === '/api' && config.url && (config.url.startsWith('http://') || config.url.startsWith('https://'))) {
+        // 提取路径部分
+        try {
+          const urlObj = new URL(config.url)
+          config.url = urlObj.pathname + urlObj.search
+        } catch {
+          // 如果解析失败，保持原样
+        }
+      }
+    }
+    // 生产环境：如果 baseURL 未设置或为空，使用默认值
+    else if (!config.baseURL || !config.baseURL.trim()) {
+      config.baseURL = getBaseURL()
     }
 
     // 处理 GET 请求的 params 参数（移除空值）

@@ -170,6 +170,13 @@ export function acceptInvite(data: IAcceptInviteDto) {
 }
 
 /**
+ * 标记邀请码为已分享
+ */
+export function markInviteAsShared(code: string) {
+  return http.post<{ message: string }>('/miniapp/invite/mark-shared', { code })
+}
+
+/**
  * 取消邀请
  */
 export function cancelInvite(data: ICancelInviteDto) {

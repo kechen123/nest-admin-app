@@ -13,6 +13,9 @@ export interface ICheckinRecord {
   images?: string[]
   isPublic?: number | boolean
   status: number
+  auditStatus?: number // 审核状态: 0-待审核, 1-已通过, 2-已拒绝
+  auditRemark?: string // 审核备注（拒绝原因）
+  auditTime?: string // 审核时间
   createdAt: string
   updatedAt: string
 }

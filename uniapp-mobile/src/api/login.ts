@@ -166,7 +166,14 @@ export function miniappWxLogin(data: {
     userId: number
     token: string
     needBindPhone: boolean
-    userInfo: IUserInfoRes & { phone?: string }
+    userInfo: {
+      id: number
+      openid: string
+      nickname?: string
+      avatar?: string
+      gender: number
+      phone?: string
+    }
   }>('/miniapp/user/wxLogin', data)
 }
 
