@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { onLoad } from '@dcloudio/uni-app'
-import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useUserStore } from '@/store/user'
-import { useTokenStore } from '@/store/token'
+import { ref } from 'vue'
 import { acceptInvite, getInviteInfo } from '@/api/couple'
+import { useTokenStore } from '@/store/token'
+import { useUserStore } from '@/store/user'
 
 defineOptions({
   name: 'InvitePage',
@@ -46,30 +46,33 @@ const isBinded = ref(false)
 const isBinding = ref(false)
 
 // 获取邀请码信息
-const fetchInviteInfo = async (code: string) => {
+async function fetchInviteInfo(code: string) {
   try {
     isLoading.value = true
     const result = await getInviteInfo(code)
     inviteInfo.value = result
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('获取邀请信息失败:', error)
     const message = error?.response?.data?.message || '获取邀请信息失败'
     uni.showToast({
       title: message,
-      icon: 'none'
+      icon: 'none',
     })
     // 如果获取失败，跳转回首页
     setTimeout(() => {
       uni.navigateBack()
     }, 2000)
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
 
 // 同意邀请
-const handleAcceptInvite = async () => {
-  if (isBinding.value || !inviteInfo.value) return
+async function handleAcceptInvite() {
+  if (isBinding.value || !inviteInfo.value)
+    return
 
   try {
     isBinding.value = true
@@ -84,24 +87,25 @@ const handleAcceptInvite = async () => {
 
     uni.showToast({
       title: '绑定成功！',
-      icon: 'success'
+      icon: 'success',
     })
 
     // 延迟跳转到首页
     setTimeout(() => {
       uni.switchTab({
-        url: '/pages/index/index'
+        url: '/pages/index/index',
       })
     }, 2000)
-
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('接受邀请失败:', error)
     const message = error?.response?.data?.message || '接受邀请失败，请重试'
     uni.showToast({
       title: message,
-      icon: 'none'
+      icon: 'none',
     })
-  } finally {
+  }
+  finally {
     isBinding.value = false
   }
 }
@@ -112,10 +116,11 @@ onLoad((options: any) => {
   if (code) {
     inviteCode.value = code
     fetchInviteInfo(code)
-  } else {
+  }
+  else {
     uni.showToast({
       title: '邀请链接无效',
-      icon: 'none'
+      icon: 'none',
     })
     setTimeout(() => {
       uni.navigateBack()
@@ -157,8 +162,10 @@ onLoad((options: any) => {
         </view>
 
         <!-- 同意按钮 -->
-        <button class="accept-btn" :disabled="isBinding || !inviteInfo?.canAccept" :loading="isBinding"
-          @click="handleAcceptInvite">
+        <button
+          class="accept-btn" :disabled="isBinding || !inviteInfo?.canAccept" :loading="isBinding"
+          @click="handleAcceptInvite"
+        >
           <text v-if="!isBinding && inviteInfo?.canAccept">❤️ 同意邀请</text>
           <text v-else-if="!isBinding && inviteInfo?.isExpired">邀请码已过期</text>
           <text v-else-if="!isBinding">邀请码不可用</text>
@@ -467,7 +474,6 @@ onLoad((options: any) => {
 }
 
 @keyframes heartbeat {
-
   0%,
   100% {
     transform: scale(1);
@@ -479,7 +485,6 @@ onLoad((options: any) => {
 }
 
 @keyframes bounce {
-
   0%,
   20%,
   50%,

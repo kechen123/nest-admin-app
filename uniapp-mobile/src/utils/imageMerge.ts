@@ -12,8 +12,6 @@ export interface MergeMarkerOptions {
   id: string
 }
 
-
-
 function getImageInfo(src: string) {
   console.log('src', src)
   return new Promise<UniApp.GetImageInfoSuccessData>((resolve, reject) => {
@@ -61,22 +59,23 @@ function getLocalImagePath(imagePath: string): string {
   if (imagePath.startsWith('data:') || imagePath.startsWith('http')) {
     return imagePath
   }
-  
+
   // 如果是本地路径，尝试转换为临时路径
   if (imagePath.startsWith('/')) {
     try {
       const fs = wx.getFileSystemManager()
-      const tempPath = wx.env.USER_DATA_PATH + '/' + Date.now() + '.png'
-      
+      const tempPath = `${wx.env.USER_DATA_PATH}/${Date.now()}.png`
+
       // 复制文件到临时目录
       fs.copyFileSync(imagePath, tempPath)
       return tempPath
-    } catch (error) {
+    }
+    catch (error) {
       console.warn('复制本地文件失败，使用原路径:', error)
       return imagePath
     }
   }
-  
+
   return imagePath
 }
 
@@ -109,14 +108,13 @@ export async function mergeMarkerImage(
   const x = (size * 2 - size) / 2 // 左右居中
   const y = 10 // 顶部距离
   const r = size / 2 // 圆形半径
-  
+
   ctx.save()
   ctx.beginPath()
   ctx.arc(x + r, y + r, r, 0, Math.PI * 2)
   ctx.clip()
   ctx.drawImage(fgRes.path, x, y, size, size)
   ctx.restore()
-
 
   return new Promise((resolve, reject) => {
     ctx.draw(false, () => {

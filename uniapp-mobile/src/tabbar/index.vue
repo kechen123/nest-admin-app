@@ -43,14 +43,14 @@ function handleClick(index: number) {
 onLoad(() => {
   // 解决原生 tabBar 未隐藏导致有2个 tabBar 的问题
   needHideNativeTabbar
-    && uni.hideTabBar({
-      fail(err) {
-        console.log('hideTabBar fail: ', err)
-      },
-      success(res) {
-        // console.log('hideTabBar success: ', res)
-      },
-    })
+  && uni.hideTabBar({
+    fail(err) {
+      console.log('hideTabBar fail: ', err)
+    },
+    success(res) {
+      // console.log('hideTabBar success: ', res)
+    },
+  })
 })
 // #endif
 
@@ -58,14 +58,14 @@ onLoad(() => {
 onMounted(() => {
   // 解决支付宝自定义tabbar 未隐藏导致有2个 tabBar 的问题; 注意支付宝很特别，需要在 onMounted 钩子调用
   customTabbarEnable // 另外，支付宝里面，只要是 customTabbar 都需要隐藏
-    && uni.hideTabBar({
-      fail(err) {
-        console.log('hideTabBar fail: ', err)
-      },
-      success(res) {
-        // console.log('hideTabBar success: ', res)
-      },
-    })
+  && uni.hideTabBar({
+    fail(err) {
+      console.log('hideTabBar fail: ', err)
+    },
+    success(res) {
+      // console.log('hideTabBar success: ', res)
+    },
+  })
 })
 // #endif
 const activeColor = 'var(--wot-color-theme, #1890ff)'
@@ -87,8 +87,10 @@ function getImageByIndex(index: number, item: CustomTabBarItem) {
   <view v-if="customTabbarEnable" class="h-50px pb-safe">
     <view class="border-and-fixed bg-white" @touchmove.stop.prevent>
       <view class="h-50px flex items-center">
-        <view v-for="(item, index) in tabbarList" :key="index" class="flex flex-1 flex-col items-center justify-center"
-          :style="{ color: getColorByIndex(index) }" @click="handleClick(index)">
+        <view
+          v-for="(item, index) in tabbarList" :key="index" class="flex flex-1 flex-col items-center justify-center"
+          :style="{ color: getColorByIndex(index) }" @click="handleClick(index)"
+        >
           <view v-if="item.isBulge" class="relative">
             <!-- 中间一个鼓包tabbarItem的处理 -->
             <view class="bulge">
@@ -121,7 +123,8 @@ function getImageByIndex(index: number, item: CustomTabBarItem) {
               </template>
               <template v-else>
                 <view
-                  class="absolute top-0 box-border h-5 min-w-5 center rounded-full bg-#f56c6c px-1 text-center text-xs text-white -right-3">
+                  class="absolute top-0 box-border h-5 min-w-5 center rounded-full bg-#f56c6c px-1 text-center text-xs text-white -right-3"
+                >
                   {{ item.badge > 99 ? '99+' : item.badge }}
                 </view>
               </template>

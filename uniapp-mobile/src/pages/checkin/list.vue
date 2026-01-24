@@ -139,8 +139,10 @@ function goToAdd() {
 
             <!-- 图片 -->
             <view v-if="record.images.length > 0" class="record-images">
-              <wd-img v-for="(image, index) in record.images.slice(0, 3)" :key="index" :src="image" mode="aspectFill"
-                class="record-image" />
+              <wd-img
+                v-for="(image, index) in record.images.slice(0, 3)" :key="index" :src="image" mode="aspectFill"
+                class="record-image"
+              />
               <view v-if="record.images.length > 3" class="image-more">
                 +{{ record.images.length - 3 }}
               </view>

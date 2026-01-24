@@ -183,8 +183,10 @@ async function chooseAvatar(data: any) {
       <view class="form-item">
         <text class="form-label">头像</text>
         <view class="avatar-section">
-          <button class="avatar-preview" :disabled="isUploadingAvatar" open-type="chooseAvatar"
-            @chooseavatar="chooseAvatar">
+          <button
+            class="avatar-preview" :disabled="isUploadingAvatar" open-type="chooseAvatar"
+            @chooseavatar="chooseAvatar"
+          >
             <image v-if="formData.avatar" :src="formData.avatar" mode="aspectFill" />
             <text v-else class="default-avatar">👤</text>
             <view v-if="isUploadingAvatar" class="uploading-overlay">

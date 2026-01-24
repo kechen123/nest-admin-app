@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { computed, onMounted, ref } from 'vue'
 import { useCheckinStore } from '@/store/checkin'
 
 definePage({
@@ -16,7 +16,8 @@ const { records } = storeToRefs(checkinStore)
 onMounted(async () => {
   try {
     await checkinStore.loadRecords()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('加载打卡记录失败:', error)
   }
 })
@@ -28,7 +29,7 @@ const scale = ref(16)
 
 // 地图标记点
 const markers = computed(() => {
-  return records.value.map((record) => ({
+  return records.value.map(record => ({
     id: record.id,
     latitude: record.latitude,
     longitude: record.longitude,
@@ -48,7 +49,7 @@ const markers = computed(() => {
 })
 
 // 获取当前位置
-const getCurrentLocation = () => {
+function getCurrentLocation() {
   uni.getLocation({
     type: 'gcj02',
     success: (res) => {
@@ -65,7 +66,7 @@ const getCurrentLocation = () => {
 }
 
 // 标记点点击事件
-const onMarkerTap = (e: any) => {
+function onMarkerTap(e: any) {
   const markerId = e.detail.markerId
   const record = checkinStore.getRecordById(markerId)
   if (record) {
@@ -76,12 +77,12 @@ const onMarkerTap = (e: any) => {
 }
 
 // 地图点击事件（添加新打卡）
-const onMapTap = () => {
+function onMapTap() {
   // 可以在这里添加点击地图添加打卡的功能
 }
 
 // 跳转到打卡发布页面
-const goToAddCheckin = () => {
+function goToAddCheckin() {
   uni.navigateTo({
     url: '/pages/checkin/add',
   })
@@ -91,16 +92,18 @@ onMounted(async () => {
   // 加载打卡记录
   try {
     await checkinStore.loadRecords()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('加载打卡记录失败:', error)
   }
-  
+
   // 如果有打卡记录，将地图中心设置为第一个打卡点
   if (records.value.length > 0) {
     const firstRecord = records.value[0]
     latitude.value = firstRecord.latitude
     longitude.value = firstRecord.longitude
-  } else {
+  }
+  else {
     // 否则获取当前位置
     getCurrentLocation()
   }
@@ -122,7 +125,9 @@ onMounted(async () => {
     />
     <!-- 添加打卡按钮 -->
     <view class="add-btn" @click="goToAddCheckin">
-      <view class="add-icon">+</view>
+      <view class="add-icon">
+        +
+      </view>
       <text class="add-text">打卡</text>
     </view>
     <!-- 定位按钮 -->

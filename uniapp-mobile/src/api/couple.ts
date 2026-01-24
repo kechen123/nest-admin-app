@@ -73,7 +73,7 @@ export enum InviteCodeStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
   EXPIRED = 'expired',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 /**
@@ -184,4 +184,3 @@ export function cancelInvite(data: ICancelInviteDto) {
 export function getUserInviteCodes() {
   return http.get<IUserInviteListItem[]>('/miniapp/invite/my-codes')
 }
-

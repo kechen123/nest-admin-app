@@ -1,6 +1,6 @@
 import { ref } from 'vue'
-import { getEnvBaseUrl } from '@/utils/index'
 import { useTokenStore } from '@/store/token'
+import { getEnvBaseUrl } from '@/utils/index'
 
 const VITE_UPLOAD_BASEURL = `${getEnvBaseUrl()}/api/upload/image`
 
@@ -152,12 +152,13 @@ async function uploadFile({
   // 获取 token
   const tokenStore = useTokenStore()
   let token = tokenStore.validToken.value || ''
-  
+
   // 如果没有 token，尝试获取
   if (!token && tokenStore.tryGetValidToken) {
     try {
       token = await tokenStore.tryGetValidToken()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('获取token失败:', error)
     }
   }
@@ -181,16 +182,17 @@ async function uploadFile({
         if (typeof responseData === 'string') {
           try {
             responseData = JSON.parse(responseData)
-          } catch (e) {
+          }
+          catch (e) {
             // 如果解析失败，使用原始数据
             console.log('Response is not JSON, using raw data:', responseData)
           }
         }
-        
+
         // 后端返回格式通常是 { code: 200, data: {...}, msg: '...' }
         // 或者直接返回数据对象
         const result = responseData?.data || responseData
-        
+
         onSuccess(result)
       }
       catch (err) {

@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import { onShow } from '@dcloudio/uni-app'
-import dayjs from 'dayjs'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { getMapMarkers } from '@/api/checkin'
 import { useCheckinStore } from '@/store/checkin'
-import { mergeMarkerImage } from '@/utils/imageMerge'
 import { useTokenStore } from '@/store/token'
+import { mergeMarkerImage } from '@/utils/imageMerge'
 
 defineOptions({
   name: 'Home',
@@ -326,15 +325,19 @@ function goToDetail(id: string | number) {
 
 <template>
   <view class="home-container">
-    <canvas id="canvas-marker" canvas-id="canvas-marker"
-      style="width: 200px; height: 200px;position: absolute; top: -500rpx; left: -500rpx; z-index: -1;" />
+    <canvas
+      id="canvas-marker" canvas-id="canvas-marker"
+      style="width: 200px; height: 200px;position: absolute; top: -500rpx; left: -500rpx; z-index: -1;"
+    />
     <!-- 地图区域 - 全屏背景 -->
     <view class="map-section">
       <view class="map-container">
-        <map :latitude="mapLatitude" :longitude="mapLongitude" :scale="mapScale" :markers="mapMarkers"
-          :show-location="true" class="map" @markertap="onMarkerTap" />
+        <map
+          :latitude="mapLatitude" :longitude="mapLongitude" :scale="mapScale" :markers="mapMarkers"
+          :show-location="true" class="map" @markertap="onMarkerTap"
+        />
         <!-- 悬浮开关 -->
-        <view class="map-switch-float" v-if="tokenStore.hasLogin">
+        <view v-if="tokenStore.hasLogin" class="map-switch-float">
           <text class="switch-text">{{ showPublicCheckins ? '隐藏' : '显示' }}公开打卡</text>
           <switch color="#ff6b9d" :checked="showPublicCheckins" @change="togglePublicCheckins" />
         </view>
@@ -365,10 +368,12 @@ function goToDetail(id: string | number) {
   left: 0;
   right: 0;
   z-index: 10;
-  background: linear-gradient(180deg,
-      rgba(255, 107, 157, 0.95) 0%,
-      rgba(255, 143, 171, 0.9) 50%,
-      rgba(255, 143, 171, 0) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 107, 157, 0.95) 0%,
+    rgba(255, 143, 171, 0.9) 50%,
+    rgba(255, 143, 171, 0) 100%
+  );
   padding: 60rpx 30rpx 80rpx;
   padding-top: calc(60rpx + env(safe-area-inset-top));
   color: #fff;

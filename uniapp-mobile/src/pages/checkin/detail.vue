@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import { useCheckinStore } from '@/store/checkin'
 import dayjs from 'dayjs'
+import { onMounted, ref } from 'vue'
+import { useCheckinStore } from '@/store/checkin'
 
 definePage({
   style: {
@@ -43,7 +43,8 @@ onMounted(async () => {
         uni.navigateBack()
       }, 1500)
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('加载记录失败:', error)
     uni.showToast({
       title: '加载失败',
@@ -53,14 +54,16 @@ onMounted(async () => {
 })
 
 // 格式化时间
-const formatTime = (time: string) => {
-  if (!time) return ''
+function formatTime(time: string) {
+  if (!time)
+    return ''
   return dayjs(time).format('YYYY年MM月DD日 HH:mm')
 }
 
 // 预览图片
-const previewImage = (index: number) => {
-  if (!record.value) return
+function previewImage(index: number) {
+  if (!record.value)
+    return
   uni.previewImage({
     urls: record.value.images,
     current: index,
@@ -68,8 +71,9 @@ const previewImage = (index: number) => {
 }
 
 // 在地图上查看
-const viewOnMap = () => {
-  if (!record.value) return
+function viewOnMap() {
+  if (!record.value)
+    return
   uni.switchTab({
     url: '/pages/map/map',
   })
@@ -77,8 +81,9 @@ const viewOnMap = () => {
 }
 
 // 删除打卡
-const deleteCheckin = async () => {
-  if (!record.value) return
+async function deleteCheckin() {
+  if (!record.value)
+    return
 
   uni.showModal({
     title: '提示',
@@ -96,7 +101,8 @@ const deleteCheckin = async () => {
           setTimeout(() => {
             uni.navigateBack()
           }, 1500)
-        } catch (error) {
+        }
+        catch (error) {
           uni.hideLoading()
           console.error('删除失败:', error)
         }
@@ -110,8 +116,10 @@ const deleteCheckin = async () => {
   <view v-if="record" class="detail-container">
     <!-- 头部图片 -->
     <view v-if="record.images.length > 0" class="header-images">
-      <swiper class="swiper" :indicator-dots="record.images.length > 1" :autoplay="false"
-        indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#fff">
+      <swiper
+        class="swiper" :indicator-dots="record.images.length > 1" :autoplay="false"
+        indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#fff"
+      >
         <swiper-item v-for="(image, index) in record.images" :key="index" @click="previewImage(index)">
           <wd-img :src="image" mode="aspectFill" class="header-image" />
         </swiper-item>
@@ -128,7 +136,9 @@ const deleteCheckin = async () => {
         </view>
         <view class="location-info">
           <text class="location-text">{{ record.address }}</text>
-          <button class="map-btn" size="mini" @click="viewOnMap">在地图上查看</button>
+          <button class="map-btn" size="mini" @click="viewOnMap">
+            在地图上查看
+          </button>
         </view>
         <view class="location-coords">
           坐标：{{ record.latitude.toFixed(6) }}, {{ record.longitude.toFixed(6) }}
@@ -141,7 +151,9 @@ const deleteCheckin = async () => {
           <text class="section-icon">💕</text>
           <text class="section-title">内容</text>
         </view>
-        <view class="content-text">{{ record.content }}</view>
+        <view class="content-text">
+          {{ record.content }}
+        </view>
       </view>
 
       <!-- 时间信息 -->
@@ -158,7 +170,9 @@ const deleteCheckin = async () => {
 
     <!-- 底部操作栏 -->
     <view class="footer-actions">
-      <button class="delete-btn" @click="deleteCheckin">删除</button>
+      <button class="delete-btn" @click="deleteCheckin">
+        删除
+      </button>
     </view>
   </view>
 

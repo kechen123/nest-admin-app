@@ -1,8 +1,8 @@
+import type { ICheckinRecord } from '@/api/checkin'
+import dayjs from 'dayjs'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import dayjs from 'dayjs'
 import * as checkinApi from '@/api/checkin'
-import type { ICheckinRecord } from '@/api/checkin'
 
 // 打卡记录类型（兼容后端和本地）
 export interface CheckinRecord {
@@ -50,10 +50,12 @@ export const useCheckinStore = defineStore(
         const res = await checkinApi.getCheckinList({ page, pageSize })
         records.value = res.list.map(transformRecord)
         return res
-      } catch (error) {
+      }
+      catch (error) {
         console.error('加载打卡记录失败:', error)
         throw error
-      } finally {
+      }
+      finally {
         loading.value = false
       }
     }
@@ -72,7 +74,8 @@ export const useCheckinStore = defineStore(
         const newRecord = transformRecord(res)
         records.value.unshift(newRecord) // 最新的在前面
         return newRecord
-      } catch (error) {
+      }
+      catch (error) {
         console.error('创建打卡记录失败:', error)
         // 如果API调用失败，回退到本地存储
         const newRecord: CheckinRecord = {
@@ -96,7 +99,8 @@ export const useCheckinStore = defineStore(
           return true
         }
         return false
-      } catch (error) {
+      }
+      catch (error) {
         console.error('删除打卡记录失败:', error)
         // 如果API调用失败，回退到本地删除
         const index = records.value.findIndex(item => item.id === id)
@@ -125,7 +129,8 @@ export const useCheckinStore = defineStore(
           return true
         }
         return false
-      } catch (error) {
+      }
+      catch (error) {
         console.error('更新打卡记录失败:', error)
         // 如果API调用失败，回退到本地更新
         const index = records.value.findIndex(item => item.id === id)
@@ -152,7 +157,8 @@ export const useCheckinStore = defineStore(
           if (!records.value.find(item => item.id === record.id)) {
             records.value.push(record)
           }
-        } catch (error) {
+        }
+        catch (error) {
           console.error('获取打卡记录详情失败:', error)
         }
       }
@@ -172,7 +178,8 @@ export const useCheckinStore = defineStore(
     const getStatistics = async () => {
       try {
         return await checkinApi.getCheckinStatistics()
-      } catch (error) {
+      }
+      catch (error) {
         console.error('获取统计信息失败:', error)
         // 如果API调用失败，使用本地数据计算
         const total = records.value.length

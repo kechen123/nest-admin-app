@@ -140,7 +140,8 @@ function chooseImage() {
             icon: 'none',
             duration: 2000,
           })
-        } else {
+        }
+        else {
           validFiles.push(file)
         }
       }
@@ -184,8 +185,8 @@ function chooseImage() {
           const fileInfo = await new Promise<{ size: number }>((resolve, reject) => {
             uni.getFileInfo({
               filePath: path,
-              success: (res) => resolve(res),
-              fail: (err) => reject(err),
+              success: res => resolve(res),
+              fail: err => reject(err),
             })
           })
 
@@ -195,10 +196,12 @@ function chooseImage() {
               icon: 'none',
               duration: 2000,
             })
-          } else {
+          }
+          else {
             validPaths.push(path)
           }
-        } catch (error) {
+        }
+        catch (error) {
           console.error('获取文件信息失败:', error)
           // 如果获取文件信息失败，仍然允许上传（由后端验证）
           validPaths.push(path)

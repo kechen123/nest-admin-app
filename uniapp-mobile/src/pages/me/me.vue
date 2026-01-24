@@ -2,7 +2,6 @@
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { generateInviteCode } from '@/api/couple'
-import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useCheckinStore } from '@/store/checkin'
 import { useTokenStore } from '@/store/token'
@@ -131,7 +130,8 @@ export default {
           })
         },
       }
-    } catch (error: any) {
+    }
+    catch (error: any) {
       console.error('获取邀请码失败:', error)
       uni.showToast({
         title: '获取邀请码失败',
@@ -492,7 +492,6 @@ export default {
   }
 
   @keyframes gradientShift {
-
     0%,
     100% {
       background-position: 0% 50%;
@@ -947,10 +946,12 @@ export default {
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(135deg,
-          rgba(255, 107, 157, 0.03) 0%,
-          rgba(255, 143, 171, 0.03) 50%,
-          rgba(255, 179, 189, 0.03) 100%);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 107, 157, 0.03) 0%,
+        rgba(255, 143, 171, 0.03) 50%,
+        rgba(255, 179, 189, 0.03) 100%
+      );
       opacity: 0;
       transition: opacity 0.3s ease;
       border-radius: 20rpx;
@@ -1062,7 +1063,6 @@ export default {
 }
 
 @keyframes bounce {
-
   0%,
   20%,
   50%,
@@ -1081,7 +1081,6 @@ export default {
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;

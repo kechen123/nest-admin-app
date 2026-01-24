@@ -5,14 +5,13 @@ import type { IAuthLoginRes, IUserInfoRes } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue' // 修复：导入 computed
 import {
+  bindPhone as _bindPhone,
   login as _login,
-  logout as _logout,
+  miniappWxLogin as _miniappWxLogin,
   refreshToken as _refreshToken,
   wxLogin as _wxLogin,
   getWxCode,
   getWxUserProfile,
-  miniappWxLogin as _miniappWxLogin,
-  bindPhone as _bindPhone,
 } from '@/api/login'
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { isDoubleTokenMode } from '@/utils'
@@ -181,17 +180,17 @@ export const useTokenStore = defineStore(
      * @param options 登录选项，包含是否跳过授权（默认true，静默登录）
      * @returns 登录结果
      */
-    const miniappWxLogin = async (options?: { skipAuth?: boolean; phone?: string }) => {
+    const miniappWxLogin = async (options?: { skipAuth?: boolean, phone?: string }) => {
       try {
         // 默认静默登录，不需要用户授权
         const { skipAuth = true, phone } = options || {}
-        
+
         // 1. 获取微信小程序登录的code（静默获取，不需要用户授权）
         const wxCodeRes = await getWxCode()
         console.log('小程序静默登录-code: ', wxCodeRes)
-        
-        let userInfo: { nickName?: string; avatarUrl?: string; gender?: number } | undefined
-        
+
+        let userInfo: { nickName?: string, avatarUrl?: string, gender?: number } | undefined
+
         // 2. 如果需要授权，则获取用户授权信息（通常不需要）
         if (!skipAuth) {
           try {
@@ -212,24 +211,24 @@ export const useTokenStore = defineStore(
             throw authError
           }
         }
-        
+
         // 3. 调用小程序登录接口（静默登录，不传userInfo）
-        const res = await _miniappWxLogin({ 
+        const res = await _miniappWxLogin({
           code: wxCodeRes.code,
           userInfo,
           phone,
         })
         console.log('小程序静默登录-res: ', res)
-        
+
         // 4. 将小程序登录返回格式转换为标准格式（单token模式）
         const standardRes: IAuthLoginRes = {
           token: res.token,
           expiresIn: 30 * 24 * 60 * 60, // 30天，单位：秒
         }
-        
+
         // 5. 设置token信息
         setTokenInfo(standardRes)
-        
+
         // 6. 转换并设置用户信息
         if (res.userInfo) {
           const userStore = useUserStore()
@@ -243,7 +242,7 @@ export const useTokenStore = defineStore(
           }
           userStore.setUserInfo(standardUserInfo)
         }
-        
+
         // 7. 如果需要绑定手机号，返回特殊标识
         if (res.needBindPhone) {
           return {
@@ -251,7 +250,7 @@ export const useTokenStore = defineStore(
             needBindPhone: true,
           } as IAuthLoginRes & { needBindPhone: boolean }
         }
-        
+
         return standardRes
       }
       catch (error) {

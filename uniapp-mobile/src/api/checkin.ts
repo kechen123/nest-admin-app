@@ -89,10 +89,12 @@ export function createCheckin(data: ICreateCheckinDto) {
  * 获取打卡记录列表
  */
 export function getCheckinList(params?: IQueryCheckinDto) {
-  const queryString = params ? Object.entries(params)
-    .filter(([_, value]) => value !== undefined && value !== null)
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-    .join('&') : ''
+  const queryString = params
+    ? Object.entries(params)
+        .filter(([_, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+        .join('&')
+    : ''
   const url = queryString ? `/miniapp/checkin?${queryString}` : '/miniapp/checkin'
   return http.get<IPaginationResponse<ICheckinRecord>>(url)
 }

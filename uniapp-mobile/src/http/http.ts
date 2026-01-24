@@ -20,26 +20,27 @@ export function http<T>(options: CustomRequestOptions) {
     // 获取token并添加到请求头
     const tokenStore = useTokenStore()
     let token = (tokenStore.validToken as any).value || ''
-    
+
     // 如果没有token但可以刷新，尝试刷新
     if (!token && tokenStore.tryGetValidToken) {
       try {
         token = await tokenStore.tryGetValidToken()
-      } catch (error) {
+      }
+      catch (error) {
         console.error('获取token失败:', error)
       }
     }
-    
+
     const headers = {
       ...options.header,
       'Content-Type': 'application/json',
     }
-    
+
     // 如果有token，添加到Authorization头（登录接口除外）
     if (token && !options.header?.Authorization && !options.url?.includes('/wxLogin')) {
       headers.Authorization = `Bearer ${token}`
     }
-    
+
     uni.request({
       ...options,
       header: headers,
@@ -57,7 +58,7 @@ export function http<T>(options: CustomRequestOptions) {
 
         if (isTokenExpired) {
           const tokenStore = useTokenStore()
-          
+
           // #ifdef MP-WEIXIN
           // 小程序环境：如果没有token或token已过期，直接触发授权登录
           if (!token) {
@@ -74,7 +75,7 @@ export function http<T>(options: CustomRequestOptions) {
                 // 调用静默登录（不需要用户授权，直接获取code登录）
                 const loginResult = await tokenStore.miniappWxLogin()
                 console.log('静默登录成功', loginResult)
-                
+
                 // 如果需要绑定手机号，提示用户
                 // if ((loginResult as any).needBindPhone) {
                 //   nextTick(() => {
@@ -86,7 +87,7 @@ export function http<T>(options: CustomRequestOptions) {
                 //     })
                 //   })
                 // }
-                
+
                 miniappLogging = false
                 // 将任务队列的所有任务重新请求
                 miniappLoginQueue.forEach(task => task())
