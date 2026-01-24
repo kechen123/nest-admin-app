@@ -156,6 +156,16 @@ CREATE TABLE `invite_config` (
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
+-- 7. 插入小程序管理菜单数据
+-- ============================================
+INSERT INTO `menus` (`id`, `name`, `title`, `permission_code`, `menu_type`, `path`, `component`, `query`, `is_frame`, `is_cache`, `visible`, `status`, `icon`, `parent_id`, `order_num`, `remark`) VALUES
+(104, 'Miniapp', '小程序管理', NULL, 'M', '/miniapp', 'Layout', NULL, 1, 0, 1, 1, 'Platform', 0, 3, NULL),
+(105, 'MiniappUser', '用户管理', 'miniapp:user:list', 'C', '/miniapp/user', 'miniapp/user/index', NULL, 1, 0, 1, 1, 'UserFilled', 104, 1, NULL),
+(106, 'MiniappInvite', '邀请管理', 'miniapp:invite:list', 'C', '/miniapp/invite-code', 'miniapp/invite-code/index', NULL, 1, 0, 1, 1, 'Share', 104, 2, NULL),
+(107, 'MiniappInviteInfo', '邀请信息管理', 'miniapp:invite-info:list', 'C', '/miniapp/invite-config', 'miniapp/invite-config/index', NULL, 1, 0, 1, 1, 'Message', 104, 3, NULL),
+(108, 'MiniappCheckin', '用户打卡管理', 'miniapp:checkin:list', 'C', '/miniapp/checkin', 'miniapp/checkin/index', NULL, 1, 0, 1, 1, 'Calendar', 104, 4, NULL);
+
+-- ============================================
 -- 初始化完成
 -- ============================================
 SELECT '小程序打卡系统数据库表创建完成' AS '';

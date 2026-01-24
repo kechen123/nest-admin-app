@@ -123,11 +123,10 @@ export default {
 
       // 获取当前有效邀请码
       const inviteCode = await pageInstance.generateInviteCode()
-      console.log('inviteCode>>>>>>>>>>>>>>>>', inviteCode)
       return {
         title: `${currentUserInfo?.userInfo?.nickname || '我'}邀请你共同记录美好时光`,
         path: `pages/invite/invite?code=${inviteCode.code}`,
-        imageUrl: '/static/images/login_logo.png',
+        imageUrl: '/static/logo.png',
         success: async (res: any) => {
           console.log('分享成功:', res)
           // 分享成功，标记邀请码为已分享

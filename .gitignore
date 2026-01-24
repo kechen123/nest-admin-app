@@ -1,6 +1,7 @@
 # 环境变量文件（重要：不要提交）
 .env.local
 .env.*.local
+backend/.env
 backend/.env.local
 backend/.env.*.local
 web/.env.local
