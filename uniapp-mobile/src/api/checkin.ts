@@ -131,9 +131,34 @@ export function getCheckinStatistics() {
 }
 
 /**
+ * 获取地图标记点查询参数
+ */
+export interface IMapMarkersQuery {
+  latitude?: number
+  longitude?: number
+  radius?: number // 查询半径（公里）
+  includePublic?: boolean
+}
+
+/**
  * 获取地图标记点
  */
-export function getMapMarkers(includePublic?: boolean) {
-  const queryString = includePublic !== undefined ? `?includePublic=${includePublic}` : ''
+export function getMapMarkers(params?: IMapMarkersQuery) {
+  const queryParams: string[] = []
+  
+  if (params?.latitude !== undefined) {
+    queryParams.push(`latitude=${params.latitude}`)
+  }
+  if (params?.longitude !== undefined) {
+    queryParams.push(`longitude=${params.longitude}`)
+  }
+  if (params?.radius !== undefined) {
+    queryParams.push(`radius=${params.radius}`)
+  }
+  if (params?.includePublic !== undefined) {
+    queryParams.push(`includePublic=${params.includePublic}`)
+  }
+  
+  const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : ''
   return http.get<ICheckinRecord[]>(`/miniapp/checkin/map/markers${queryString}`)
 }

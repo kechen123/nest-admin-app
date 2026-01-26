@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { onShow } from '@dcloudio/uni-app'
-import { storeToRefs } from 'pinia'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { getMapMarkers } from '@/api/checkin'
-import { useCheckinStore } from '@/store/checkin'
+import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 import { useTokenStore } from '@/store/token'
-import { mergeMarkerImage } from '@/utils/imageMerge'
+import { useMapLocation } from '@/composables/useMapLocation'
+import { useMapMarkers } from '@/composables/useMapMarkers'
+import { useSystemInfo } from '@/composables/useSystemInfo'
+import { useMapRegionChange } from '@/composables/useMapRegionChange'
 
 defineOptions({
   name: 'Home',
@@ -20,195 +20,58 @@ definePage({
   },
 })
 
+// Store
 const tokenStore = useTokenStore()
-const checkinStore = useCheckinStore()
-const { records } = storeToRefs(checkinStore)
-const lastRefreshTime = ref(0) // 上次刷新时间
 
-// 地图相关
-const mapLatitude = ref(39.908823) // 默认位置（北京）
-const mapLongitude = ref(116.397470) // 默认位置（北京）
-const mapScale = ref(13)
-const showPublicCheckins = ref(true) // 默认显示公开打卡
-const mapMarkers = ref<any[]>([])
-const statusBarHeight = ref(0) // 状态栏高度
-const safeAreaTop = ref(0) // 安全区域顶部高度
+// Composables
+const { mapLatitude, mapLongitude, mapScale, getCurrentLocation } = useMapLocation()
+const { safeAreaTop, getSystemInfo } = useSystemInfo()
 
-// 获取系统信息，适配安全区域
-function getSystemInfo() {
-  try {
-    const systemInfo = uni.getSystemInfoSync()
-    statusBarHeight.value = systemInfo.statusBarHeight || 0
-    // 计算安全区域顶部高度（状态栏高度，用于动态设置padding-top）
-    safeAreaTop.value = statusBarHeight.value
-  }
-  catch (error) {
-    console.error('获取系统信息失败:', error)
-    safeAreaTop.value = 0
-  }
-}
+// 从本地存储读取设置
+const STORAGE_KEY_PUBLIC_CHECKINS: string = 'map_settings_show_public_checkins'
+const STORAGE_KEY_ONLY_SHOW_MARKERS: string = 'map_settings_only_show_markers'
 
-// 获取当前位置
-function getCurrentLocation() {
-  return new Promise<void>((resolve) => {
-    // #ifdef MP-WEIXIN
-    // 微信小程序需要先检查定位权限
-    uni.getSetting({
-      success: (settingRes) => {
-        if (settingRes.authSetting['scope.userLocation']) {
-          // 已授权，直接获取位置
-          console.log('已授权，直接获取位置')
-          requestLocation()
-        }
-        else if (settingRes.authSetting['scope.userLocation'] === false) {
-          console.log('用户拒绝了定位权限')
-          // 用户拒绝了定位权限，引导用户开启
-          uni.showModal({
-            title: '需要定位权限',
-            content: '为了更好的体验，需要获取您的位置信息',
-            confirmText: '去设置',
-            cancelText: '取消',
-            success: (modalRes) => {
-              if (modalRes.confirm) {
-                uni.openSetting({
-                  success: (openRes) => {
-                    if (openRes.authSetting['scope.userLocation']) {
-                      requestLocation()
-                    }
-                    else {
-                      console.warn('用户未开启定位权限')
-                      resolve()
-                    }
-                  },
-                  fail: () => {
-                    resolve()
-                  },
-                })
-              }
-              else {
-                resolve()
-              }
-            },
-          })
-        }
-        else {
-          console.log('未询问过，直接请求定位')
-          // 未询问过，直接请求定位
-          requestLocation()
-        }
-      },
-      fail: () => {
-        // 获取设置失败，直接尝试定位
-        requestLocation()
-      },
-    })
+const showPublicCheckins = ref(
+  uni.getStorageSync(STORAGE_KEY_PUBLIC_CHECKINS) !== false, // 默认 true，如果存储的是 false 则为 false
+)
+const onlyShowMarkers = ref(
+  uni.getStorageSync(STORAGE_KEY_ONLY_SHOW_MARKERS) === true, // 默认 false，只有明确存储为 true 才为 true
+)
+const selectedMarkerId = ref<number | null>(null) // 当前选中的 marker ID
 
-    function requestLocation() {
-      uni.getLocation({
-        type: 'gcj02',
-        altitude: false,
-        geocode: false,
-        success: (res) => {
-          console.log('定位成功:', res)
-          mapLatitude.value = res.latitude
-          mapLongitude.value = res.longitude
-          mapScale.value = 15 // 定位后放大到合适的比例
-          resolve()
-        },
-        fail: (err) => {
-          console.warn('获取位置失败:', err)
-          // 如果获取位置失败，使用默认位置（北京）
-          mapLatitude.value = 39.908823
-          mapLongitude.value = 116.397470
-          mapScale.value = 13
-          resolve()
-        },
-      })
+const { mapMarkers, loadMapMarkers, loadRadius, refreshMarkersDisplay } = useMapMarkers(
+  mapLatitude,
+  mapLongitude,
+  showPublicCheckins,
+  onlyShowMarkers,
+  selectedMarkerId,
+)
+
+// 地图区域变化处理
+const { onRegionChange, initCenterLocation } = useMapRegionChange(
+  mapLatitude,
+  mapLongitude,
+  (lat, lon) => {
+    // 只有在初始化完成后才响应地图滑动
+    if (isInitialized.value && !isInitializing.value) {
+      console.log('地图滑动，加载新位置的点位')
+      loadMapMarkers(lat, lon, loadRadius.value)
     }
-    // #endif
+  },
+)
 
-    // #ifndef MP-WEIXIN
-    // 非微信小程序，直接获取位置
-    uni.getLocation({
-      type: 'gcj02',
-      success: (res) => {
-        console.log('定位成功:', res)
-        mapLatitude.value = res.latitude
-        mapLongitude.value = res.longitude
-        mapScale.value = 15 // 定位后放大到合适的比例
-        resolve()
-      },
-      fail: (err) => {
-        console.warn('获取位置失败，使用默认位置:', err)
-        // 如果获取位置失败，使用默认位置（北京）
-        mapLatitude.value = 39.908823
-        mapLongitude.value = 116.397470
-        mapScale.value = 13
-        resolve()
-      },
-    })
-    // #endif
-  })
-}
-
-// 加载地图标记点（只加载公开打卡）
-async function loadMapMarkers() {
-  try {
-    // 只加载公开打卡数据
-    const apiMarkers = await getMapMarkers(showPublicCheckins.value)
-    const promises = apiMarkers.map(async (record: any) => {
-      const iconPath = await mergeMarkerImage({
-        canvasId: 'canvas-marker',
-        foregroundSrc: record.images[0],
-        backgroundSrc: '/static/images/marker_bg.png',
-        size: 60,
-        fgSize: 60,
-        id: record.id,
-      })
-      return iconPath
-    })
-    const iconPaths = await Promise.all(promises)
-    console.log('iconPaths', iconPaths)
-
-    const markers = apiMarkers.map((record: any) => {
-      const iconPath = iconPaths.find((iconPath: { id: string }) => iconPath.id === record.id)
-      return {
-        id: record.id,
-        latitude: Number(record.latitude),
-        longitude: Number(record.longitude),
-        iconPath: iconPath?.tempFilePath || '/static/images/location.png',
-        width: 60,
-        height: 60,
-        callout: {
-          content: record.content || record.address,
-          color: '#ff6b9d',
-          fontSize: 12,
-          borderRadius: 5,
-          borderColor: '#ff6b9d',
-          borderWidth: 0,
-          bgColor: '#fff',
-          padding: 5,
-          display: 'ALWAYS',
-        },
-      }
-    })
-
-    mapMarkers.value = markers
-  }
-  catch (error) {
-    console.error('加载地图标记点失败:', error)
-    // 如果加载失败，清空标记点
-    mapMarkers.value = []
-  }
-}
+// 其他状态
+const lastRefreshTime = ref(0) // 上次刷新时间
+const isInitialized = ref(false) // 是否已初始化完成
+const isInitializing = ref(false) // 是否正在初始化
+const showSettingsModal = ref(false) // 是否显示设置弹窗
 
 // 刷新数据
-async function refreshData() {
+async function refreshData(forceRefresh = false) {
   try {
-    // 加载打卡记录列表
-    await checkinStore.loadRecords()
-    // 加载地图标记点
-    await loadMapMarkers()
+    // 显式传入当前位置，确保使用最新的定位结果
+    // 如果 forceRefresh 为 true，强制刷新，忽略去重逻辑
+    await loadMapMarkers(mapLatitude.value, mapLongitude.value, loadRadius.value, forceRefresh)
     // 更新刷新时间
     lastRefreshTime.value = Date.now()
   }
@@ -218,33 +81,52 @@ async function refreshData() {
 }
 
 // 监听发布成功事件，刷新数据
-function onCheckinPublished() {
-  refreshData()
+async function onCheckinPublished() {
+  // 发布成功后强制刷新，确保显示最新数据
+  console.log('收到发布成功事件，强制刷新地图数据')
+  // 重置上次请求参数，确保能重新请求
+  await refreshData(true)
+  // 更新刷新时间
+  lastRefreshTime.value = Date.now()
 }
 
 // 加载统计数据
 onMounted(async () => {
   try {
+    isInitializing.value = true
     // 获取系统信息
     getSystemInfo()
     // 先定位到当前位置
     await getCurrentLocation()
     // 加载数据
     await refreshData()
+    // 初始化地图中心位置记录，避免首次 regionchange 触发请求
+    initCenterLocation(mapLatitude.value, mapLongitude.value)
+    // 标记初始化完成
+    isInitialized.value = true
     // 监听发布成功事件
     uni.$on('checkin-published', onCheckinPublished)
   }
   catch (error) {
     console.error('加载数据失败:', error)
+    isInitialized.value = true // 即使失败也标记为已初始化
+  }
+  finally {
+    isInitializing.value = false
   }
 })
 
 // 页面显示时刷新数据（从发布页面返回时）
-onShow(() => {
-  // 如果距离上次刷新超过 2 秒，则刷新（避免频繁刷新）
-  const now = Date.now()
-  if (now - lastRefreshTime.value > 2000) {
-    refreshData()
+onShow(async () => {
+  // 如果已经初始化完成，且距离上次刷新超过 1 秒，则刷新（避免频繁刷新）
+  if (isInitialized.value && !isInitializing.value) {
+    const now = Date.now()
+    // 缩短刷新间隔，确保从发布页面返回时能及时刷新
+    if (now - lastRefreshTime.value > 1000) {
+      console.log('页面显示，刷新地图数据')
+      await refreshData(true) // 从其他页面返回时也强制刷新
+      lastRefreshTime.value = now
+    }
   }
 })
 
@@ -253,7 +135,9 @@ onUnmounted(() => {
   uni.$off('checkin-published', onCheckinPublished)
 })
 
-// 切换显示公开打卡
+/**
+ * 切换显示公开打卡
+ */
 async function togglePublicCheckins(e?: any) {
   if (e) {
     showPublicCheckins.value = e.detail.value
@@ -261,61 +145,86 @@ async function togglePublicCheckins(e?: any) {
   else {
     showPublicCheckins.value = !showPublicCheckins.value
   }
-  await loadMapMarkers()
+  // 保存到本地存储
+  uni.setStorageSync(STORAGE_KEY_PUBLIC_CHECKINS, showPublicCheckins.value)
+  // 切换时重新加载，传入当前位置
+  await loadMapMarkers(mapLatitude.value, mapLongitude.value, loadRadius.value)
 }
 
-// 标记点点击事件
+/**
+ * 切换只显示点位
+ */
+async function toggleOnlyShowMarkers(e?: any) {
+  if (e) {
+    onlyShowMarkers.value = e.detail.value
+  }
+  else {
+    onlyShowMarkers.value = !onlyShowMarkers.value
+  }
+  // 保存到本地存储
+  uni.setStorageSync(STORAGE_KEY_ONLY_SHOW_MARKERS, onlyShowMarkers.value)
+  // 切换时只重新转换 markers，不需要重新从服务器加载
+  await refreshMarkersDisplay()
+}
+
+/**
+ * 打开设置弹窗
+ */
+function openSettingsModal() {
+  showSettingsModal.value = true
+}
+
+/**
+ * 关闭设置弹窗
+ */
+function closeSettingsModal() {
+  showSettingsModal.value = false
+}
+
+/**
+ * 标记点点击事件
+ */
 async function onMarkerTap(e: any) {
   const markerId = e.detail.markerId
-  // 先从本地records查找
-  let record = records.value.find((r: any) => r.id === markerId)
-  // 如果本地没有，尝试从API获取
-  if (!record) {
-    try {
-      record = await checkinStore.getRecordById(markerId)
-    }
-    catch (error) {
-      console.error('获取记录失败:', error)
-    }
+  console.log('点击了标记点', markerId)
+  
+  // 设置选中的 marker ID（如果点击的是同一个，则取消选中）
+  if (selectedMarkerId.value === markerId) {
+    selectedMarkerId.value = null
   }
-  if (record) {
-    goToDetail(record.id)
+  else {
+    selectedMarkerId.value = markerId
   }
+  
+  // 更新 markers 显示（图标大小和层级）
+  await refreshMarkersDisplay()
+  
+  // 直接跳转到详情页，详情页会自己加载数据
+  // goToDetail(markerId)
 }
 
-// 最新打卡记录
-const latestRecord = computed(() => {
-  if (records.value.length === 0)
-    return null
-  return [...records.value].sort((a, b) => {
-    const timeA = a.createdAt || a.createTime
-    const timeB = b.createdAt || b.createTime
-    return new Date(timeB).getTime() - new Date(timeA).getTime()
-  })[0]
-})
-
-// 跳转到打卡发布页面
-function goToAddCheckin() {
-  uni.navigateTo({
-    url: '/pages/checkin/add',
-  })
+/**
+ * 气泡点击事件
+ */
+async function onCalloutTap(e: any) {
+  const markerId = e.detail.markerId
+  console.log('点击了气泡', markerId)
+  
+  // 设置选中的 marker ID（如果点击的是同一个，则取消选中）
+  if (selectedMarkerId.value === markerId) {
+    selectedMarkerId.value = null
+  }
+  else {
+    selectedMarkerId.value = markerId
+  }
+  
+  // 更新 markers 显示（图标大小和层级）
+  await refreshMarkersDisplay()
 }
 
-// 跳转到地图页面
-function goToMap() {
-  uni.switchTab({
-    url: '/pages/map/map',
-  })
-}
-
-// 跳转到打卡列表
-function goToList() {
-  uni.switchTab({
-    url: '/pages/checkin/list',
-  })
-}
-
-// 跳转到详情
+/**
+ * 跳转到详情页
+ */
 function goToDetail(id: string | number) {
   uni.navigateTo({
     url: `/pages/checkin/detail?id=${id}`,
@@ -325,21 +234,32 @@ function goToDetail(id: string | number) {
 
 <template>
   <view class="home-container">
-    <canvas
-      id="canvas-marker" canvas-id="canvas-marker"
-      style="width: 200px; height: 200px;position: absolute; top: -500rpx; left: -500rpx; z-index: -1;"
-    />
+    <canvas id="canvas-marker" canvas-id="canvas-marker"
+      style="width: 200px; height: 200px;position: absolute; top: -500rpx; left: -500rpx; z-index: -1;" />
     <!-- 地图区域 - 全屏背景 -->
     <view class="map-section">
       <view class="map-container">
-        <map
-          :latitude="mapLatitude" :longitude="mapLongitude" :scale="mapScale" :markers="mapMarkers"
-          :show-location="true" class="map" @markertap="onMarkerTap"
-        />
-        <!-- 悬浮开关 -->
-        <view v-if="tokenStore.hasLogin" class="map-switch-float">
-          <text class="switch-text">{{ showPublicCheckins ? '隐藏' : '显示' }}公开打卡</text>
-          <switch color="#ff6b9d" :checked="showPublicCheckins" @change="togglePublicCheckins" />
+        <map id="home-map" :latitude="mapLatitude" :longitude="mapLongitude" :scale="mapScale" :markers="mapMarkers"
+          :show-location="true" class="map" @markertap="onMarkerTap" @callouttap="onCalloutTap"
+          @regionchange="onRegionChange">
+          <cover-view slot="callout">
+            <cover-view v-for="marker in mapMarkers" :key="marker.id" :marker-id="marker.id" class="custom-callout">
+              <cover-view class="callout-content">
+                <!-- cover-image 支持网络图片，但建议使用本地路径 -->
+                <cover-image v-if="marker._data?.image" :src="marker._data.image" class="callout-image"
+                  mode="aspectFill" />
+                <cover-view class="callout-text">
+                  <cover-view class="callout-text-inner">
+                    {{ marker._data?.content || marker._data?.address || '' }}
+                  </cover-view>
+                </cover-view>
+              </cover-view>
+            </cover-view>
+          </cover-view>
+        </map>
+        <!-- 悬浮设置按钮 -->
+        <view v-if="tokenStore.hasLogin" class="settings-button" @click="openSettingsModal">
+          <text class="settings-icon">⚙️</text>
         </view>
       </view>
     </view>
@@ -349,6 +269,28 @@ function goToDetail(id: string | number) {
       <view class="header-content">
         <text class="app-title">💕 恋爱足迹</text>
         <text class="app-subtitle">记录我们的美好时光</text>
+      </view>
+    </view>
+
+    <!-- 设置弹窗 -->
+    <view v-if="showSettingsModal" class="settings-modal" @click="closeSettingsModal">
+      <view class="settings-modal-content" @click.stop>
+        <view class="settings-modal-header">
+          <text class="settings-modal-title">设置</text>
+          <text class="settings-modal-close" @click="closeSettingsModal">✕</text>
+        </view>
+        <view class="settings-modal-body">
+          <!-- 显示公开打卡开关 -->
+          <view class="settings-item">
+            <text class="settings-item-label">显示公开打卡</text>
+            <switch color="#ff6b9d" :checked="showPublicCheckins" @change="togglePublicCheckins" />
+          </view>
+          <!-- 只显示点位开关 -->
+          <view class="settings-item">
+            <text class="settings-item-label">只显示点位</text>
+            <switch color="#ff6b9d" :checked="onlyShowMarkers" @change="toggleOnlyShowMarkers" />
+          </view>
+        </view>
       </view>
     </view>
   </view>
@@ -368,12 +310,10 @@ function goToDetail(id: string | number) {
   left: 0;
   right: 0;
   z-index: 10;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 107, 157, 0.95) 0%,
-    rgba(255, 143, 171, 0.9) 50%,
-    rgba(255, 143, 171, 0) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 107, 157, 0.95) 0%,
+      rgba(255, 143, 171, 0.9) 50%,
+      rgba(255, 143, 171, 0) 100%);
   padding: 60rpx 30rpx 80rpx;
   padding-top: calc(60rpx + env(safe-area-inset-top));
   color: #fff;
@@ -549,6 +489,7 @@ function goToDetail(id: string | number) {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -603,23 +544,136 @@ function goToDetail(id: string | number) {
   height: 100%;
 }
 
-.map-switch-float {
+.settings-button {
   position: absolute;
   bottom: 200rpx;
   right: 20rpx;
+  width: 80rpx;
+  height: 80rpx;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 50rpx;
-  padding: 12rpx 24rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  justify-content: center;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
   z-index: 10;
+  cursor: pointer;
 
-  .switch-text {
-    font-size: 24rpx;
-    color: #333;
-    white-space: nowrap;
+  .settings-icon {
+    font-size: 40rpx;
   }
+}
+
+.settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.settings-modal-content {
+  width: 600rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40rpx 30rpx;
+  border-bottom: 1rpx solid #eee;
+
+  .settings-modal-title {
+    font-size: 36rpx;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .settings-modal-close {
+    font-size: 40rpx;
+    color: #999;
+    width: 60rpx;
+    height: 60rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+}
+
+.settings-modal-body {
+  padding: 30rpx;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .settings-item-label {
+    font-size: 32rpx;
+    color: #333;
+  }
+}
+
+/* 自定义气泡样式 */
+.custom-callout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.callout-content {
+  background: #fff;
+  border-radius: 8rpx;
+  padding: 8rpx 12rpx;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+  max-width: 200rpx;
+  min-width: 80rpx;
+  border: 1rpx solid #ff6b9d;
+  pointer-events: auto;
+}
+
+.callout-image {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1rpx solid rgba(255, 107, 157, 0.3);
+}
+
+.callout-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.callout-text-inner {
+  font-size: 24rpx;
+  color: #ff6b9d;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
 }
 </style>
