@@ -21,6 +21,7 @@ import { CheckinRecordService } from './checkin-record.service';
 import { CreateCheckinDto } from './dto/create-checkin.dto';
 import { UpdateCheckinDto } from './dto/update-checkin.dto';
 import { QueryCheckinDto } from './dto/query-checkin.dto';
+import { QueryMapMarkersDto } from './dto/query-map-markers.dto';
 import { CheckinRecord } from './checkin-record.entity';
 import { PaginationResponseDto } from '../../../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
@@ -63,14 +64,37 @@ export class CheckinRecordController {
 
   @Get('map/markers')
   @UseGuards(OptionalJwtAuthGuard)
-  @ApiOperation({ summary: '获取地图标记点' })
-  @ApiResponse({ status: 200, type: [CheckinRecord] })
-  async getMapMarkers(@Req() req: any, @Query('includePublic') includePublic?: string) {
+  @ApiOperation({ 
+    summary: '获取地图标记点（支持位置范围查询）',
+    description: `
+获取地图标记点数据，支持以下功能：
+1. **位置范围查询**：通过 latitude、longitude、radius 参数查询指定范围内的点位
+2. **数据权限**：
+   - 未登录用户：只返回公开的打卡记录
+   - 已登录用户：返回公开的打卡记录 + 用户自己的私密记录 + 绑定用户的私密记录
+3. **includePublic 参数**：
+   - true（默认）：包含公开数据，如果用户登录也包含用户和绑定用户的私密数据
+   - false：只返回用户和绑定用户的打卡记录（需要登录）
+
+**位置范围查询说明**：
+- 如果提供了 latitude、longitude、radius 参数，只返回指定范围内的点位
+- 使用 Haversine 公式精确计算距离
+- radius 范围：0.1 - 1000 公里
+- 如果不提供位置参数，返回所有符合条件的点位
+    `.trim()
+  })
+  @ApiResponse({ 
+    status: 200, 
+    type: [CheckinRecord],
+    description: '返回打卡记录数组，已按位置范围过滤（如果提供了位置参数）'
+  })
+  async getMapMarkers(
+    @Req() req: any,
+    @Query() queryDto: QueryMapMarkersDto,
+  ) {
     // 不强制要求登录，如果有登录信息则使用
     const userId = req.user?.userId || req.user?.id;
-    // 默认 includePublic 为 true，如果传入了 'false' 字符串则为 false
-    const includePublicBool = includePublic === undefined || includePublic === 'true';
-    return await this.recordService.getMapMarkers(userId, includePublicBool);
+    return await this.recordService.getMapMarkers(userId, queryDto);
   }
 
   @Get(':id')

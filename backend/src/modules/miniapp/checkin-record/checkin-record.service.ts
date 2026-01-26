@@ -5,6 +5,7 @@ import { CheckinRecord } from './checkin-record.entity';
 import { CreateCheckinDto } from './dto/create-checkin.dto';
 import { UpdateCheckinDto } from './dto/update-checkin.dto';
 import { QueryCheckinDto } from './dto/query-checkin.dto';
+import { QueryMapMarkersDto } from './dto/query-map-markers.dto';
 import { IPaginationResponse } from '../../../common/interfaces/response.interface';
 import { UserCoupleService } from '../user-couple/user-couple.service';
 import { CheckinNotificationService } from '../checkin-notification/checkin-notification.service';
@@ -121,9 +122,11 @@ export class CheckinRecordService {
   }
 
   /**
-   * 获取地图标记点（用于地图展示）
+   * 获取地图标记点（用于地图展示，支持位置范围查询）
    */
-  async getMapMarkers(userId?: number, includePublic: boolean = true): Promise<CheckinRecord[]> {
+  async getMapMarkers(userId?: number, queryDto?: QueryMapMarkersDto): Promise<CheckinRecord[]> {
+    const { latitude, longitude, radius = 10, includePublic = true } = queryDto || {};
+    
     const queryBuilder = this.recordRepository.createQueryBuilder('record')
       .leftJoinAndSelect('record.user', 'user')
       .where('record.status = :status', { status: 1 })
@@ -131,6 +134,7 @@ export class CheckinRecordService {
       .andWhere('(record.auditStatus IS NULL OR record.auditStatus != :rejectedStatus)', { rejectedStatus: 2 });
 
     // includePublic 默认为 true，查询全部公开打卡记录
+    // 如果用户已登录，也要包含用户和绑定用户的私密点位数据
     if (includePublic) {
       if (userId) {
         // 如果用户已登录，获取用户的另一半ID
@@ -163,9 +167,74 @@ export class CheckinRecordService {
       );
     }
 
+    // 如果提供了位置参数，添加位置范围过滤
+    if (latitude !== undefined && longitude !== undefined && radius !== undefined) {
+      // 使用 Haversine 公式计算距离（单位：公里）
+      // 地球半径：6371 公里
+      // 计算纬度差和经度差的弧度
+      const latRad = latitude * Math.PI / 180;
+      const lonRad = longitude * Math.PI / 180;
+      
+      // 计算距离的 SQL 表达式
+      // 使用 Haversine 公式：d = 2R * arcsin(sqrt(sin²(Δlat/2) + cos(lat1) * cos(lat2) * sin²(Δlon/2)))
+      // 为了性能，我们使用简化的边界框过滤，然后再精确计算
+      // 1度纬度约等于111公里，1度经度在赤道约等于111公里，在高纬度会变小
+      const latDelta = radius / 111; // 纬度差（度）
+      const lonDelta = radius / (111 * Math.cos(latRad)); // 经度差（度）
+      
+      // 先使用边界框快速过滤（性能优化）
+      queryBuilder
+        .andWhere('record.latitude BETWEEN :minLat AND :maxLat', {
+          minLat: latitude - latDelta,
+          maxLat: latitude + latDelta,
+        })
+        .andWhere('record.longitude BETWEEN :minLon AND :maxLon', {
+          minLon: longitude - lonDelta,
+          maxLon: longitude + lonDelta,
+        });
+      
+      // 添加精确距离计算的子查询（使用 Haversine 公式）
+      // 注意：TypeORM 的 QueryBuilder 对复杂地理计算支持有限，这里使用原生 SQL
+      const records = await queryBuilder.getMany();
+      
+      // 在内存中精确计算距离并过滤
+      const filteredRecords = records.filter(record => {
+        const recordLat = Number(record.latitude);
+        const recordLon = Number(record.longitude);
+        const distance = this.calculateDistance(latitude, longitude, recordLat, recordLon);
+        return distance <= radius;
+      });
+      
+      return filteredRecords.sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        return timeB - timeA;
+      });
+    }
+
     return await queryBuilder
       .orderBy('record.createdAt', 'DESC')
       .getMany();
+  }
+
+  /**
+   * 计算两点之间的距离（公里）
+   * 使用 Haversine 公式
+   */
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371; // 地球半径（公里）
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+      + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+      * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   }
 
   /**
