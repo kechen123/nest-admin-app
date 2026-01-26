@@ -40,6 +40,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       timestamp: Date.now(),
     };
 
+    // 设置响应头，确保中文字符正确编码
+    response.setHeader('Content-Type', 'application/json; charset=utf-8');
     response.status(status).json(errorResponse);
   }
 }

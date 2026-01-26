@@ -260,7 +260,7 @@ export default {
             <text class="avatar-name partner">{{ userInfo.partnerInfo?.nickname || '未设置昵称' }}</text>
           </view>
         </view>
-        
+
         <!-- 未绑定用户：显示单个头像 -->
         <view v-else class="single-user">
           <view class="user-avatar">
@@ -272,7 +272,6 @@ export default {
             <text class="user-desc">记录我们的美好时光</text>
           </view>
         </view>
-        
         <!-- 操作按钮 -->
         <view class="action-buttons">
           <!-- 未绑定且未邀请时显示邀请按钮 -->
@@ -765,9 +764,13 @@ export default {
 
   // 操作按钮区域
   .action-buttons {
-    width: 100%;
+    width: 300rpx;
     display: flex;
     justify-content: center;
+
+    button {
+      margin: 0px;
+    }
   }
 
   .edit-btn {
@@ -1259,6 +1262,7 @@ export default {
 }
 
 @keyframes heartbeat {
+
   0%,
   100% {
     transform: scale(1);
