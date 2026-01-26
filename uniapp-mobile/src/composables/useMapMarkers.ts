@@ -16,6 +16,22 @@ import {
 
 const DEFAULT_RADIUS = 10 // 默认加载半径（公里）
 const DEBOUNCE_DELAY = 500 // 防抖延迟（毫秒）
+const MIN_DISTANCE_KM = 7 // 最小触发距离（公里）
+
+/**
+ * 计算两点间的距离（公里）
+ * 使用 Haversine 公式
+ */
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371 // 地球半径（公里）
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+    * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
 
 export function useMapMarkers(
   mapLatitude: Ref<number>,
@@ -163,20 +179,60 @@ export function useMapMarkers(
       const currentLon = centerLon ?? mapLongitude.value
       const radius = radiusKm ?? loadRadius.value
 
-      // 检查是否与上次请求参数相同（避免重复请求相同位置）
-      // 如果 forceRefresh 为 true，则跳过此检查并清除上次请求参数
+      // 先检查缓存，如果有缓存数据，先显示缓存数据（提升加载速度）
+      const cached = getCachedMarkers()
+      let cachedMarkers: CachedMarker[] = []
+      let displayMarkers: CachedMarker[] = []
+      
+      if (cached && cached.markers.length > 0) {
+        cachedMarkers = cached.markers
+        // 先显示缓存中当前位置范围内的点位
+        if (currentLat !== undefined && currentLon !== undefined) {
+          displayMarkers = filterMarkersByDistance(cachedMarkers, currentLat, currentLon, radius)
+        } else {
+          displayMarkers = cachedMarkers
+        }
+        console.log(`从缓存加载 ${displayMarkers.length} 个点位`)
+
+        // 立即显示缓存数据（无论距离多少，先显示缓存提升体验）
+        mapMarkers.value = await convertToMapMarkers(displayMarkers)
+      }
+
+      // 检查是否需要请求服务器数据
+      let shouldRequest = false
+      
       if (forceRefresh) {
-        lastRequestParams.value = null // 清除上次请求参数，确保能重新请求
+        // 强制刷新，清除上次请求参数，确保能重新请求
+        lastRequestParams.value = null
+        shouldRequest = true
+        console.log('强制刷新，触发请求')
       }
       else if (lastRequestParams.value) {
-        const { lat, lon, radius: lastRadius } = lastRequestParams.value
-        const latDiff = Math.abs(currentLat - lat)
-        const lonDiff = Math.abs(currentLon - lon)
-        // 如果位置和半径都相同或变化很小（小于 0.0001 度，约 10 米），不重复请求
-        if (latDiff < 0.0001 && lonDiff < 0.0001 && Math.abs(radius - lastRadius) < 0.1) {
-          console.log('位置未变化，跳过请求')
+        const { lat, lon } = lastRequestParams.value
+        
+        // 计算与上次请求位置的距离
+        const distance = calculateDistance(lat, lon, currentLat, currentLon)
+        
+        // 如果距离大于等于7公里，才发起请求
+        if (distance >= MIN_DISTANCE_KM) {
+          shouldRequest = true
+          console.log(`位置变化距离 ${distance.toFixed(2)} 公里，大于等于 ${MIN_DISTANCE_KM} 公里，触发请求`)
+        }
+        else {
+          console.log(`位置变化距离 ${distance.toFixed(2)} 公里，小于 ${MIN_DISTANCE_KM} 公里，跳过请求，使用缓存数据`)
+          // 如果距离小于7公里，不请求服务器，直接使用已显示的缓存数据
           return
         }
+      }
+      else {
+        // 没有上次请求记录，首次请求
+        shouldRequest = true
+        console.log('首次请求服务器数据')
+      }
+
+      // 如果需要请求服务器数据
+      if (!shouldRequest) {
+        return
       }
 
       isLoadingMarkers.value = true
@@ -185,26 +241,6 @@ export function useMapMarkers(
 
       // 检查是否是首次进入
       const isFirst = isFirstVisit()
-      let cachedMarkers: CachedMarker[] = []
-      let displayMarkers: CachedMarker[] = []
-
-      if (!isFirst) {
-        // 非首次进入：先加载本地缓存
-        const cached = getCachedMarkers()
-        if (cached) {
-          cachedMarkers = cached.markers
-          // 先显示缓存中当前位置范围内的点位（前端临时显示，等待后端数据）
-          if (currentLat !== undefined && currentLon !== undefined) {
-            displayMarkers = filterMarkersByDistance(cachedMarkers, currentLat, currentLon, radius)
-          } else {
-            displayMarkers = cachedMarkers
-          }
-          console.log(`从缓存加载 ${displayMarkers.length} 个点位`)
-
-          // 立即显示缓存数据
-          mapMarkers.value = await convertToMapMarkers(displayMarkers)
-        }
-      }
 
       // 请求服务器数据（后端已实现位置范围过滤）
       console.log('请求服务器数据...', { currentLat, currentLon, radius })
@@ -252,6 +288,8 @@ export function useMapMarkers(
           })))
         }
       }
+
+      // 服务器数据返回后，更新地图标记点（覆盖之前显示的缓存数据）
 
       // 更新地图标记点
       console.log(`准备转换 ${displayMarkers.length} 个点位为地图标记点`)

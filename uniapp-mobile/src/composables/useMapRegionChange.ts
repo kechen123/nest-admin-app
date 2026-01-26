@@ -5,6 +5,22 @@ import { ref, type Ref } from 'vue'
 import { debounce } from '@/utils/debounce'
 
 const DEBOUNCE_DELAY = 500 // 防抖延迟（毫秒）
+const MIN_DISTANCE_KM = 7 // 最小触发距离（公里）
+
+/**
+ * 计算两点间的距离（公里）
+ * 使用 Haversine 公式
+ */
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371 // 地球半径（公里）
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+    * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
 
 export function useMapRegionChange(
   mapLatitude: Ref<number>,
@@ -26,14 +42,23 @@ export function useMapRegionChange(
         const centerLat = res.latitude
         const centerLon = res.longitude
 
-        // 检查位置是否真的发生了变化（避免微小变化触发请求）
+        // 检查位置是否真的发生了变化（距离判断）
         if (lastCenterLat.value !== null && lastCenterLon.value !== null) {
-          const latDiff = Math.abs(centerLat - lastCenterLat.value)
-          const lonDiff = Math.abs(centerLon - lastCenterLon.value)
-          // 如果位置变化小于 0.001 度（约 100 米），不触发请求
-          if (latDiff < 0.001 && lonDiff < 0.001) {
+          // 计算与上次请求位置的距离
+          const distance = calculateDistance(
+            lastCenterLat.value,
+            lastCenterLon.value,
+            centerLat,
+            centerLon,
+          )
+          
+          // 如果距离小于7公里，不触发请求
+          if (distance < MIN_DISTANCE_KM) {
+            console.log(`位置变化距离 ${distance.toFixed(2)} 公里，小于 ${MIN_DISTANCE_KM} 公里，跳过请求`)
             return
           }
+          
+          console.log(`位置变化距离 ${distance.toFixed(2)} 公里，大于 ${MIN_DISTANCE_KM} 公里，触发请求`)
         }
 
         // 更新地图中心点
