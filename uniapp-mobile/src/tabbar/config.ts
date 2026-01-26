@@ -25,12 +25,12 @@ export const selectedTabbarStrategy = TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CAC
 
 // TODO: 2/3. 使用 NATIVE_TABBAR 时，更新下面的 tabbar 配置
 export const nativeTabbarList: NativeTabBarItem[] = [
-  {
-    iconPath: 'static/tabbar/home.png',
-    selectedIconPath: 'static/tabbar/homeHL.png',
-    pagePath: 'pages/index/index',
-    text: '首页',
-  },
+  // {
+  //   iconPath: 'static/tabbar/home.png',
+  //   selectedIconPath: 'static/tabbar/homeHL.png',
+  //   pagePath: 'pages/index/index',
+  //   text: '首页',
+  // },
   // {
   //   iconPath: 'static/tabbar/home.png',
   //   selectedIconPath: 'static/tabbar/homeHL.png',
@@ -49,12 +49,12 @@ export const nativeTabbarList: NativeTabBarItem[] = [
   //   pagePath: 'pages/checkin/list',
   //   text: '记录',
   // },
-  {
-    iconPath: 'static/tabbar/personal.png',
-    selectedIconPath: 'static/tabbar/personalHL.png',
-    pagePath: 'pages/me/me',
-    text: '我的',
-  },
+  // {
+  //   iconPath: 'static/tabbar/personal.png',
+  //   selectedIconPath: 'static/tabbar/personalHL.png',
+  //   pagePath: 'pages/me/me',
+  //   text: '我的',
+  // },
 ]
 
 // TODO: 3/3. 使用 CUSTOM_TABBAR(2,3) 时，更新下面的 tabbar 配置

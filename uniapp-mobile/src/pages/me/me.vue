@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { onShow } from '@dcloudio/uni-app'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { generateInviteCode, markInviteAsShared } from '@/api/couple'
@@ -6,9 +7,15 @@ import { useUserStore } from '@/store'
 import { useCheckinStore } from '@/store/checkin'
 import { useTokenStore } from '@/store/token'
 
+defineOptions({
+  name: 'MePage',
+})
+
 definePage({
   style: {
     navigationBarTitleText: '我的',
+    navigationBarBackgroundColor: '#f57ba4',
+    navigationBarTextStyle: 'white',
   },
 })
 
@@ -31,8 +38,23 @@ async function loadStatistics() {
   }
 }
 
+// 设置导航栏颜色
+function setNavigationBarColor() {
+  uni.setNavigationBarColor({
+    frontColor: '#ffffff', // 前景颜色值，包括按钮、标题、状态栏的颜色，仅支持 #ffffff 和 #000000
+    backgroundColor: '#ff6b9d', // 背景颜色值，有效值为十六进制颜色
+    animation: {
+      duration: 400,
+      timingFunc: 'easeIn',
+    },
+  })
+}
+
 // 页面挂载时加载统计数据
 onMounted(() => {
+  // 设置导航栏颜色
+  setNavigationBarColor()
+
   if (tokenStore.hasLogin) {
     loadStatistics()
     console.log('onMounted>>>>>>>>>>>>>>>>')
@@ -43,6 +65,9 @@ onMounted(() => {
 })
 
 onShow(() => {
+  // 每次显示页面时重新设置导航栏颜色（tabbar 页面切换时会触发）
+  setNavigationBarColor()
+
   if (tokenStore.hasLogin) {
     console.log('onShow>>>>>>>>>>>>', userInfo.value)
   }
@@ -215,37 +240,57 @@ export default {
     <view v-else class="profile-section">
       <!-- 用户信息卡片 -->
       <view class="user-card" @click="goToProfileEdit">
-        <view class="user-avatar">
-          <image v-if="userInfo.userInfo?.avatar" :src="userInfo.userInfo?.avatar" mode="aspectFill" />
-          <image v-else class="default-avatar" src="/static/images/default-avatar.png" mode="aspectFill" />
-        </view>
-        <view class="user-info">
-          <text class="user-name">{{ userInfo.userInfo?.nickname || '未设置昵称' }}</text>
-          <view v-if="userInfo.hasPartner" class="partner-relation">
-            <view class="relation-icon">
-              ❤️
+        <!-- 已绑定用户：显示情侣头像 -->
+        <view v-if="userInfo.hasPartner" class="couple-avatars">
+          <view class="avatar-item">
+            <view class="user-avatar">
+              <image v-if="userInfo.userInfo?.avatar" :src="userInfo.userInfo?.avatar" mode="aspectFill" />
+              <image v-else class="default-avatar" src="/static/images/default-avatar.png" mode="aspectFill" />
             </view>
-            <text class="partner-name">{{ userInfo.partnerInfo?.nickname || '未设置昵称' }}</text>
+            <text class="avatar-name">{{ userInfo.userInfo?.nickname || '未设置昵称' }}</text>
           </view>
-          <text v-else class="user-desc">记录我们的美好时光</text>
+          <view class="heart-connector">
+            ❤️
+          </view>
+          <view class="avatar-item">
+            <view class="user-avatar partner">
+              <image v-if="userInfo.partnerInfo?.avatar" :src="userInfo.partnerInfo?.avatar" mode="aspectFill" />
+              <image v-else class="default-avatar" src="/static/images/default-avatar.png" mode="aspectFill" />
+            </view>
+            <text class="avatar-name partner">{{ userInfo.partnerInfo?.nickname || '未设置昵称' }}</text>
+          </view>
         </view>
-        <!-- 未绑定且未邀请时显示邀请按钮 -->
-        <button open-type="share" @tap.stop="" v-if="!userInfo.hasPartner && !userInfo.hasPendingInvite"
-          class="invite-btn">
-          <text class="invite-icon">💌</text>
-          <text class="invite-text">
-            邀请
-          </text>
-        </button>
-        <!-- 已邀请但对方未同意时显示等待状态 -->
-        <view v-else-if="!userInfo.hasPartner && userInfo.hasPendingInvite" class="pending-invite">
-          <text class="pending-icon">⏳</text>
-          <text class="pending-text">邀请中</text>
+        
+        <!-- 未绑定用户：显示单个头像 -->
+        <view v-else class="single-user">
+          <view class="user-avatar">
+            <image v-if="userInfo.userInfo?.avatar" :src="userInfo.userInfo?.avatar" mode="aspectFill" />
+            <image v-else class="default-avatar" src="/static/images/default-avatar.png" mode="aspectFill" />
+          </view>
+          <view class="user-info">
+            <text class="user-name">{{ userInfo.userInfo?.nickname || '未设置昵称' }}</text>
+            <text class="user-desc">记录我们的美好时光</text>
+          </view>
         </view>
-        <!-- 已绑定时显示编辑按钮 -->
-        <view v-else class="edit-btn" @click="goToProfileEdit">
-          <text class="edit-icon">✏️</text>
-          <text class="edit-text">编辑</text>
+        
+        <!-- 操作按钮 -->
+        <view class="action-buttons">
+          <!-- 未绑定且未邀请时显示邀请按钮 -->
+          <button open-type="share" @tap.stop="" v-if="!userInfo.hasPartner && !userInfo.hasPendingInvite"
+            class="invite-btn">
+            <text class="invite-icon">💌</text>
+            <text class="invite-text">邀请</text>
+          </button>
+          <!-- 已邀请但对方未同意时显示等待状态 -->
+          <view v-else-if="!userInfo.hasPartner && userInfo.hasPendingInvite" class="pending-invite">
+            <text class="pending-icon">⏳</text>
+            <text class="pending-text">邀请中</text>
+          </view>
+          <!-- 已绑定时显示编辑按钮 -->
+          <view v-else class="edit-btn" @click.stop="goToProfileEdit">
+            <text class="edit-icon">✏️</text>
+            <text class="edit-text">编辑</text>
+          </view>
         </view>
       </view>
 
@@ -546,94 +591,183 @@ export default {
       0 2rpx 4rpx rgba(0, 0, 0, 0.08);
   }
 
-  .user-avatar {
-    width: 120rpx;
-    height: 120rpx;
-    border-radius: 60rpx;
-    overflow: hidden;
-    margin-right: 32rpx;
+  // 情侣头像布局
+  .couple-avatars {
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 32rpx;
 
-    &::after {
-      content: '';
-      position: absolute;
-      top: -4rpx;
-      left: -4rpx;
-      right: -4rpx;
-      bottom: -4rpx;
-      background: linear-gradient(135deg, #ff6b9d, #ff8fab, #ffb3bd);
-      border-radius: 64rpx;
-      z-index: -1;
-      opacity: 0.3;
+    .avatar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+
+      .user-avatar {
+        width: 120rpx;
+        height: 120rpx;
+        border-radius: 60rpx;
+        overflow: hidden;
+        margin-right: 0;
+        margin-bottom: 16rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: all 0.3s ease;
+        border: 4rpx solid rgba(255, 107, 157, 0.2);
+
+        &.partner {
+          border-color: rgba(255, 143, 171, 0.3);
+        }
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: -4rpx;
+          left: -4rpx;
+          right: -4rpx;
+          bottom: -4rpx;
+          background: linear-gradient(135deg, #ff6b9d, #ff8fab, #ffb3bd);
+          border-radius: 64rpx;
+          z-index: -1;
+          opacity: 0.2;
+        }
+
+        image {
+          width: 100%;
+          height: 100%;
+          transition: transform 0.3s ease;
+        }
+
+        .default-avatar {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 60rpx;
+          background: linear-gradient(135deg, #ff6b9d, #ff8fab);
+          color: white;
+        }
+
+        &:active image {
+          transform: scale(1.05);
+        }
+      }
+
+      .avatar-name {
+        font-size: 28rpx;
+        font-weight: 600;
+        color: #2d3748;
+        text-align: center;
+        max-width: 140rpx;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        &.partner {
+          color: #ff6b9d;
+        }
+      }
     }
 
-    image {
-      width: 100%;
-      height: 100%;
-      transition: transform 0.3s ease;
-    }
-
-    .default-avatar {
-      font-size: 60rpx;
-      color: #fff;
-      filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.1));
-    }
-
-    &:active image {
-      transform: scale(1.1);
+    .heart-connector {
+      font-size: 40rpx;
+      margin: 0 24rpx;
+      animation: heartbeat 2s ease-in-out infinite;
+      filter: drop-shadow(0 2rpx 4rpx rgba(255, 107, 157, 0.3));
     }
   }
 
-  .user-info {
-    flex: 1;
+  // 单个用户布局
+  .single-user {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 32rpx;
 
-    .user-name {
-      font-size: 40rpx;
-      font-weight: 700;
-      color: #2d3748;
-      margin-bottom: 8rpx;
-      display: block;
-      background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      line-height: 1.2;
-    }
-
-    .user-desc {
-      font-size: 28rpx;
-      color: #718096;
-      line-height: 1.4;
-      opacity: 0.8;
-    }
-
-    .partner-relation {
+    .user-avatar {
+      width: 120rpx;
+      height: 120rpx;
+      border-radius: 60rpx;
+      overflow: hidden;
+      margin-right: 32rpx;
       display: flex;
       align-items: center;
-      margin-top: 12rpx;
+      justify-content: center;
+      position: relative;
+      transition: all 0.3s ease;
 
-      .relation-icon {
-        font-size: 32rpx;
-        margin: 0 16rpx;
-        filter: drop-shadow(0 2rpx 4rpx rgba(255, 107, 157, 0.3));
-        animation: heartbeat 2s ease-in-out infinite;
+      &::after {
+        content: '';
+        position: absolute;
+        top: -4rpx;
+        left: -4rpx;
+        right: -4rpx;
+        bottom: -4rpx;
+        background: linear-gradient(135deg, #ff6b9d, #ff8fab, #ffb3bd);
+        border-radius: 64rpx;
+        z-index: -1;
+        opacity: 0.3;
       }
 
-      .partner-name {
-        font-size: 32rpx;
-        font-weight: 600;
-        color: #ff6b9d;
-        background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+      image {
+        width: 100%;
+        height: 100%;
+        transition: transform 0.3s ease;
+      }
+
+      .default-avatar {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 60rpx;
+        background: linear-gradient(135deg, #ff6b9d, #ff8fab);
+        color: white;
+      }
+
+      &:active image {
+        transform: scale(1.1);
+      }
+    }
+
+    .user-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      .user-name {
+        font-size: 40rpx;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 8rpx;
+        display: block;
+        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         line-height: 1.2;
       }
+
+      .user-desc {
+        font-size: 28rpx;
+        color: #718096;
+        line-height: 1.4;
+        opacity: 0.8;
+      }
     }
+  }
+
+  // 操作按钮区域
+  .action-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 
   .edit-btn {
@@ -1121,6 +1255,17 @@ export default {
   0%,
   100% {
     opacity: 1;
+  }
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
   }
 
   50% {

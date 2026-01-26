@@ -13,7 +13,7 @@ defineOptions({
 definePage({
   style: {
     navigationBarTitleText: '邀请函',
-    navigationBarBackgroundColor: '#ff6b9d',
+    navigationBarBackgroundColor: '#f57ba4',
     navigationBarTextStyle: 'white',
   },
 })
@@ -162,10 +162,8 @@ onLoad((options: any) => {
         </view>
 
         <!-- 同意按钮 -->
-        <button
-          class="accept-btn" :disabled="isBinding || !inviteInfo?.canAccept" :loading="isBinding"
-          @click="handleAcceptInvite"
-        >
+        <button class="accept-btn" :disabled="isBinding || !inviteInfo?.canAccept" :loading="isBinding"
+          @click="handleAcceptInvite">
           <text v-if="!isBinding && inviteInfo?.canAccept">❤️ 同意邀请</text>
           <text v-else-if="!isBinding && inviteInfo?.isExpired">邀请码已过期</text>
           <text v-else-if="!isBinding">邀请码不可用</text>
@@ -214,7 +212,11 @@ onLoad((options: any) => {
 <style lang="scss" scoped>
 .invite-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+  background: linear-gradient(180deg,
+      rgba(255, 107, 157, 0.75) 0%,
+      rgba(255, 143, 171, 0.65) 30%,
+      rgba(255, 182, 193, 0.5) 60%,
+      rgba(255, 228, 225, 0.4) 100%);
   padding: 40rpx;
   display: flex;
   align-items: center;
@@ -256,14 +258,15 @@ onLoad((options: any) => {
   width: 100%;
 
   .invite-card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 24rpx;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 32rpx;
     padding: 60rpx 40rpx;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10rpx);
+    box-shadow: 0 12rpx 48rpx rgba(255, 107, 157, 0.15), 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(20rpx);
+    border: 1rpx solid rgba(255, 255, 255, 0.8);
 
     .heart-icon {
       font-size: 80rpx;
@@ -289,11 +292,12 @@ onLoad((options: any) => {
     .inviter-info {
       display: flex;
       align-items: center;
-      background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(255, 143, 171, 0.1));
-      border-radius: 16rpx;
+      background: linear-gradient(135deg, rgba(255, 107, 157, 0.08), rgba(255, 143, 171, 0.08));
+      border-radius: 20rpx;
       padding: 32rpx;
       margin-bottom: 48rpx;
       width: 100%;
+      border: 1rpx solid rgba(255, 107, 157, 0.1);
 
       .inviter-avatar {
         width: 100rpx;
@@ -370,14 +374,15 @@ onLoad((options: any) => {
   width: 100%;
 
   .success-card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 24rpx;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 32rpx;
     padding: 60rpx 40rpx;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10rpx);
+    box-shadow: 0 12rpx 48rpx rgba(255, 107, 157, 0.15), 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(20rpx);
+    border: 1rpx solid rgba(255, 255, 255, 0.8);
 
     .success-icon {
       font-size: 80rpx;
@@ -474,6 +479,7 @@ onLoad((options: any) => {
 }
 
 @keyframes heartbeat {
+
   0%,
   100% {
     transform: scale(1);
@@ -485,6 +491,7 @@ onLoad((options: any) => {
 }
 
 @keyframes bounce {
+
   0%,
   20%,
   50%,
