@@ -41,14 +41,50 @@ const inviteInfo = ref<{
 } | null>(null)
 
 // 页面状态
-const isLoading = ref(false)
 const isBinded = ref(false)
 const isBinding = ref(false)
+
+// 检查并确保用户已登录
+async function ensureLogin() {
+  // 更新当前时间以确保登录状态检查准确
+  tokenStore.updateNowTime()
+
+  // 如果已登录，直接返回
+  if (tokenStore.hasLogin) {
+    return true
+  }
+
+  try {
+    console.log('用户未登录，开始静默登录...')
+
+    // 调用静默登录（不需要用户授权）
+    await tokenStore.miniappWxLogin()
+
+    console.log('登录成功')
+    return true
+  }
+  catch (error: any) {
+    console.error('登录失败:', error)
+    const message = error?.message || '登录失败，请重试'
+    uni.showToast({
+      title: message,
+      icon: 'none',
+      duration: 2000,
+    })
+    // 登录失败，延迟跳转回首页
+    setTimeout(() => {
+      uni.navigateBack()
+    }, 2000)
+    return false
+  }
+  finally {
+    // 页面级 loading 由 onLoad 统一控制
+  }
+}
 
 // 获取邀请码信息
 async function fetchInviteInfo(code: string) {
   try {
-    isLoading.value = true
     const result = await getInviteInfo(code)
     inviteInfo.value = result
   }
@@ -65,7 +101,7 @@ async function fetchInviteInfo(code: string) {
     }, 2000)
   }
   finally {
-    isLoading.value = false
+    // 页面级 loading 由 onLoad 统一控制
   }
 }
 
@@ -111,36 +147,45 @@ async function handleAcceptInvite() {
 }
 
 // 页面加载
-onLoad((options: any) => {
+onLoad(async (options: any) => {
   const { code } = options
-  if (code) {
+  // 使用小程序自带 loading（不显示文案）
+  uni.showLoading({ title: ' ', mask: true })
+
+  try {
+    if (!code) {
+      uni.showToast({
+        title: '邀请链接无效',
+        icon: 'none',
+      })
+      setTimeout(() => {
+        uni.navigateBack()
+      }, 2000)
+      return
+    }
+
     inviteCode.value = code
-    fetchInviteInfo(code)
+
+    // 先确保用户已登录
+    const loginSuccess = await ensureLogin()
+    if (!loginSuccess) {
+      // 登录失败，已在上面的 ensureLogin 中处理跳转
+      return
+    }
+
+    // 登录成功后，获取邀请信息
+    await fetchInviteInfo(code)
   }
-  else {
-    uni.showToast({
-      title: '邀请链接无效',
-      icon: 'none',
-    })
-    setTimeout(() => {
-      uni.navigateBack()
-    }, 2000)
+  finally {
+    uni.hideLoading()
   }
 })
 </script>
 
 <template>
   <view class="invite-container">
-    <!-- 加载状态 -->
-    <view v-if="isLoading" class="loading-section">
-      <view class="loading-spinner">
-        <text class="loading-icon">⏳</text>
-      </view>
-      <text class="loading-text">正在加载邀请信息...</text>
-    </view>
-
     <!-- 邀请内容 -->
-    <view v-else-if="!isBinded" class="invite-section">
+    <view v-if="inviteInfo && !isBinded" class="invite-section">
       <!-- 邀请卡片 -->
       <view class="invite-card">
         <view class="heart-icon">
@@ -162,8 +207,12 @@ onLoad((options: any) => {
         </view>
 
         <!-- 同意按钮 -->
-        <button class="accept-btn" :disabled="isBinding || !inviteInfo?.canAccept" :loading="isBinding"
-          @click="handleAcceptInvite">
+        <button
+          class="accept-btn"
+          :disabled="isBinding || !inviteInfo?.canAccept"
+          :loading="isBinding"
+          @click="handleAcceptInvite"
+        >
           <text v-if="!isBinding && inviteInfo?.canAccept">❤️ 同意邀请</text>
           <text v-else-if="!isBinding && inviteInfo?.isExpired">邀请码已过期</text>
           <text v-else-if="!isBinding">邀请码不可用</text>
@@ -212,11 +261,13 @@ onLoad((options: any) => {
 <style lang="scss" scoped>
 .invite-container {
   min-height: 100vh;
-  background: linear-gradient(180deg,
-      rgba(255, 107, 157, 0.75) 0%,
-      rgba(255, 143, 171, 0.65) 30%,
-      rgba(255, 182, 193, 0.5) 60%,
-      rgba(255, 228, 225, 0.4) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 107, 157, 0.75) 0%,
+    rgba(255, 143, 171, 0.65) 30%,
+    rgba(255, 182, 193, 0.5) 60%,
+    rgba(255, 228, 225, 0.4) 100%
+  );
   padding: 40rpx;
   display: flex;
   align-items: center;
@@ -264,7 +315,9 @@ onLoad((options: any) => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 12rpx 48rpx rgba(255, 107, 157, 0.15), 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 12rpx 48rpx rgba(255, 107, 157, 0.15),
+      0 4rpx 16rpx rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(20rpx);
     border: 1rpx solid rgba(255, 255, 255, 0.8);
 
@@ -380,7 +433,9 @@ onLoad((options: any) => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 12rpx 48rpx rgba(255, 107, 157, 0.15), 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 12rpx 48rpx rgba(255, 107, 157, 0.15),
+      0 4rpx 16rpx rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(20rpx);
     border: 1rpx solid rgba(255, 255, 255, 0.8);
 
@@ -479,7 +534,6 @@ onLoad((options: any) => {
 }
 
 @keyframes heartbeat {
-
   0%,
   100% {
     transform: scale(1);
@@ -491,7 +545,6 @@ onLoad((options: any) => {
 }
 
 @keyframes bounce {
-
   0%,
   20%,
   50%,

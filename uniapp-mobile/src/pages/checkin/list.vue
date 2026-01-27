@@ -85,7 +85,7 @@ function getAuditStatusText(auditStatus?: number) {
     case 1:
       return '已通过'
     case 2:
-      return '已拒绝'
+      return '审核不通过'
     default:
       return '待审核'
   }
@@ -160,13 +160,13 @@ function goToAdd() {
               {{ formatTime(record.createdAt || record.createTime) }}
             </view>
 
-            <!-- 审核状态 -->
-            <view v-if="record.auditStatus !== undefined && record.auditStatus !== null" class="audit-status">
-              <view :class="['status-badge', getAuditStatusClass(record.auditStatus)]">
+            <!-- 审核状态 - 只显示审核未通过 -->
+            <view v-if="record.auditStatus === 2" class="audit-status">
+              <view class="status-badge" :class="getAuditStatusClass(record.auditStatus)">
                 {{ getAuditStatusText(record.auditStatus) }}
               </view>
               <!-- 拒绝原因 -->
-              <view v-if="record.auditStatus === 2 && record.auditRemark" class="reject-reason">
+              <view v-if="record.auditRemark" class="reject-reason">
                 <text class="reject-label">拒绝原因：</text>
                 <text class="reject-text">{{ record.auditRemark }}</text>
               </view>
@@ -185,8 +185,13 @@ function goToAdd() {
 
             <!-- 图片 -->
             <view v-if="record.images.length > 0" class="record-images">
-              <image v-for="(image, index) in record.images.slice(0, 3)" :key="index" :src="image" mode="aspectFill"
-                class="record-image" />
+              <image
+                v-for="(image, index) in record.images.slice(0, 3)"
+                :key="index"
+                :src="image"
+                mode="aspectFill"
+                class="record-image"
+              />
               <view v-if="record.images.length > 3" class="image-more">
                 +{{ record.images.length - 3 }}
               </view>
