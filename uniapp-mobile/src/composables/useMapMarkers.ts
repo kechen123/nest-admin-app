@@ -4,6 +4,7 @@
 import { ref, nextTick, type Ref } from 'vue'
 import { getMapMarkers } from '@/api/checkin'
 import { mergeMarkerImage } from '@/utils/imageMerge'
+import { useUserStore } from '@/store/user'
 import {
   getCachedMarkers,
   saveMarkersToCache,
@@ -51,6 +52,7 @@ export function useMapMarkers(
   function transformToCachedMarker(record: any): CachedMarker {
     return {
       id: record.id,
+      userId: record.userId, // 保存用户ID，用于过滤
       latitude: Number(record.latitude),
       longitude: Number(record.longitude),
       address: record.address,
@@ -60,6 +62,45 @@ export function useMapMarkers(
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       cachedAt: Date.now(),
+    }
+  }
+
+  /**
+   * 根据 includePublic 过滤缓存数据
+   * @param markers 缓存数据
+   * @param includePublic 是否包含公开数据（true=包含，false=不包含）
+   * @param currentUserId 当前用户ID
+   */
+  function filterMarkersByIncludePublic(
+    markers: CachedMarker[],
+    includePublic: boolean,
+    currentUserId?: number,
+  ): CachedMarker[] {
+    if (includePublic) {
+      // 包含公开数据：返回所有数据（后端已经过滤过了）
+      return markers
+    }
+    else {
+      // 不包含公开数据：只返回当前用户和另一半的记录
+      if (!currentUserId || currentUserId === -1) {
+        // 未登录，不包含公开数据时应该返回空数组
+        return []
+      }
+      // 过滤逻辑：
+      // 1. 保留当前用户的记录（无论是否公开）
+      // 2. 保留其他用户的私密记录（可能是另一半的记录，后端在 includePublic=0 时会返回）
+      // 3. 过滤掉其他用户的公开记录（这些不应该在 includePublic=0 时显示）
+      return markers.filter((marker) => {
+        // 如果是当前用户的记录，保留
+        if (marker.userId === currentUserId) {
+          return true
+        }
+        // 如果不是当前用户的记录
+        // 如果是私密的（isPublic=0 或 false），可能是另一半的记录，保留
+        // 如果是公开的（isPublic=1 或 true），过滤掉
+        const isPublic = marker.isPublic === 1 || marker.isPublic === true
+        return !isPublic
+      })
     }
   }
 
@@ -98,21 +139,21 @@ export function useMapMarkers(
     }
   }
 
- 
+
   async function convertToMapMarkers(cachedMarkers: CachedMarker[]): Promise<any[]> {
     // 根据 onlyShowMarkers 状态决定 customCallout.display 的值
     const calloutDisplay = onlyShowMarkers?.value ? 'BYCLICK' : 'ALWAYS'
-    
+
     // 获取当前选中的 marker ID
     const currentSelectedId = selectedMarkerId?.value ?? null
-    
+
     const markers = cachedMarkers.map((record) => {
       const markerId = Number(record.id)
       const isSelected = currentSelectedId === markerId
-      
+
       // 使用默认图标或原始图片作为 marker 图标
       const iconPath = '/static/images/love.png'
-      
+
       // 根据是否选中设置不同的图标大小
       const width = isSelected ? 50 : 33  // 选中时变大
       const height = isSelected ? 36 : 24  // 选中时变大
@@ -145,7 +186,7 @@ export function useMapMarkers(
     // 分离选中的和未选中的 markers
     const selectedMarkers: any[] = []
     const unselectedMarkers: any[] = []
-    
+
     markers.forEach((marker) => {
       if (marker.id === currentSelectedId) {
         selectedMarkers.push(marker)
@@ -154,7 +195,7 @@ export function useMapMarkers(
         unselectedMarkers.push(marker)
       }
     })
-    
+
     // 将选中的放在最后
     const sortedMarkers = [...unselectedMarkers, ...selectedMarkers]
 
@@ -183,16 +224,25 @@ export function useMapMarkers(
       const cached = getCachedMarkers()
       let cachedMarkers: CachedMarker[] = []
       let displayMarkers: CachedMarker[] = []
-      
       if (cached && cached.markers.length > 0) {
         cachedMarkers = cached.markers
-        // 先显示缓存中当前位置范围内的点位
+        
+        // 根据 includePublic 过滤缓存数据
+        const userStore = useUserStore()
+        const currentUserId = userStore.userInfo?.userInfo?.userId
+        const filteredByIncludePublic = filterMarkersByIncludePublic(
+          cachedMarkers,
+          showPublicCheckins.value,
+          currentUserId && currentUserId !== -1 ? currentUserId : undefined,
+        )
+        
+        // 再根据位置范围过滤
         if (currentLat !== undefined && currentLon !== undefined) {
-          displayMarkers = filterMarkersByDistance(cachedMarkers, currentLat, currentLon, radius)
+          displayMarkers = filterMarkersByDistance(filteredByIncludePublic, currentLat, currentLon, radius)
         } else {
-          displayMarkers = cachedMarkers
+          displayMarkers = filteredByIncludePublic
         }
-        console.log(`从缓存加载 ${displayMarkers.length} 个点位`)
+        console.log(`从缓存加载 ${displayMarkers.length} 个点位（已根据 includePublic=${showPublicCheckins.value ? 1 : 0} 过滤）`)
 
         // 立即显示缓存数据（无论距离多少，先显示缓存提升体验）
         mapMarkers.value = await convertToMapMarkers(displayMarkers)
@@ -200,7 +250,6 @@ export function useMapMarkers(
 
       // 检查是否需要请求服务器数据
       let shouldRequest = false
-      
       if (forceRefresh) {
         // 强制刷新，清除上次请求参数，确保能重新请求
         lastRequestParams.value = null
@@ -209,10 +258,10 @@ export function useMapMarkers(
       }
       else if (lastRequestParams.value) {
         const { lat, lon } = lastRequestParams.value
-        
+
         // 计算与上次请求位置的距离
         const distance = calculateDistance(lat, lon, currentLat, currentLon)
-        
+
         // 如果距离大于等于7公里，才发起请求
         if (distance >= MIN_DISTANCE_KM) {
           shouldRequest = true
@@ -248,7 +297,7 @@ export function useMapMarkers(
         latitude: currentLat,
         longitude: currentLon,
         radius,
-        includePublic: showPublicCheckins.value,
+        includePublic: showPublicCheckins.value ? 1 : 0, // 将 boolean 转换为 0/1
       })
       const serverCachedMarkers = apiMarkers.map(transformToCachedMarker)
 
@@ -279,10 +328,10 @@ export function useMapMarkers(
         // 如果有新增点位，显示提示（可选）
         if (newMarkers.length > 0) {
           console.log(`当前位置范围内新增 ${newMarkers.length} 个点位`)
-          console.log('新增点位详情:', newMarkers.map(m => ({ 
-            id: m.id, 
-            lat: m.latitude, 
-            lon: m.longitude, 
+          console.log('新增点位详情:', newMarkers.map(m => ({
+            id: m.id,
+            lat: m.latitude,
+            lon: m.longitude,
             address: m.address,
             hasImages: !!(m.images && m.images.length > 0)
           })))
@@ -298,14 +347,14 @@ export function useMapMarkers(
       console.log(`转换完成，共 ${convertedMarkers.length} 个标记点`)
       console.log('转换后标记点ID列表:', convertedMarkers.map(m => m.id))
       console.log('标记点详情:', convertedMarkers.map(m => ({ id: m.id, lat: m.latitude, lon: m.longitude, icon: m.iconPath })))
-      
+
       // 检查是否有重复的ID
       const ids = convertedMarkers.map(m => m.id)
       const uniqueIds = new Set(ids)
       if (ids.length !== uniqueIds.size) {
         console.warn('发现重复的标记点ID:', ids.filter((id, index) => ids.indexOf(id) !== index))
       }
-      
+
       // 强制更新地图标记点（使用新数组引用确保响应式更新）
       // 使用 nextTick 确保 DOM 更新后再更新 markers
       await nextTick()
@@ -322,18 +371,25 @@ export function useMapMarkers(
       // 如果加载失败，尝试使用缓存数据
       const cached = getCachedMarkers()
       if (cached) {
-        let fallbackMarkers = cached.markers
-        // 如果提供了位置参数，过滤缓存数据
+        // 根据 includePublic 过滤缓存数据
+        const userStore = useUserStore()
+        const currentUserId = userStore.userInfo?.userInfo?.userId
+        let fallbackMarkers = filterMarkersByIncludePublic(
+          cached.markers,
+          showPublicCheckins.value,
+          currentUserId && currentUserId !== -1 ? currentUserId : undefined,
+        )
+        // 如果提供了位置参数，再根据位置范围过滤
         if (centerLat !== undefined && centerLon !== undefined) {
           fallbackMarkers = filterMarkersByDistance(
-            cached.markers,
+            fallbackMarkers,
             centerLat,
             centerLon,
             radiusKm ?? loadRadius.value,
           )
         }
         mapMarkers.value = await convertToMapMarkers(fallbackMarkers)
-        console.log('使用缓存数据作为备用')
+        console.log('使用缓存数据作为备用（已根据 includePublic 过滤）')
       }
       else {
         mapMarkers.value = []
@@ -356,8 +412,17 @@ export function useMapMarkers(
       const currentLon = mapLongitude.value
       const radius = loadRadius.value
       
-      // 过滤出当前范围内的点位
-      const displayMarkers = filterMarkersByDistance(cached.markers, currentLat, currentLon, radius)
+      // 根据 includePublic 过滤缓存数据
+      const userStore = useUserStore()
+      const currentUserId = userStore.userInfo?.userInfo?.userId
+      const filteredByIncludePublic = filterMarkersByIncludePublic(
+        cached.markers,
+        showPublicCheckins.value,
+        currentUserId && currentUserId !== -1 ? currentUserId : undefined,
+      )
+      
+      // 再过滤出当前范围内的点位
+      const displayMarkers = filterMarkersByDistance(filteredByIncludePublic, currentLat, currentLon, radius)
       
       // 重新转换 markers
       const convertedMarkers = await convertToMapMarkers(displayMarkers)

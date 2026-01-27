@@ -51,7 +51,7 @@ export interface IQueryCheckinDto {
   pageSize?: number
   startDate?: string
   endDate?: string
-  includePublic?: boolean
+  includePublic?: number // 1-包含公开（默认），0-不包含
 }
 
 /**
@@ -137,7 +137,7 @@ export interface IMapMarkersQuery {
   latitude?: number
   longitude?: number
   radius?: number // 查询半径（公里）
-  includePublic?: boolean
+  includePublic?: number // 1-包含公开（默认），0-不包含
 }
 
 /**

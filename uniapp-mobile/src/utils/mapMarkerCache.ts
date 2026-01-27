@@ -4,6 +4,7 @@
 
 export interface CachedMarker {
   id: string | number
+  userId?: number // 用户ID，用于过滤
   latitude: number
   longitude: number
   address: string

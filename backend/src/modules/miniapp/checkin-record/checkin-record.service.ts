@@ -17,7 +17,7 @@ export class CheckinRecordService {
     private readonly recordRepository: Repository<CheckinRecord>,
     private readonly coupleService: UserCoupleService,
     private readonly notificationService: CheckinNotificationService,
-  ) {}
+  ) { }
 
   /**
    * 创建打卡记录
@@ -51,7 +51,7 @@ export class CheckinRecordService {
    * 分页查询打卡记录
    */
   async findAll(queryDto: QueryCheckinDto, userId?: number): Promise<IPaginationResponse<CheckinRecord>> {
-    const { page = 1, pageSize = 10, startDate, endDate, includePublic = true } = queryDto;
+    const { page = 1, pageSize = 10, startDate, endDate, includePublic = 1 } = queryDto;
     const skip = (page - 1) * pageSize;
 
     const queryBuilder = this.recordRepository.createQueryBuilder('record')
@@ -59,13 +59,13 @@ export class CheckinRecordService {
       .where('record.status = :status', { status: 1 })
       .andWhere('record.deletedAt IS NULL');
 
-    // includePublic 默认为 true，查询全部公开打卡记录
-    if (includePublic) {
+    // includePublic 默认为 1，查询全部公开打卡记录
+    if (includePublic === 1) {
       if (userId) {
         // 如果用户已登录，获取用户的另一半ID
         const couple = await this.coupleService.getCoupleInfo(userId);
         const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
-        
+
         // 查询逻辑：
         // 1. 用户自己的打卡：包含所有状态（包括被拒绝的）
         // 2. 另一半的打卡：过滤掉被拒绝的
@@ -80,15 +80,15 @@ export class CheckinRecordService {
           .andWhere('(record.auditStatus IS NULL OR record.auditStatus != :rejectedStatus)', { rejectedStatus: 2 });
       }
     } else {
-      // includePublic 为 false，需要 userId，查询我和绑定用户的打卡记录
+      // includePublic 为 0，需要 userId，查询我和绑定用户的打卡记录
       if (!userId) {
-        throw new BadRequestException('includePublic 为 false 时需要用户登录');
+        throw new BadRequestException('includePublic 为 0 时需要用户登录');
       }
-      
+
       // 获取用户的另一半ID
       const couple = await this.coupleService.getCoupleInfo(userId);
       const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
-      
+
       // 查询逻辑：
       // 1. 用户自己的打卡：包含所有状态（包括被拒绝的）
       // 2. 另一半的打卡：过滤掉被拒绝的
@@ -125,46 +125,66 @@ export class CheckinRecordService {
    * 获取地图标记点（用于地图展示，支持位置范围查询）
    */
   async getMapMarkers(userId?: number, queryDto?: QueryMapMarkersDto): Promise<CheckinRecord[]> {
-    const { latitude, longitude, radius = 10, includePublic = true } = queryDto || {};
-    
+    const { latitude, longitude, radius = 10 } = queryDto || {};
+    // 确保 includePublic 是数字类型：0 或 1
+    const includePublic = queryDto?.includePublic !== undefined 
+      ? Number(queryDto.includePublic) 
+      : 1;
+
     const queryBuilder = this.recordRepository.createQueryBuilder('record')
       .leftJoinAndSelect('record.user', 'user')
       .where('record.status = :status', { status: 1 })
       .andWhere('record.deletedAt IS NULL')
       .andWhere('(record.auditStatus IS NULL OR record.auditStatus != :rejectedStatus)', { rejectedStatus: 2 });
 
-    // includePublic 默认为 true，查询全部公开打卡记录
-    // 如果用户已登录，也要包含用户和绑定用户的私密点位数据
-    if (includePublic) {
+    // 查询逻辑：
+    // 公开（includePublic=1）：当前用户和另一半的所有记录（待审核和通过的）+ 其他用户发布的公开记录（待审核和通过的）
+    // 不公开（includePublic=0）：当前用户和另一半的所有记录（待审核和通过的）
+    if (includePublic === 1) {
       if (userId) {
         // 如果用户已登录，获取用户的另一半ID
         const couple = await this.coupleService.getCoupleInfo(userId);
         const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
-        
-        // 查询用户、另一半和公开的打卡
-        queryBuilder.andWhere(
-          '(record.userId = :userId OR record.userId = :partnerId OR record.isPublic = 1)',
-          { userId, partnerId: partnerId || -1 }
-        );
+
+        // 查询逻辑：
+        // 1. 当前用户和另一半的所有记录（待审核和通过的）- 已在全局条件中过滤掉被拒绝的
+        // 2. 其他用户发布的公开记录（待审核和通过的）- 已在全局条件中过滤掉被拒绝的
+        if (partnerId) {
+          // 有另一半：查询当前用户、另一半和公开的打卡（排除当前用户和另一半）
+          queryBuilder.andWhere(
+            '(record.userId = :userId OR record.userId = :partnerId OR (record.isPublic = 1 AND record.userId != :userId AND record.userId != :partnerId))',
+            { userId, partnerId }
+          );
+        } else {
+          // 没有另一半：查询当前用户和公开的打卡（排除当前用户）
+          queryBuilder.andWhere(
+            '(record.userId = :userId OR (record.isPublic = 1 AND record.userId != :userId))',
+            { userId }
+          );
+        }
       } else {
-        // 未登录用户，只查询公开的打卡
+        // 未登录用户，只查询公开的打卡（待审核和通过的）- 已在全局条件中过滤掉被拒绝的
         queryBuilder.andWhere('record.isPublic = 1');
       }
     } else {
-      // includePublic 为 false，需要 userId，查询我和绑定用户的打卡记录
+      // includePublic 为 0，需要 userId，查询当前用户和另一半的打卡记录（待审核和通过的）
       if (!userId) {
-        throw new BadRequestException('includePublic 为 false 时需要用户登录');
+        throw new BadRequestException('includePublic 为 0 时需要用户登录');
       }
-      
+
       // 获取用户的另一半ID
       const couple = await this.coupleService.getCoupleInfo(userId);
       const partnerId = couple ? (couple.userId === userId ? couple.partnerId : couple.userId) : null;
-      
-      // 只查询用户和另一半的打卡
-      queryBuilder.andWhere(
-        '(record.userId = :userId OR record.userId = :partnerId)',
-        { userId, partnerId: partnerId || -1 }
-      );
+
+      // 只查询当前用户和另一半的打卡（待审核和通过的）- 已在全局条件中过滤掉被拒绝的
+      if (partnerId) {
+        queryBuilder.andWhere(
+          '(record.userId = :userId OR record.userId = :partnerId)',
+          { userId, partnerId }
+        );
+      } else {
+        queryBuilder.andWhere('record.userId = :userId', { userId });
+      }
     }
 
     // 如果提供了位置参数，添加位置范围过滤
@@ -174,14 +194,14 @@ export class CheckinRecordService {
       // 计算纬度差和经度差的弧度
       const latRad = latitude * Math.PI / 180;
       const lonRad = longitude * Math.PI / 180;
-      
+
       // 计算距离的 SQL 表达式
       // 使用 Haversine 公式：d = 2R * arcsin(sqrt(sin²(Δlat/2) + cos(lat1) * cos(lat2) * sin²(Δlon/2)))
       // 为了性能，我们使用简化的边界框过滤，然后再精确计算
       // 1度纬度约等于111公里，1度经度在赤道约等于111公里，在高纬度会变小
       const latDelta = radius / 111; // 纬度差（度）
       const lonDelta = radius / (111 * Math.cos(latRad)); // 经度差（度）
-      
+
       // 先使用边界框快速过滤（性能优化）
       queryBuilder
         .andWhere('record.latitude BETWEEN :minLat AND :maxLat', {
@@ -192,11 +212,11 @@ export class CheckinRecordService {
           minLon: longitude - lonDelta,
           maxLon: longitude + lonDelta,
         });
-      
+
       // 添加精确距离计算的子查询（使用 Haversine 公式）
       // 注意：TypeORM 的 QueryBuilder 对复杂地理计算支持有限，这里使用原生 SQL
       const records = await queryBuilder.getMany();
-      
+
       // 在内存中精确计算距离并过滤
       const filteredRecords = records.filter(record => {
         const recordLat = Number(record.latitude);
@@ -204,7 +224,7 @@ export class CheckinRecordService {
         const distance = this.calculateDistance(latitude, longitude, recordLat, recordLon);
         return distance <= radius;
       });
-      
+
       return filteredRecords.sort((a, b) => {
         const timeA = new Date(a.createdAt).getTime();
         const timeB = new Date(b.createdAt).getTime();
@@ -256,12 +276,12 @@ export class CheckinRecordService {
       if (record.userId === userId) {
         return record;
       }
-      
+
       // 如果是公开的打卡且未被拒绝，允许访问
       if (record.isPublic === 1 && (record.auditStatus === null || record.auditStatus !== 2)) {
         return record;
       }
-      
+
       // 检查是否是另一半的打卡（另一半的打卡需要过滤掉被拒绝的）
       const couple = await this.coupleService.getCoupleInfo(userId);
       if (couple) {
@@ -270,7 +290,7 @@ export class CheckinRecordService {
           return record;
         }
       }
-      
+
       throw new ForbiddenException('无权访问该记录');
     }
 

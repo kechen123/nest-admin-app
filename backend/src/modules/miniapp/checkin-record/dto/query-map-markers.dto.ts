@@ -1,19 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsNumber, Min, Max } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
-
-function toBoolean(value: unknown): boolean | undefined {
-  if (value === undefined || value === null) return undefined;
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'number') return value === 1;
-  if (typeof value === 'string') {
-    const v = value.trim().toLowerCase();
-    if (v === 'true' || v === '1') return true;
-    if (v === 'false' || v === '0') return false;
-  }
-  // 兜底：保持原有 JS 真值规则（避免意外抛错导致接口不可用）
-  return Boolean(value);
-}
+import { IsOptional, IsNumber, Min, Max, IsIn } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class QueryMapMarkersDto {
   @ApiProperty({ 
@@ -51,13 +38,15 @@ export class QueryMapMarkersDto {
 
   @ApiProperty({ 
     description: `是否包含公开的打卡。
-- true（默认）：包含公开数据。如果用户已登录，也会包含用户自己和绑定用户的私密点位数据
-- false：只返回用户和绑定用户的打卡记录（需要登录）`, 
-    example: true, 
-    default: true, 
+- 1（默认）：包含公开数据。如果用户已登录，也会包含用户自己和绑定用户的私密点位数据
+- 0：只返回用户和绑定用户的打卡记录（需要登录）`, 
+    example: 1, 
+    default: 1, 
     required: false 
   })
-  @Transform(({ value }) => toBoolean(value))
+  @Type(() => Number)
+  @IsNumber()
+  @IsIn([0, 1])
   @IsOptional()
-  includePublic?: boolean = true;
+  includePublic?: number = 1;
 }
