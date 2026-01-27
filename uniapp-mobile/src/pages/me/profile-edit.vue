@@ -114,7 +114,7 @@ async function chooseAvatar(data: any) {
   const tempFilePath = data.detail.avatarUrl
 
   // 如果是临时路径（微信小程序返回的临时路径），需要上传到服务器
-  if (tempFilePath && tempFilePath.startsWith('http://tmp/')) {
+  if (tempFilePath && (tempFilePath.startsWith('http://tmp/') || tempFilePath.startsWith('wxfile://tmp'))) {
     try {
       isUploadingAvatar.value = true
 
