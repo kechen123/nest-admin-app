@@ -1,6 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsNumber, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
+
+function toBoolean(value: unknown): boolean | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase();
+    if (v === 'true' || v === '1') return true;
+    if (v === 'false' || v === '0') return false;
+  }
+  // 兜底：保持原有 JS 真值规则（避免意外抛错导致接口不可用）
+  return Boolean(value);
+}
 
 export class QueryMapMarkersDto {
   @ApiProperty({ 
@@ -44,7 +57,7 @@ export class QueryMapMarkersDto {
     default: true, 
     required: false 
   })
-  @Type(() => Boolean)
+  @Transform(({ value }) => toBoolean(value))
   @IsOptional()
   includePublic?: boolean = true;
 }

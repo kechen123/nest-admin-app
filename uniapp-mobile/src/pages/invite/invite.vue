@@ -152,7 +152,7 @@ onLoad((options: any) => {
         <!-- 邀请人信息 -->
         <view class="inviter-info">
           <view class="inviter-avatar">
-            <wd-img v-if="inviteInfo?.inviter.avatar" :src="inviteInfo.inviter.avatar" mode="aspectFill" />
+            <image v-if="inviteInfo?.inviter.avatar" :src="inviteInfo.inviter.avatar" mode="aspectFill" />
             <text v-else class="default-avatar">👤</text>
           </view>
           <view class="inviter-details">
@@ -184,7 +184,7 @@ onLoad((options: any) => {
         <view class="couple-info">
           <view class="partner-item">
             <view class="partner-avatar">
-              <wd-img v-if="inviteInfo?.inviter.avatar" :src="inviteInfo.inviter.avatar" mode="aspectFill" />
+              <image v-if="inviteInfo?.inviter.avatar" :src="inviteInfo.inviter.avatar" mode="aspectFill" />
               <text v-else class="default-avatar">👤</text>
             </view>
             <text class="partner-name">{{ inviteInfo?.inviter.nickname }}</text>
@@ -196,7 +196,7 @@ onLoad((options: any) => {
 
           <view class="partner-item">
             <view class="partner-avatar">
-              <wd-img v-if="userInfo.avatar" :src="userInfo.avatar" mode="aspectFill" />
+              <image v-if="userInfo.avatar" :src="userInfo.avatar" mode="aspectFill" />
               <text v-else class="default-avatar">👤</text>
             </view>
             <text class="partner-name">{{ userInfo.nickname }}</text>

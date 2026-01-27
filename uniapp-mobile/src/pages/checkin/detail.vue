@@ -116,12 +116,10 @@ async function deleteCheckin() {
   <view v-if="record" class="detail-container">
     <!-- 头部图片 -->
     <view v-if="record.images.length > 0" class="header-images">
-      <swiper
-        class="swiper" :indicator-dots="record.images.length > 1" :autoplay="false"
-        indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#fff"
-      >
+      <swiper class="swiper" :indicator-dots="record.images.length > 1" :autoplay="false"
+        indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#fff">
         <swiper-item v-for="(image, index) in record.images" :key="index" @click="previewImage(index)">
-          <wd-img :src="image" mode="aspectFill" class="header-image" />
+          <image :src="image" mode="aspectFill" class="header-image" />
         </swiper-item>
       </swiper>
     </view>

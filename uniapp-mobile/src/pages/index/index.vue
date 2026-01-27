@@ -139,6 +139,7 @@ onUnmounted(() => {
  * 切换显示公开打卡
  */
 async function togglePublicCheckins(e?: any) {
+  console.log('切换显示公开打卡', e)
   if (e) {
     showPublicCheckins.value = e.detail.value
   }
@@ -187,7 +188,7 @@ function closeSettingsModal() {
 async function onMarkerTap(e: any) {
   const markerId = e.detail.markerId
   console.log('点击了标记点', markerId)
-  
+
   // 设置选中的 marker ID（如果点击的是同一个，则取消选中）
   if (selectedMarkerId.value === markerId) {
     selectedMarkerId.value = null
@@ -195,10 +196,10 @@ async function onMarkerTap(e: any) {
   else {
     selectedMarkerId.value = markerId
   }
-  
+
   // 更新 markers 显示（图标大小和层级）
   await refreshMarkersDisplay()
-  
+
   // 直接跳转到详情页，详情页会自己加载数据
   // goToDetail(markerId)
 }
@@ -209,7 +210,7 @@ async function onMarkerTap(e: any) {
 async function onCalloutTap(e: any) {
   const markerId = e.detail.markerId
   console.log('点击了气泡', markerId)
-  
+
   // 设置选中的 marker ID（如果点击的是同一个，则取消选中）
   if (selectedMarkerId.value === markerId) {
     selectedMarkerId.value = null
@@ -217,7 +218,7 @@ async function onCalloutTap(e: any) {
   else {
     selectedMarkerId.value = markerId
   }
-  
+
   // 更新 markers 显示（图标大小和层级）
   await refreshMarkersDisplay()
 }

@@ -1,6 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
+
+function toBoolean(value: unknown): boolean | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase();
+    if (v === 'true' || v === '1') return true;
+    if (v === 'false' || v === '0') return false;
+  }
+  return Boolean(value);
+}
 
 export class QueryCheckinDto {
   @ApiProperty({ description: '页码', example: 1, default: 1, required: false })
@@ -33,7 +45,7 @@ export class QueryCheckinDto {
   endDate?: string;
 
   @ApiProperty({ description: '是否包含公开的打卡', example: true, default: true, required: false })
-  @Type(() => Boolean)
+  @Transform(({ value }) => toBoolean(value))
   @IsOptional()
   includePublic?: boolean = true;
 }
