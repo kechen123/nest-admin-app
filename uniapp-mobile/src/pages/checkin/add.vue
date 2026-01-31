@@ -441,222 +441,125 @@ onShow(() => {
 </script>
 
 <template>
-  <view class="add-checkin-container">
-    <!-- 位置选择 -->
-    <view class="section">
-      <view class="section-title">
-        位置
-      </view>
-      <view class="location-box" @click="selectLocationOnMap">
-        <view class="location-info">
-          <text class="location-icon">📍</text>
-          <text class="location-text">{{ address }}</text>
-        </view>
-        <text class="location-arrow">›</text>
-      </view>
-    </view>
-
-    <!-- 打卡内容 -->
-    <view class="section">
-      <view class="section-title">
-        打卡内容
-      </view>
-      <textarea v-model="content" class="content-input" placeholder="记录这一刻的美好..." :show-confirm-bar="false" />
+  <view class="moments-publish">
+    <!-- 主体：文字 + 图片，类似朋友圈 -->
+    <view class="publish-body">
+      <textarea v-model="content" class="moment-textarea" placeholder="这一刻的想法..." :maxlength="500"
+        :show-confirm-bar="false" />
       <view class="char-count">
         {{ content.length }}/500
       </view>
-    </view>
 
-    <!-- 是否公开 -->
-    <view class="section">
-      <view class="section-title">
-        隐私设置
-      </view>
-      <view class="switch-box">
-        <text class="switch-label">公开打卡</text>
-        <switch :checked="isPublic" color="#ff6b9d" @change="(e: any) => isPublic = e.detail.value" />
-      </view>
-      <view class="switch-tip">
-        <text>开启后，其他用户可以在公开地图上看到你的打卡</text>
-      </view>
-    </view>
-
-    <!-- 图片上传 -->
-    <view class="section">
-      <view class="section-title">
-        照片
-      </view>
-      <view class="image-list">
-        <view v-for="(image, index) in images" :key="index" class="image-item" @click="previewImage(index)">
-          <image :src="image" mode="aspectFill" class="image" />
+      <!-- 图片网格 3列 -->
+      <view class="moment-images">
+        <view v-for="(image, index) in images" :key="index" class="moment-image-item" @click="previewImage(index)">
+          <image :src="image" mode="aspectFill" class="moment-img" />
           <view v-if="uploadingIndexes.has(index)" class="image-uploading">
-            <text>上传中...</text>
+            <text>上传中</text>
           </view>
           <view v-else class="image-delete" @click.stop="deleteImage(index)">
-            ×
+            <text class="delete-icon">×</text>
           </view>
         </view>
-        <view v-if="images.length < 9" class="image-item image-add" @click="chooseImage">
+        <view v-if="images.length < 9" class="moment-image-item image-add" @click="chooseImage">
           <text class="add-icon">+</text>
-          <text class="add-text">添加照片</text>
         </view>
       </view>
     </view>
 
-    <!-- 提交按钮 -->
-    <view class="submit-section">
-      <button class="submit-btn" :disabled="uploadingIndexes.size > 0" @click="submitCheckin">
-        {{ uploadingIndexes.size > 0 ? '图片上传中...' : '发布打卡' }}
+    <!-- 底部选项栏：位置、谁可以看 -->
+    <view class="moment-options">
+      <view class="option-row" @click="selectLocationOnMap">
+        <text class="option-icon">📍</text>
+        <text class="option-text">{{ address }}</text>
+        <text class="option-arrow">›</text>
+      </view>
+      <view class="option-row">
+        <text class="option-icon">👁</text>
+        <text class="option-text">{{ isPublic ? '公开' : '仅自己可见' }}</text>
+        <switch :checked="isPublic" color="#ff6b9d" size="20" @change="(e: any) => isPublic = e.detail.value" />
+      </view>
+    </view>
+
+    <!-- 发表按钮 -->
+    <view class="publish-footer">
+      <button class="publish-btn" :class="{ disabled: uploadingIndexes.size > 0 }" :disabled="uploadingIndexes.size > 0"
+        @click="submitCheckin">
+        {{ uploadingIndexes.size > 0 ? '图片上传中...' : '发表' }}
       </button>
     </view>
   </view>
 </template>
 
 <style lang="scss" scoped>
-.add-checkin-container {
+.moments-publish {
   min-height: 100vh;
   background: #f5f5f5;
-  padding-bottom: 120rpx;
+  padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
 }
 
-.section {
+/* 主体：文字 + 图片，类似朋友圈 */
+.publish-body {
   background: #fff;
-  margin-top: 20rpx;
-  padding: 30rpx;
-
-  .section-title {
-    font-size: 32rpx;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 20rpx;
-  }
+  padding: 32rpx 32rpx 24rpx;
+  margin-bottom: 24rpx;
 }
 
-.location-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20rpx;
-  background: #f8f8f8;
-  border-radius: 12rpx;
-  margin-bottom: 20rpx;
-
-  .location-info {
-    display: flex;
-    align-items: center;
-    flex: 1;
-
-    .location-icon {
-      font-size: 32rpx;
-      margin-right: 12rpx;
-    }
-
-    .location-text {
-      font-size: 28rpx;
-      color: #333;
-      flex: 1;
-    }
-  }
-
-  .location-arrow {
-    font-size: 40rpx;
-    color: #999;
-  }
-}
-
-.location-btns {
-  display: flex;
-  gap: 20rpx;
-}
-
-.switch-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20rpx;
-  background: #f8f8f8;
-  border-radius: 12rpx;
-
-  .switch-label {
-    font-size: 28rpx;
-    color: #333;
-  }
-}
-
-.switch-tip {
-  margin-top: 12rpx;
-  padding: 0 20rpx;
-
-  text {
-    font-size: 24rpx;
-    color: #999;
-  }
-}
-
-.location-btn {
-  flex: 1;
-  padding: 12rpx 24rpx;
-  background: #ff6b9d;
-  color: #fff;
-  border-radius: 8rpx;
-  font-size: 24rpx;
-  text-align: center;
-
-  &.map-select {
-    background: #fff;
-    color: #ff6b9d;
-    border: 2rpx solid #ff6b9d;
-  }
-}
-
-.content-input {
+.moment-textarea {
   width: 100%;
-  min-height: 200rpx;
-  padding: 20rpx;
-  background: #f8f8f8;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  line-height: 1.6;
+  min-height: 280rpx;
+  padding: 0;
+  font-size: 32rpx;
+  line-height: 1.5;
+  color: #333;
+  background: transparent;
+  box-sizing: border-box;
 }
 
 .char-count {
   text-align: right;
   font-size: 24rpx;
-  color: #999;
-  margin-top: 10rpx;
+  color: #b2b2b2;
+  margin-top: 16rpx;
 }
 
-.image-list {
+/* 图片网格 3列，类似朋友圈 */
+.moment-images {
   display: flex;
   flex-wrap: wrap;
-  gap: 20rpx;
+  margin-top: 24rpx;
+  gap: 16rpx;
 }
 
-.image-item {
-  width: 200rpx;
-  height: 200rpx;
-  border-radius: 12rpx;
+.moment-image-item {
+  width: 218rpx;
+  height: 218rpx;
+  border-radius: 8rpx;
   overflow: hidden;
   position: relative;
+  background: #f5f5f5;
 
-  .image {
+  .moment-img {
     width: 100%;
     height: 100%;
   }
 
   .image-delete {
     position: absolute;
-    top: -10rpx;
-    right: -10rpx;
-    width: 40rpx;
-    height: 40rpx;
-    background: #ff4757;
-    color: #fff;
+    top: 4rpx;
+    right: 4rpx;
+    width: 44rpx;
+    height: 44rpx;
+    background: rgba(0, 0, 0, 0.5);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32rpx;
+  }
+
+  .delete-icon {
+    color: #fff;
+    font-size: 36rpx;
     line-height: 1;
   }
 
@@ -666,11 +569,10 @@ onShow(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12rpx;
 
     text {
       color: #fff;
@@ -679,41 +581,71 @@ onShow(() => {
   }
 
   &.image-add {
-    background: #f8f8f8;
-    border: 2rpx dashed #ddd;
+    background: #f5f5f5;
+    border: 2rpx dashed #d9d9d9;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
+  }
 
-    .add-icon {
-      font-size: 60rpx;
-      color: #999;
-      line-height: 1;
-    }
-
-    .add-text {
-      font-size: 24rpx;
-      color: #999;
-      margin-top: 10rpx;
-    }
+  .add-icon {
+    font-size: 64rpx;
+    color: #c0c0c0;
+    line-height: 1;
   }
 }
 
-.submit-section {
+/* 底部选项栏：位置、谁可以看 */
+.moment-options {
+  background: #fff;
+  padding: 0 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  height: 100rpx;
+  border-bottom: 1rpx solid #eee;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .option-icon {
+    font-size: 36rpx;
+    margin-right: 16rpx;
+  }
+
+  .option-text {
+    flex: 1;
+    font-size: 30rpx;
+    color: #333;
+  }
+
+  .option-arrow {
+    font-size: 36rpx;
+    color: #c0c0c0;
+    margin-left: 8rpx;
+  }
+}
+
+/* 发表按钮，粉色系 */
+.publish-footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20rpx 30rpx;
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   background: #fff;
-  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
 }
 
-.submit-btn {
+.publish-btn {
   width: 100%;
   height: 88rpx;
+  line-height: 88rpx;
   background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
   color: #fff;
   border-radius: 44rpx;
@@ -721,6 +653,7 @@ onShow(() => {
   font-weight: 600;
   border: none;
 
+  &.disabled,
   &[disabled] {
     opacity: 0.6;
   }

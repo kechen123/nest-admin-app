@@ -277,7 +277,9 @@ export default {
           <!-- 未绑定且未邀请时显示邀请按钮 -->
           <button open-type="share" @tap.stop="" v-if="!userInfo.hasPartner && !userInfo.hasPendingInvite"
             class="invite-btn">
-            <text class="invite-icon">💌</text>
+            <view class="invite-icon-wrap">
+              <image class="invite-icon" src="/static/images/me/icon1.png" mode="aspectFit" />
+            </view>
             <text class="invite-text">邀请</text>
           </button>
           <!-- 已邀请但对方未同意时显示等待状态 -->
@@ -323,8 +325,9 @@ export default {
             <text class="menu-desc">修改个人信息</text>
           </view>
           <view class="menu-arrow">
-            →
+            <wd-icon name="arrow-right" size="22px"></wd-icon>
           </view>
+
         </view>
         <view class="menu-item" @click="goToCheckinRecords">
           <view class="menu-icon">
@@ -335,7 +338,7 @@ export default {
             <text class="menu-desc">查看历史打卡记录</text>
           </view>
           <view class="menu-arrow">
-            →
+            <wd-icon name="arrow-right" size="22px"></wd-icon>
           </view>
         </view>
 
@@ -350,7 +353,7 @@ export default {
             <text class="menu-desc">安全退出账号</text>
           </view>
           <view class="menu-arrow">
-            →
+            <wd-icon name="arrow-right" size="22px"></wd-icon>
           </view>
         </view>
       </view>
@@ -819,52 +822,49 @@ export default {
   }
 
   .invite-btn {
-    padding: 20rpx 28rpx;
-    background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+    padding: 8rpx 24rpx;
+    background: #fff;
+    border: 2rpx solid #ff8fab;
     border-radius: 24rpx;
     display: flex;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
-    box-shadow: 0 6rpx 16rpx rgba(255, 107, 157, 0.25);
-    transition: all 0.3s ease;
+    box-shadow: 0 4rpx 12rpx rgba(255, 107, 157, 0.12);
+    transition: all 0.25s ease;
     position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.4s ease;
-    }
 
     &:active {
-      transform: translateY(2rpx);
-      box-shadow: 0 3rpx 8rpx rgba(255, 107, 157, 0.35);
+      background: rgba(255, 143, 171, 0.08);
+      border-color: #ff6b9d;
+      transform: scale(0.98);
     }
 
-    &:active::before {
-      left: 100%;
-    }
-
-    .invite-icon {
-      font-size: 24rpx;
-      margin-right: 8rpx;
-      filter: drop-shadow(0 1rpx 2rpx rgba(0, 0, 0, 0.1));
+    .invite-icon-wrap {
+      width: 40rpx;
+      height: 40rpx;
+      margin-right: 10rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
       animation: bounce 2s ease-in-out infinite;
     }
 
+    .invite-icon {
+      width: 26rpx;
+      height: 26rpx;
+    }
+
     .invite-text {
-      font-size: 26rpx;
+      font-size: 28rpx;
       background-color: transparent;
       border: none;
       padding: 0;
       margin: 0;
-      color: #fff;
+      color: #ff6b9d;
       font-weight: 600;
+      letter-spacing: 0.5rpx;
     }
   }
 

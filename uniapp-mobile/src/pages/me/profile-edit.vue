@@ -360,6 +360,7 @@ async function chooseAvatar(data: any) {
   .save-btn {
     width: 100%;
     height: 88rpx;
+    line-height: 88rpx;
     border-radius: 44rpx;
     font-size: 32rpx;
     background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
