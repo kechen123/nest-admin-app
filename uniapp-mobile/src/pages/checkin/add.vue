@@ -476,7 +476,7 @@ onShow(() => {
       </view>
       <view class="option-row">
         <text class="option-icon">👁</text>
-        <text class="option-text">{{ isPublic ? '公开' : '仅自己可见' }}</text>
+        <text class="option-text">公开</text>
         <switch :checked="isPublic" color="#ff6b9d" size="20" @change="(e: any) => isPublic = e.detail.value" />
       </view>
     </view>
@@ -485,7 +485,7 @@ onShow(() => {
     <view class="publish-footer">
       <button class="publish-btn" :class="{ disabled: uploadingIndexes.size > 0 }" :disabled="uploadingIndexes.size > 0"
         @click="submitCheckin">
-        {{ uploadingIndexes.size > 0 ? '图片上传中...' : '发表' }}
+        发表
       </button>
     </view>
   </view>
